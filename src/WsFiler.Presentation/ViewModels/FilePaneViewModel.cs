@@ -42,6 +42,20 @@ public sealed partial class FilePaneViewModel : ViewModelBase
 
     public FileItemViewModel? CurrentItem => Items.Count == 0 ? null : Items[cursorIndex];
 
+    public IReadOnlyList<FileItemViewModel> OperationTargets
+    {
+        get
+        {
+            var markedItems = Items.Where(item => item.IsMarked).ToList();
+            if (markedItems.Count > 0)
+            {
+                return markedItems;
+            }
+
+            return CurrentItem is null ? [] : [CurrentItem];
+        }
+    }
+
     public void MoveCursor(int delta)
     {
         if (Items.Count == 0)

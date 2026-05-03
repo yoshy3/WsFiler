@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using WsFiler.Core.Files;
+using WsFiler.Presentation.Operations;
 
 namespace WsFiler.Presentation.ViewModels;
 
@@ -58,6 +59,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     public FilePaneViewModel ActivePane => LeftPane.IsActive ? LeftPane : RightPane;
 
+    private FilePaneViewModel InactivePane => LeftPane.IsActive ? RightPane : LeftPane;
+
     private void SwitchActivePane()
     {
         LeftPane.IsActive = !LeftPane.IsActive;
@@ -95,6 +98,121 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         await LoadPaneAsync(ActivePane, current.FullPath);
     }
 
+    public FileOperationRequest? CreateCopyRequest()
+    {
+        var targets = ActivePane.OperationTargets;
+        if (targets.Count == 0)
+        {
+            StatusMessage = "No item to copy";
+            return null;
+        }
+
+        return new FileOperationRequest(targets, InactivePane.CurrentPath);
+    }
+
+    public FileOperationRequest? CreateMoveRequest()
+    {
+        var targets = ActivePane.OperationTargets;
+        if (targets.Count == 0)
+        {
+            StatusMessage = "No item to move";
+            return null;
+        }
+
+        return new FileOperationRequest(targets, InactivePane.CurrentPath);
+    }
+
+    public DeleteRequest? CreateDeleteRequest()
+    {
+        var targets = ActivePane.OperationTargets;
+        if (targets.Count == 0)
+        {
+            StatusMessage = "No item to delete";
+            return null;
+        }
+
+        return new DeleteRequest(targets);
+    }
+
+    public RenameRequest? CreateRenameRequest()
+    {
+        var current = ActivePane.CurrentItem;
+        if (current is null)
+        {
+            StatusMessage = "No item to rename";
+            return null;
+        }
+
+        return new RenameRequest(current);
+    }
+
+    public async Task CopyAsync(FileOperationRequest request)
+    {
+        try
+        {
+            var sourcePaths = request.Targets.Select(item => item.FullPath).ToList();
+            await fileSystemProvider.CopyAsync(sourcePaths, request.DestinationDirectory);
+            ActivePane.ClearMarks();
+            await RefreshPaneAsync(InactivePane);
+            StatusMessage = $"Copied {request.Targets.Count:N0} item(s)";
+            OnPropertyChanged(nameof(StatusSummary));
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = ex.Message;
+        }
+    }
+
+    public async Task MoveAsync(FileOperationRequest request)
+    {
+        try
+        {
+            var sourcePaths = request.Targets.Select(item => item.FullPath).ToList();
+            await fileSystemProvider.MoveAsync(sourcePaths, request.DestinationDirectory);
+            ActivePane.ClearMarks();
+            await RefreshPaneAsync(InactivePane);
+            await RefreshPaneAsync(ActivePane);
+            StatusMessage = $"Moved {request.Targets.Count:N0} item(s)";
+            OnPropertyChanged(nameof(StatusSummary));
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = ex.Message;
+        }
+    }
+
+    public async Task DeleteAsync(DeleteRequest request)
+    {
+        try
+        {
+            var targetPaths = request.Targets.Select(item => item.FullPath).ToList();
+            await fileSystemProvider.DeleteAsync(targetPaths);
+            ActivePane.ClearMarks();
+            await RefreshPaneAsync(ActivePane);
+            StatusMessage = $"Deleted {request.Targets.Count:N0} item(s)";
+            OnPropertyChanged(nameof(StatusSummary));
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = ex.Message;
+        }
+    }
+
+    public async Task RenameAsync(RenameRequest request, string newName)
+    {
+        try
+        {
+            await fileSystemProvider.RenameAsync(request.Target.FullPath, newName);
+            await RefreshPaneAsync(ActivePane);
+            StatusMessage = $"Renamed {request.Target.Name} to {newName}";
+            OnPropertyChanged(nameof(StatusSummary));
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = ex.Message;
+        }
+    }
+
     private async Task NavigateParentAsync()
     {
         var parent = Directory.GetParent(ActivePane.CurrentPath);
@@ -122,6 +240,12 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private async Task RefreshPaneAsync(FilePaneViewModel pane)
+    {
+        var items = await fileSystemProvider.ListDirectoryAsync(pane.CurrentPath);
+        pane.Load(pane.CurrentPath, items);
+    }
+
     private async void LoadInitialPanes(IFileSystemProvider fileSystemProvider, string home)
     {
         try
@@ -147,6 +271,37 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult<IReadOnlyList<FileSystemItem>>([]);
+        }
+
+        public Task CopyAsync(
+            IReadOnlyList<string> sourcePaths,
+            string destinationDirectory,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task MoveAsync(
+            IReadOnlyList<string> sourcePaths,
+            string destinationDirectory,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteAsync(
+            IReadOnlyList<string> targetPaths,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task RenameAsync(
+            string sourcePath,
+            string newName,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
         }
     }
 

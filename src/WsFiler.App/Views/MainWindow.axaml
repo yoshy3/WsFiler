@@ -9,6 +9,23 @@
         Icon="/Assets/avalonia-logo.ico"
         Title="WsFiler">
 
+    <Window.Styles>
+        <Style Selector="DataGrid">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="RowHeight" Value="20"/>
+            <Setter Property="ColumnHeaderHeight" Value="22"/>
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+        </Style>
+        <Style Selector="DataGridCell">
+            <Setter Property="Padding" Value="5,0"/>
+        </Style>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Padding" Value="5,0"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+    </Window.Styles>
+
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
@@ -39,18 +56,21 @@
                                Text="{Binding LeftPane.CurrentPath}"
                                Margin="8,5"
                                FontFamily="Consolas"/>
-                    <DataGrid Grid.Row="1"
+                    <DataGrid x:Name="LeftFileGrid"
+                              Grid.Row="1"
                               ItemsSource="{Binding LeftPane.Items}"
+                              SelectedItem="{Binding LeftPane.SelectedItem, Mode=TwoWay}"
                               AutoGenerateColumns="False"
-                              GridLinesVisibility="Horizontal"
+                              GridLinesVisibility="None"
                               HeadersVisibility="Column"
-                              IsReadOnly="True">
+                              IsReadOnly="True"
+                              SelectionMode="Single">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="" Binding="{Binding Kind}" Width="36"/>
-                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
-                            <DataGridTextColumn Header="Ext" Binding="{Binding Extension}" Width="90"/>
-                            <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="110"/>
-                            <DataGridTextColumn Header="Modified" Binding="{Binding Modified}" Width="150"/>
+                            <DataGridTextColumn Header="" Binding="{Binding Kind}" Width="24"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="*"/>
+                            <DataGridTextColumn Header="Ext" Binding="{Binding Extension}" Width="62"/>
+                            <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="92"/>
+                            <DataGridTextColumn Header="Modified" Binding="{Binding Modified}" Width="178"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -65,18 +85,21 @@
                                Text="{Binding RightPane.CurrentPath}"
                                Margin="8,5"
                                FontFamily="Consolas"/>
-                    <DataGrid Grid.Row="1"
+                    <DataGrid x:Name="RightFileGrid"
+                              Grid.Row="1"
                               ItemsSource="{Binding RightPane.Items}"
+                              SelectedItem="{Binding RightPane.SelectedItem, Mode=TwoWay}"
                               AutoGenerateColumns="False"
-                              GridLinesVisibility="Horizontal"
+                              GridLinesVisibility="None"
                               HeadersVisibility="Column"
-                              IsReadOnly="True">
+                              IsReadOnly="True"
+                              SelectionMode="Single">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="" Binding="{Binding Kind}" Width="36"/>
-                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
-                            <DataGridTextColumn Header="Ext" Binding="{Binding Extension}" Width="90"/>
-                            <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="110"/>
-                            <DataGridTextColumn Header="Modified" Binding="{Binding Modified}" Width="150"/>
+                            <DataGridTextColumn Header="" Binding="{Binding Kind}" Width="24"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="*"/>
+                            <DataGridTextColumn Header="Ext" Binding="{Binding Extension}" Width="62"/>
+                            <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="92"/>
+                            <DataGridTextColumn Header="Modified" Binding="{Binding Modified}" Width="178"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -87,7 +110,13 @@
                 Padding="8,6"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                 BorderThickness="0,1,0,0">
-            <TextBlock Text="{Binding StatusMessage}"/>
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage}"/>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding StatusSummary}"
+                           FontFamily="Consolas"/>
+            </Grid>
         </Border>
     </Grid>
 

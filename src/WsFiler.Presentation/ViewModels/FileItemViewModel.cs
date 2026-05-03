@@ -2,9 +2,13 @@ using WsFiler.Core.Files;
 
 namespace WsFiler.Presentation.ViewModels;
 
-public sealed class FileItemViewModel(FileSystemItem item)
+public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBase
 {
+    public string FullPath { get; } = item.FullPath;
+
     public string Name { get; } = item.Name;
+
+    public string DisplayName => IsMarked ? $"> {Name}" : $"  {Name}";
 
     public string Extension { get; } = item.Extension;
 
@@ -19,6 +23,33 @@ public sealed class FileItemViewModel(FileSystemItem item)
         FileSystemItemType.File => "F",
         _ => "O",
     };
+
+    public bool IsDirectory { get; } = item.IsDirectory;
+
+    private bool isMarked;
+
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private string mark = "";
+
+    public bool IsMarked
+    {
+        get => isMarked;
+        private set => SetProperty(ref isMarked, value);
+    }
+
+    public void ToggleMark()
+    {
+        IsMarked = !IsMarked;
+        Mark = IsMarked ? ">" : "";
+        OnPropertyChanged(nameof(DisplayName));
+    }
+
+    public void ClearMark()
+    {
+        IsMarked = false;
+        Mark = "";
+        OnPropertyChanged(nameof(DisplayName));
+    }
 
     private static string FormatSize(long? size)
     {

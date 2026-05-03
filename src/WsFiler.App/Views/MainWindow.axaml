@@ -1,0 +1,94 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:WsFiler.Presentation.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="680"
+        x:Class="WsFiler.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="WsFiler">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto"
+          Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+        <Border Grid.Row="0"
+                Padding="8,6"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="0,0,0,1">
+            <TextBlock Text="WsFiler"
+                       FontSize="15"
+                       FontWeight="SemiBold"/>
+        </Border>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*"
+              Margin="8"
+              ColumnSpacing="8">
+            <Border Grid.Column="0"
+                    BorderBrush="{DynamicResource SystemAccentColor}"
+                    BorderThickness="2"
+                    CornerRadius="4">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0"
+                               Text="{Binding LeftPane.CurrentPath}"
+                               Margin="8,5"
+                               FontFamily="Consolas"/>
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding LeftPane.Items}"
+                              AutoGenerateColumns="False"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column"
+                              IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="" Binding="{Binding Kind}" Width="36"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Ext" Binding="{Binding Extension}" Width="90"/>
+                            <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="110"/>
+                            <DataGridTextColumn Header="Modified" Binding="{Binding Modified}" Width="150"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0"
+                               Text="{Binding RightPane.CurrentPath}"
+                               Margin="8,5"
+                               FontFamily="Consolas"/>
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding RightPane.Items}"
+                              AutoGenerateColumns="False"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column"
+                              IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="" Binding="{Binding Kind}" Width="36"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Ext" Binding="{Binding Extension}" Width="90"/>
+                            <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="110"/>
+                            <DataGridTextColumn Header="Modified" Binding="{Binding Modified}" Width="150"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Padding="8,6"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="0,1,0,0">
+            <TextBlock Text="{Binding StatusMessage}"/>
+        </Border>
+    </Grid>
+
+</Window>

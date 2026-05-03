@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="../tests/WsFiler.Core.Tests/WsFiler.Core.Tests.csproj" />
+  <Project Path="../tests/WsFiler.Infra.Tests/WsFiler.Infra.Tests.csproj" />
+  <Project Path="WsFiler.App/WsFiler.App.csproj" />
+  <Project Path="WsFiler.Core/WsFiler.Core.csproj" />
+  <Project Path="WsFiler.Infra/WsFiler.Infra.csproj" />
+  <Project Path="WsFiler.Presentation/WsFiler.Presentation.csproj" />
+</Solution>

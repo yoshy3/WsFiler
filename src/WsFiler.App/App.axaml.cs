@@ -7,22 +7,18 @@ using Avalonia.Markup.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Avalonia.Styling;
 using WsFiler.Core.Commands;
 using WsFiler.Core.KeyMap;
 using WsFiler.App.Views;
 using WsFiler.Infra.Files;
+using WsFiler.Infra.Settings;
 using WsFiler.Presentation.ViewModels;
 
 namespace WsFiler.App;
 
 public partial class App : Application
 {
-    private const string SettingsFileName = "settings.json";
-
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -32,7 +28,7 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var settings = LoadSettings();
+            var settings = SettingsManager.Load();
             ApplyLanguage(settings.Language);
             ApplyTheme(settings.Theme);
             var viewModel = new MainWindowViewModel(new LocalFileSystemProvider());
@@ -47,7 +43,7 @@ public partial class App : Application
             {
                 if (desktop.MainWindow?.DataContext is MainWindowViewModel vm)
                 {
-                    var currentSettings = LoadSettings();
+                    var currentSettings = SettingsManager.Load();
                     var paths = vm.GetCurrentPanePaths();
                     currentSettings.KeyMap ??= CreateDefaultKeyMapSettings();
                     currentSettings.Language = NormalizeLanguage(currentSettings.Language);
@@ -57,48 +53,12 @@ public partial class App : Application
                         LeftPath = paths.LeftPath,
                         RightPath = paths.RightPath,
                     };
-                    SaveSettings(currentSettings);
+                    SettingsManager.Save(currentSettings);
                 }
             };
         }
 
         base.OnFrameworkInitializationCompleted();
-    }
-
-    private static string GetSettingsPath()
-    {
-        return Path.Combine(AppContext.BaseDirectory, SettingsFileName);
-    }
-
-    private static AppSettings LoadSettings()
-    {
-        try
-        {
-            var path = GetSettingsPath();
-            if (!File.Exists(path))
-            {
-                return new AppSettings();
-            }
-
-            var json = File.ReadAllText(path);
-            return JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? new AppSettings();
-        }
-        catch
-        {
-            return new AppSettings();
-        }
-    }
-
-    private static void SaveSettings(AppSettings settings)
-    {
-        try
-        {
-            var json = JsonSerializer.Serialize(settings, JsonOptions);
-            File.WriteAllText(GetSettingsPath(), json);
-        }
-        catch
-        {
-        }
     }
 
     private void ApplyTheme(string? theme)
@@ -165,34 +125,4 @@ public partial class App : Application
         return keyMap;
     }
 
-    private static JsonSerializerOptions JsonOptions { get; } = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true,
-    };
-
-    private sealed class AppSettings
-    {
-        [JsonPropertyName("lastSession")]
-        public LastSessionSettings? LastSession { get; set; }
-
-        [JsonPropertyName("keyMap")]
-        public Dictionary<string, string>? KeyMap { get; set; }
-
-        [JsonPropertyName("theme")]
-        public string? Theme { get; set; } = "system";
-
-        [JsonPropertyName("language")]
-        public string? Language { get; set; } = "system";
-    }
-
-    private sealed class LastSessionSettings
-    {
-        [JsonPropertyName("leftPath")]
-        public string? LeftPath { get; set; }
-
-        [JsonPropertyName("rightPath")]
-        public string? RightPath { get; set; }
-    }
 }

@@ -1,0 +1,30 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WsFiler.App.Views.TextPreviewDialog"
+        MinWidth="520"
+        MinHeight="320"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Title="プレビュー">
+    <Grid RowDefinitions="Auto,*">
+        <Border Grid.Row="0"
+                Padding="10,6"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="0,0,0,1">
+            <TextBlock x:Name="PathTextBlock"
+                       FontFamily="Consolas"
+                       TextTrimming="CharacterEllipsis"/>
+        </Border>
+
+        <TextBox x:Name="PreviewTextBox"
+                 Grid.Row="1"
+                 AcceptsReturn="True"
+                 AcceptsTab="True"
+                 FontFamily="Consolas"
+                 FontSize="13"
+                 IsReadOnly="True"
+                 TextWrapping="NoWrap"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+    </Grid>
+</Window>

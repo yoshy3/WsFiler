@@ -3,7 +3,10 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using WsFiler.Core.Commands;
 using WsFiler.Core.Files;
@@ -14,6 +17,8 @@ namespace WsFiler.App.Views;
 
 public partial class MainWindow : Window
 {
+    private const int PreviewByteLimit = 100 * 1024;
+
     private readonly Dictionary<string, string> keyToCommandMap;
 
     public MainWindow(IReadOnlyDictionary<string, string>? customKeyMap = null)
@@ -64,6 +69,11 @@ public partial class MainWindow : Window
         else if (commandId == ApplicationCommandId.FileRename)
         {
             await ConfirmAndRenameAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.DirectoryOpen &&
+                 viewModel.ActivePane.CurrentItem is { IsDirectory: false } currentItem)
+        {
+            await PreviewTextFileAsync(currentItem);
         }
         else
         {
@@ -181,6 +191,36 @@ public partial class MainWindow : Window
         {
             await viewModel.RenameAsync(request, newName);
         }
+    }
+
+    private async Task PreviewTextFileAsync(FileItemViewModel item)
+    {
+        var (text, isTruncated) = await ReadPreviewTextAsync(item.FullPath);
+        var dialog = new TextPreviewDialog(item.FullPath, text, isTruncated);
+        dialog.FitToOwner(this);
+        await dialog.ShowDialog(this);
+    }
+
+    private static async Task<(string Text, bool IsTruncated)> ReadPreviewTextAsync(string path)
+    {
+        await using var stream = File.OpenRead(path);
+        var bufferSize = (int)System.Math.Min(stream.Length, PreviewByteLimit);
+        var buffer = new byte[bufferSize];
+        var totalRead = 0;
+
+        while (totalRead < buffer.Length)
+        {
+            var read = await stream.ReadAsync(buffer.AsMemory(totalRead));
+            if (read == 0)
+            {
+                break;
+            }
+
+            totalRead += read;
+        }
+
+        var text = Encoding.UTF8.GetString(buffer, 0, totalRead);
+        return (text, stream.Length > PreviewByteLimit);
     }
 
     private void ScrollActiveSelectionIntoView(MainWindowViewModel viewModel)

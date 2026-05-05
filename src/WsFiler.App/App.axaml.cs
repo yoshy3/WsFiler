@@ -6,9 +6,11 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Avalonia.Styling;
 using WsFiler.Core.Commands;
 using WsFiler.Core.KeyMap;
 using WsFiler.App.Views;
@@ -31,6 +33,8 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var settings = LoadSettings();
+            ApplyLanguage(settings.Language);
+            ApplyTheme(settings.Theme);
             var viewModel = new MainWindowViewModel(new LocalFileSystemProvider());
             _ = viewModel.InitializeAsync(settings.LastSession?.LeftPath, settings.LastSession?.RightPath);
 
@@ -46,6 +50,8 @@ public partial class App : Application
                     var currentSettings = LoadSettings();
                     var paths = vm.GetCurrentPanePaths();
                     currentSettings.KeyMap ??= CreateDefaultKeyMapSettings();
+                    currentSettings.Language = NormalizeLanguage(currentSettings.Language);
+                    currentSettings.Theme = NormalizeTheme(currentSettings.Theme);
                     currentSettings.LastSession = new LastSessionSettings
                     {
                         LeftPath = paths.LeftPath,
@@ -95,6 +101,50 @@ public partial class App : Application
         }
     }
 
+    private void ApplyTheme(string? theme)
+    {
+        RequestedThemeVariant = NormalizeTheme(theme) switch
+        {
+            "light" => ThemeVariant.Light,
+            "dark" => ThemeVariant.Dark,
+            _ => ThemeVariant.Default,
+        };
+    }
+
+    private static void ApplyLanguage(string? language)
+    {
+        var normalized = NormalizeLanguage(language);
+        var culture = normalized == "system" ? CultureInfo.InstalledUICulture : CultureInfo.GetCultureInfo(normalized);
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        CultureInfo.CurrentCulture = culture;
+        CultureInfo.CurrentUICulture = culture;
+    }
+
+    private static string NormalizeLanguage(string? language)
+    {
+        if (string.Equals(language, "ja", StringComparison.OrdinalIgnoreCase))
+        {
+            return "ja";
+        }
+
+        if (string.Equals(language, "en", StringComparison.OrdinalIgnoreCase))
+        {
+            return "en";
+        }
+
+        return "system";
+    }
+
+    private static string NormalizeTheme(string? theme)
+    {
+        return string.Equals(theme, "light", StringComparison.OrdinalIgnoreCase)
+            ? "light"
+            : string.Equals(theme, "dark", StringComparison.OrdinalIgnoreCase)
+                ? "dark"
+                : "system";
+    }
+
     private static Dictionary<string, string> CreateDefaultKeyMapSettings()
     {
         var keyMap = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -129,6 +179,12 @@ public partial class App : Application
 
         [JsonPropertyName("keyMap")]
         public Dictionary<string, string>? KeyMap { get; set; }
+
+        [JsonPropertyName("theme")]
+        public string? Theme { get; set; } = "system";
+
+        [JsonPropertyName("language")]
+        public string? Language { get; set; } = "system";
     }
 
     private sealed class LastSessionSettings

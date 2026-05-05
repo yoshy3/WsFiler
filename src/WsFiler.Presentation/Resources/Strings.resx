@@ -18,4 +18,97 @@
   <data name="Status.Ready" xml:space="preserve">
     <value>Ready</value>
   </data>
+  <data name="Status.PreviewUnavailable" xml:space="preserve">
+    <value>Preview is not available yet</value>
+  </data>
+  <data name="Status.NoItemToCopy" xml:space="preserve">
+    <value>No item to copy</value>
+  </data>
+  <data name="Status.NoItemToMove" xml:space="preserve">
+    <value>No item to move</value>
+  </data>
+  <data name="Status.NoItemToDelete" xml:space="preserve">
+    <value>No item to delete</value>
+  </data>
+  <data name="Status.NoItemToRename" xml:space="preserve">
+    <value>No item to rename</value>
+  </data>
+  <data name="Status.Copied" xml:space="preserve">
+    <value>Copied {0:N0} item(s)</value>
+  </data>
+  <data name="Status.Moved" xml:space="preserve">
+    <value>Moved {0:N0} item(s)</value>
+  </data>
+  <data name="Status.Deleted" xml:space="preserve">
+    <value>Deleted {0:N0} item(s)</value>
+  </data>
+  <data name="Status.Renamed" xml:space="preserve">
+    <value>Renamed {0} to {1}</value>
+  </data>
+  <data name="Status.AlreadyAtRoot" xml:space="preserve">
+    <value>Already at root</value>
+  </data>
+  <data name="Dialog.Copy.Title" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Dialog.Copy.MessageSingle" xml:space="preserve">
+    <value>Copy {0}.</value>
+  </data>
+  <data name="Dialog.Copy.MessageMultiple" xml:space="preserve">
+    <value>Copy {0} and {1:N0} other item(s).</value>
+  </data>
+  <data name="Dialog.Copy.Destination" xml:space="preserve">
+    <value>Destination(F)</value>
+  </data>
+  <data name="Dialog.Move.Title" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="Dialog.Move.MessageSingle" xml:space="preserve">
+    <value>Move {0}.</value>
+  </data>
+  <data name="Dialog.Move.MessageMultiple" xml:space="preserve">
+    <value>Move {0} and {1:N0} other item(s).</value>
+  </data>
+  <data name="Dialog.Move.Destination" xml:space="preserve">
+    <value>Destination(F)</value>
+  </data>
+  <data name="Dialog.Rename.Title" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Dialog.Rename.NewName" xml:space="preserve">
+    <value>New name(N)</value>
+  </data>
+  <data name="Dialog.Common.Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Dialog.Common.Yes" xml:space="preserve">
+    <value>Yes(Y)</value>
+  </data>
+  <data name="Dialog.Common.No" xml:space="preserve">
+    <value>No(N)</value>
+  </data>
+  <data name="Dialog.Common.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Dialog.Preview.Title" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="Dialog.Preview.Truncated" xml:space="preserve">
+    <value>{0} (showing beginning only)</value>
+  </data>
+  <data name="Grid.Column.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Grid.Column.Ext" xml:space="preserve">
+    <value>Ext</value>
+  </data>
+  <data name="Grid.Column.Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Grid.Column.Modified" xml:space="preserve">
+    <value>Modified</value>
+  </data>
+  <data name="Pane.Summary" xml:space="preserve">
+    <value>{0:N0} items, {1:N0} selected</value>
+  </data>
 </root>

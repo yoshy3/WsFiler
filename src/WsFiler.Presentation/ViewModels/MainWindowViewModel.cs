@@ -1,7 +1,9 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WsFiler.Core.Commands;
 using WsFiler.Core.Files;
 using WsFiler.Presentation.Operations;
+using WsFiler.Presentation.Resources;
 
 namespace WsFiler.Presentation.ViewModels;
 
@@ -9,15 +11,21 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 {
     private readonly IFileSystemProvider fileSystemProvider;
     private readonly string defaultHome;
+    private int nextLogNumber = 1;
 
     [ObservableProperty]
-    private string statusMessage = "Ready";
+    private string statusMessage = Strings.Status_Ready;
+
+    [ObservableProperty]
+    private bool isLogVisible;
 
     public string StatusSummary => $"{LeftPane.Summary} | {RightPane.Summary}";
 
     public FilePaneViewModel LeftPane { get; } = new() { IsActive = true };
 
     public FilePaneViewModel RightPane { get; } = new();
+
+    public ObservableCollection<LogEntryViewModel> Logs { get; } = [];
 
     public MainWindowViewModel(IFileSystemProvider? fileSystemProvider = null)
     {
@@ -50,6 +58,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             "Backspace" => ApplicationCommandId.DirectoryParent,
             "Space" => ApplicationCommandId.SelectionToggle,
             "A" => ApplicationCommandId.SelectionAll,
+            "V" => ApplicationCommandId.LogToggle,
             "Escape" => ApplicationCommandId.SelectionClearAll,
             _ => null,
         };
@@ -97,6 +106,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             case ApplicationCommandId.SelectionClear:
                 ActivePane.ClearMarks();
                 OnPropertyChanged(nameof(StatusSummary));
+                break;
+            case ApplicationCommandId.LogToggle:
+                IsLogVisible = !IsLogVisible;
                 break;
         }
     }
@@ -166,7 +178,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
         if (!current.IsDirectory)
         {
-            StatusMessage = "Preview is not available yet";
+            StatusMessage = Strings.Status_PreviewUnavailable;
             return;
         }
 
@@ -178,7 +190,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         var targets = ActivePane.OperationTargets;
         if (targets.Count == 0)
         {
-            StatusMessage = "No item to copy";
+            StatusMessage = Strings.Status_NoItemToCopy;
             return null;
         }
 
@@ -190,7 +202,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         var targets = ActivePane.OperationTargets;
         if (targets.Count == 0)
         {
-            StatusMessage = "No item to move";
+            StatusMessage = Strings.Status_NoItemToMove;
             return null;
         }
 
@@ -202,7 +214,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         var targets = ActivePane.OperationTargets;
         if (targets.Count == 0)
         {
-            StatusMessage = "No item to delete";
+            StatusMessage = Strings.Status_NoItemToDelete;
             return null;
         }
 
@@ -214,7 +226,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         var current = ActivePane.CurrentItem;
         if (current is null)
         {
-            StatusMessage = "No item to rename";
+            StatusMessage = Strings.Status_NoItemToRename;
             return null;
         }
 
@@ -231,12 +243,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             await fileSystemProvider.CopyAsync(sourcePaths, request.DestinationDirectory, resolveConflictAsync);
             ActivePane.ClearMarks();
             await RefreshPaneAsync(InactivePane);
-            StatusMessage = $"Copied {request.Targets.Count:N0} item(s)";
+            StatusMessage = string.Format(Strings.Status_Copied, request.Targets.Count);
+            LogInfo(StatusMessage);
             OnPropertyChanged(nameof(StatusSummary));
         }
         catch (Exception ex)
         {
-            StatusMessage = ex.Message;
+            LogError(ex.Message);
         }
     }
 
@@ -251,12 +264,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             ActivePane.ClearMarks();
             await RefreshPaneAsync(InactivePane);
             await RefreshPaneAsync(ActivePane);
-            StatusMessage = $"Moved {request.Targets.Count:N0} item(s)";
+            StatusMessage = string.Format(Strings.Status_Moved, request.Targets.Count);
+            LogInfo(StatusMessage);
             OnPropertyChanged(nameof(StatusSummary));
         }
         catch (Exception ex)
         {
-            StatusMessage = ex.Message;
+            LogError(ex.Message);
         }
     }
 
@@ -268,12 +282,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             await fileSystemProvider.DeleteAsync(targetPaths);
             ActivePane.ClearMarks();
             await RefreshPaneAsync(ActivePane);
-            StatusMessage = $"Deleted {request.Targets.Count:N0} item(s)";
+            StatusMessage = string.Format(Strings.Status_Deleted, request.Targets.Count);
+            LogInfo(StatusMessage);
             OnPropertyChanged(nameof(StatusSummary));
         }
         catch (Exception ex)
         {
-            StatusMessage = ex.Message;
+            LogError(ex.Message);
         }
     }
 
@@ -283,12 +298,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         {
             await fileSystemProvider.RenameAsync(request.Target.FullPath, newName);
             await RefreshPaneAsync(ActivePane);
-            StatusMessage = $"Renamed {request.Target.Name} to {newName}";
+            StatusMessage = string.Format(Strings.Status_Renamed, request.Target.Name, newName);
+            LogInfo(StatusMessage);
             OnPropertyChanged(nameof(StatusSummary));
         }
         catch (Exception ex)
         {
-            StatusMessage = ex.Message;
+            LogError(ex.Message);
         }
     }
 
@@ -297,7 +313,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         var parent = Directory.GetParent(ActivePane.CurrentPath);
         if (parent is null)
         {
-            StatusMessage = "Already at root";
+            StatusMessage = Strings.Status_AlreadyAtRoot;
             return;
         }
 
@@ -315,7 +331,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            StatusMessage = ex.Message;
+            LogError(ex.Message);
         }
     }
 
@@ -343,6 +359,28 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         {
             var items = await fileSystemProvider.ListDirectoryAsync(defaultHome);
             pane.Load(defaultHome, items);
+        }
+    }
+
+    public void LogInfo(string message)
+    {
+        Logs.Add(new LogEntryViewModel(nextLogNumber++, "INFO", message));
+        TrimLogs();
+    }
+
+    public void LogError(string message)
+    {
+        StatusMessage = message;
+        Logs.Add(new LogEntryViewModel(nextLogNumber++, "ERROR", message));
+        IsLogVisible = true;
+        TrimLogs();
+    }
+
+    private void TrimLogs()
+    {
+        while (Logs.Count > 200)
+        {
+            Logs.RemoveAt(0);
         }
     }
 

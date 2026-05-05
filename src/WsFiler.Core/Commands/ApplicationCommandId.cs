@@ -22,6 +22,7 @@ public static class ApplicationCommandId
     public const string FileMove = "file.move";
     public const string FileDelete = "file.delete";
     public const string FileRename = "file.rename";
+    public const string LogToggle = "log.toggle";
     public const string DialogConfirm = "dialog.confirm";
     public const string DialogCancel = "dialog.cancel";
 }

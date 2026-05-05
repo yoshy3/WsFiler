@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using WsFiler.Presentation.Resources;
 
 namespace WsFiler.App.Views;
 
@@ -15,9 +16,13 @@ public partial class MoveConfirmDialog : Window
     public MoveConfirmDialog(string representativeName, int targetCount, string destinationDirectory)
         : this()
     {
+        Title = Strings.Dialog_Move_Title;
         MessageText.Text = targetCount == 1
-            ? $"{representativeName} を移動します。"
-            : $"{representativeName} ほか {targetCount - 1:N0} 件を移動します。";
+            ? string.Format(Strings.Dialog_Move_MessageSingle, representativeName)
+            : string.Format(Strings.Dialog_Move_MessageMultiple, representativeName, targetCount - 1);
+        DestinationLabel.Text = Strings.Dialog_Move_Destination;
+        YesButton.Content = Strings.Dialog_Common_Yes;
+        NoButton.Content = Strings.Dialog_Common_No;
         DestinationTextBox.Text = destinationDirectory;
         Opened += (_, _) => YesButton.Focus();
     }

@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using System;
+using WsFiler.Presentation.Resources;
 
 namespace WsFiler.App.Views;
 
@@ -18,7 +19,8 @@ public partial class TextPreviewDialog : Window
     public TextPreviewDialog(string path, string text, bool isTruncated)
         : this()
     {
-        PathTextBlock.Text = isTruncated ? $"{path} (先頭のみ表示)" : path;
+        Title = Strings.Dialog_Preview_Title;
+        PathTextBlock.Text = isTruncated ? string.Format(Strings.Dialog_Preview_Truncated, path) : path;
         PreviewTextBox.Text = text;
         Opened += (_, _) =>
         {

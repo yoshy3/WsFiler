@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WsFiler.Core.Files;
+using WsFiler.Presentation.Resources;
 
 namespace WsFiler.Presentation.ViewModels;
 
@@ -21,7 +22,7 @@ public sealed partial class FilePaneViewModel : ViewModelBase
 
     public ObservableCollection<FileItemViewModel> Items { get; } = [];
 
-    public string Summary => $"{Items.Count:N0} items, {MarkedCount:N0} selected";
+    public string Summary => string.Format(Strings.Pane_Summary, Items.Count, MarkedCount);
 
     public int MarkedCount => Items.Count(item => item.IsMarked);
 

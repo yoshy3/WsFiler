@@ -24,6 +24,20 @@
             <Setter Property="Padding" Value="5,0"/>
             <Setter Property="FontSize" Value="12"/>
         </Style>
+        <Style Selector="ListBox.logList">
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="ListBox.logList ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="MinHeight" Value="18"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="ListBox.logList TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="LineHeight" Value="18"/>
+        </Style>
     </Window.Styles>
 
     <Design.DataContext>
@@ -32,7 +46,7 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*,Auto"
+    <Grid RowDefinitions="Auto,*,Auto,Auto"
           Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
         <Border Grid.Row="0"
                 Padding="8,6"
@@ -111,6 +125,40 @@
         </Grid>
 
         <Border Grid.Row="2"
+                IsVisible="{Binding IsLogVisible}"
+                Height="96"
+                Padding="8,4"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="0,1,0,0">
+            <ListBox x:Name="LogListBox"
+                     Classes="logList"
+                     ItemsSource="{Binding Logs}"
+                     FontFamily="Consolas"
+                     FontSize="12"
+                     Background="Transparent"
+                     BorderThickness="0">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="46,70,54,*"
+                              MinHeight="18">
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding Number}"
+                                       TextAlignment="Right"
+                                       Margin="0,0,10,0"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding TimeText}"/>
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding Level}"/>
+                            <TextBlock Grid.Column="3"
+                                       Text="{Binding Message}"
+                                       TextTrimming="CharacterEllipsis"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <Border Grid.Row="3"
                 Padding="8,6"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                 BorderThickness="0,1,0,0">

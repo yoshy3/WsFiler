@@ -18,4 +18,97 @@
   <data name="Status.Ready" xml:space="preserve">
     <value>準備完了</value>
   </data>
+  <data name="Status.PreviewUnavailable" xml:space="preserve">
+    <value>プレビューはまだ利用できません</value>
+  </data>
+  <data name="Status.NoItemToCopy" xml:space="preserve">
+    <value>コピー対象がありません</value>
+  </data>
+  <data name="Status.NoItemToMove" xml:space="preserve">
+    <value>移動対象がありません</value>
+  </data>
+  <data name="Status.NoItemToDelete" xml:space="preserve">
+    <value>削除対象がありません</value>
+  </data>
+  <data name="Status.NoItemToRename" xml:space="preserve">
+    <value>リネーム対象がありません</value>
+  </data>
+  <data name="Status.Copied" xml:space="preserve">
+    <value>{0:N0} 件をコピーしました</value>
+  </data>
+  <data name="Status.Moved" xml:space="preserve">
+    <value>{0:N0} 件を移動しました</value>
+  </data>
+  <data name="Status.Deleted" xml:space="preserve">
+    <value>{0:N0} 件を削除しました</value>
+  </data>
+  <data name="Status.Renamed" xml:space="preserve">
+    <value>{0} を {1} にリネームしました</value>
+  </data>
+  <data name="Status.AlreadyAtRoot" xml:space="preserve">
+    <value>すでにルートです</value>
+  </data>
+  <data name="Dialog.Copy.Title" xml:space="preserve">
+    <value>コピー</value>
+  </data>
+  <data name="Dialog.Copy.MessageSingle" xml:space="preserve">
+    <value>{0} をコピーします。</value>
+  </data>
+  <data name="Dialog.Copy.MessageMultiple" xml:space="preserve">
+    <value>{0} ほか {1:N0} 件をコピーします。</value>
+  </data>
+  <data name="Dialog.Copy.Destination" xml:space="preserve">
+    <value>コピー先(F)</value>
+  </data>
+  <data name="Dialog.Move.Title" xml:space="preserve">
+    <value>移動</value>
+  </data>
+  <data name="Dialog.Move.MessageSingle" xml:space="preserve">
+    <value>{0} を移動します。</value>
+  </data>
+  <data name="Dialog.Move.MessageMultiple" xml:space="preserve">
+    <value>{0} ほか {1:N0} 件を移動します。</value>
+  </data>
+  <data name="Dialog.Move.Destination" xml:space="preserve">
+    <value>移動先(F)</value>
+  </data>
+  <data name="Dialog.Rename.Title" xml:space="preserve">
+    <value>リネーム</value>
+  </data>
+  <data name="Dialog.Rename.NewName" xml:space="preserve">
+    <value>新しい名前(N)</value>
+  </data>
+  <data name="Dialog.Common.Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Dialog.Common.Yes" xml:space="preserve">
+    <value>はい(Y)</value>
+  </data>
+  <data name="Dialog.Common.No" xml:space="preserve">
+    <value>いいえ(N)</value>
+  </data>
+  <data name="Dialog.Common.Cancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="Dialog.Preview.Title" xml:space="preserve">
+    <value>プレビュー</value>
+  </data>
+  <data name="Dialog.Preview.Truncated" xml:space="preserve">
+    <value>{0} (先頭のみ表示)</value>
+  </data>
+  <data name="Grid.Column.Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="Grid.Column.Ext" xml:space="preserve">
+    <value>拡張子</value>
+  </data>
+  <data name="Grid.Column.Size" xml:space="preserve">
+    <value>サイズ</value>
+  </data>
+  <data name="Grid.Column.Modified" xml:space="preserve">
+    <value>更新日時</value>
+  </data>
+  <data name="Pane.Summary" xml:space="preserve">
+    <value>{0:N0} 項目, {1:N0} 選択</value>
+  </data>
 </root>

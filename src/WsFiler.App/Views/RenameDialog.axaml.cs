@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using WsFiler.Presentation.Resources;
 
 namespace WsFiler.App.Views;
 
@@ -15,6 +16,10 @@ public partial class RenameDialog : Window
     public RenameDialog(string currentName)
         : this()
     {
+        Title = Strings.Dialog_Rename_Title;
+        NewNameLabel.Text = Strings.Dialog_Rename_NewName;
+        OkButton.Content = Strings.Dialog_Common_Ok;
+        CancelButton.Content = Strings.Dialog_Common_Cancel;
         NameTextBox.Text = currentName;
         Opened += (_, _) =>
         {

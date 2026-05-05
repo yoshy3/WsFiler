@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using WsFiler.Presentation.Resources;
 
 namespace WsFiler.App.Views;
 
@@ -15,9 +16,13 @@ public partial class CopyConfirmDialog : Window
     public CopyConfirmDialog(string representativeName, int targetCount, string destinationDirectory)
         : this()
     {
+        Title = Strings.Dialog_Copy_Title;
         MessageText.Text = targetCount == 1
-            ? $"{representativeName} をコピーします。"
-            : $"{representativeName} ほか {targetCount - 1:N0} 件をコピーします。";
+            ? string.Format(Strings.Dialog_Copy_MessageSingle, representativeName)
+            : string.Format(Strings.Dialog_Copy_MessageMultiple, representativeName, targetCount - 1);
+        DestinationLabel.Text = Strings.Dialog_Copy_Destination;
+        YesButton.Content = Strings.Dialog_Common_Yes;
+        NoButton.Content = Strings.Dialog_Common_No;
         DestinationTextBox.Text = destinationDirectory;
         Opened += (_, _) => YesButton.Focus();
     }

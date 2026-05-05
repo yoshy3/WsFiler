@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using System;
+using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 using WsFiler.Core.Commands;
 using WsFiler.Core.Files;
 using WsFiler.Core.KeyMap;
+using WsFiler.Presentation.Resources;
 using WsFiler.Presentation.ViewModels;
 
 namespace WsFiler.App.Views;
@@ -24,18 +26,20 @@ public partial class MainWindow : Window
     public MainWindow(IReadOnlyDictionary<string, string>? customKeyMap = null)
     {
         InitializeComponent();
+        ApplyLocalizedText();
         keyToCommandMap = BuildKeyMap(customKeyMap);
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
-        DataContextChanged += (_, _) => UpdatePaneVisualState();
+        DataContextChanged += (_, _) => OnDataContextChanged();
         Focusable = true;
     }
 
     public MainWindow()
     {
         InitializeComponent();
+        ApplyLocalizedText();
         keyToCommandMap = BuildKeyMap(null);
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
-        DataContextChanged += (_, _) => UpdatePaneVisualState();
+        DataContextChanged += (_, _) => OnDataContextChanged();
         Focusable = true;
     }
 
@@ -82,6 +86,38 @@ public partial class MainWindow : Window
 
         ScrollActiveSelectionIntoView(viewModel);
         UpdatePaneVisualState(viewModel);
+    }
+
+    private void ApplyLocalizedText()
+    {
+        ApplyLocalizedColumnHeaders(LeftFileGrid);
+        ApplyLocalizedColumnHeaders(RightFileGrid);
+    }
+
+    private void OnDataContextChanged()
+    {
+        UpdatePaneVisualState();
+
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.Logs.CollectionChanged += OnLogsCollectionChanged;
+        }
+    }
+
+    private void OnLogsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel && viewModel.Logs.Count > 0)
+        {
+            LogListBox.ScrollIntoView(viewModel.Logs[^1]);
+        }
+    }
+
+    private static void ApplyLocalizedColumnHeaders(DataGrid grid)
+    {
+        grid.Columns[1].Header = Strings.Grid_Column_Name;
+        grid.Columns[2].Header = Strings.Grid_Column_Ext;
+        grid.Columns[3].Header = Strings.Grid_Column_Size;
+        grid.Columns[4].Header = Strings.Grid_Column_Modified;
     }
 
     private void OnLeftFileGridSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -195,10 +231,20 @@ public partial class MainWindow : Window
 
     private async Task PreviewTextFileAsync(FileItemViewModel item)
     {
-        var (text, isTruncated) = await ReadPreviewTextAsync(item.FullPath);
-        var dialog = new TextPreviewDialog(item.FullPath, text, isTruncated);
-        dialog.FitToOwner(this);
-        await dialog.ShowDialog(this);
+        try
+        {
+            var (text, isTruncated) = await ReadPreviewTextAsync(item.FullPath);
+            var dialog = new TextPreviewDialog(item.FullPath, text, isTruncated);
+            dialog.FitToOwner(this);
+            await dialog.ShowDialog(this);
+        }
+        catch (Exception ex)
+        {
+            if (DataContext is MainWindowViewModel viewModel)
+            {
+                viewModel.LogError(ex.Message);
+            }
+        }
     }
 
     private static async Task<(string Text, bool IsTruncated)> ReadPreviewTextAsync(string path)
@@ -270,6 +316,7 @@ public partial class MainWindow : Window
             Key.M => "M",
             Key.D => "D",
             Key.R => "R",
+            Key.V => "V",
             _ => key.ToString(),
         };
     }

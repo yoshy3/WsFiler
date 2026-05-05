@@ -26,6 +26,7 @@ public static class DefaultKeyMap
         new(ApplicationCommandId.FileMove, new("M")),
         new(ApplicationCommandId.FileDelete, new("D")),
         new(ApplicationCommandId.FileRename, new("R")),
+        new(ApplicationCommandId.LogToggle, new("V")),
         new(ApplicationCommandId.DialogConfirm, new("Enter")),
         new(ApplicationCommandId.DialogCancel, new("Escape")),
     ];

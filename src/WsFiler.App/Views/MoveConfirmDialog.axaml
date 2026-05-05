@@ -5,7 +5,7 @@
         Height="180"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
-        Title="移動">
+        Title="Move">
     <Grid RowDefinitions="Auto,Auto,Auto"
           Margin="16"
           RowSpacing="8">
@@ -16,8 +16,8 @@
         <Grid Grid.Row="1"
               RowDefinitions="Auto,Auto"
               RowSpacing="3">
-            <TextBlock Grid.Row="0"
-                       Text="移動先(F)"/>
+            <TextBlock x:Name="DestinationLabel"
+                       Grid.Row="0"/>
             <TextBox x:Name="DestinationTextBox"
                      Grid.Row="1"
                      IsReadOnly="True"/>
@@ -29,11 +29,12 @@
                     Spacing="12"
                     Margin="0,6,0,0">
             <Button x:Name="YesButton"
-                    Content="はい(Y)"
+                    Content="Yes(Y)"
                     Width="120"
                     IsDefault="True"
                     Click="OnYesClick"/>
-            <Button Content="いいえ(N)"
+            <Button x:Name="NoButton"
+                    Content="No(N)"
                     Width="120"
                     IsCancel="True"
                     Click="OnNoClick"/>

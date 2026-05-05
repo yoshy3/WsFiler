@@ -4,7 +4,8 @@
       "Bash(jj describe *)",
       "Bash(jj new *)",
       "Bash(jj status *)",
-      "Bash(jj git *)"
+      "Bash(jj git *)",
+      "Bash(jj bookmark *)"
     ]
   }
 }

@@ -44,7 +44,7 @@ Source: "{#SourceDir}\ja\*"; DestDir: "{app}\ja"; Flags: ignoreversion createall
 [Icons]
 Name: "{group}\WsFiler"; Filename: "{app}\WsFiler.App.exe"
 Name: "{group}\{cm:UninstallProgram,WsFiler}"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\WsFiler"; Filename: "{app}\WsFiler.App.exe"; Tasks: desktopicon
+Name: "{userdesktop}\WsFiler"; Filename: "{app}\WsFiler.App.exe"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\WsFiler.App.exe"; Description: "{cm:LaunchProgram,WsFiler}"; Flags: nowait postinstall skipifsilent

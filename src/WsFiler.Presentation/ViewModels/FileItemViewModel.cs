@@ -51,6 +51,13 @@ public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBa
         OnPropertyChanged(nameof(DisplayName));
     }
 
+    public void MarkSelected()
+    {
+        IsMarked = true;
+        Mark = ">";
+        OnPropertyChanged(nameof(DisplayName));
+    }
+
     private static string FormatSize(long? size)
     {
         return size is null ? "" : size.Value.ToString("N0");

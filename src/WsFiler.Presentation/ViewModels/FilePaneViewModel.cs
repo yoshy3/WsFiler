@@ -94,6 +94,17 @@ public sealed partial class FilePaneViewModel : ViewModelBase
         OnPropertyChanged(nameof(Summary));
     }
 
+    public void MarkAll()
+    {
+        foreach (var item in Items)
+        {
+            item.MarkSelected();
+        }
+
+        OnPropertyChanged(nameof(MarkedCount));
+        OnPropertyChanged(nameof(Summary));
+    }
+
     partial void OnIsActiveChanged(bool value)
     {
         UpdateSelectedItem();

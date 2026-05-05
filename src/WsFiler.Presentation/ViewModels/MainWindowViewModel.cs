@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using WsFiler.Core.Commands;
 using WsFiler.Core.Files;
 using WsFiler.Presentation.Operations;
 
@@ -7,6 +8,7 @@ namespace WsFiler.Presentation.ViewModels;
 public sealed partial class MainWindowViewModel : ViewModelBase
 {
     private readonly IFileSystemProvider fileSystemProvider;
+    private readonly string defaultHome;
 
     [ObservableProperty]
     private string statusMessage = "Ready";
@@ -20,38 +22,80 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(IFileSystemProvider? fileSystemProvider = null)
     {
         this.fileSystemProvider = fileSystemProvider ?? new EmptyFileSystemProvider();
+        defaultHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    }
 
-        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        LoadInitialPanes(this.fileSystemProvider, home);
+    public Task InitializeAsync(string? leftPath = null, string? rightPath = null)
+    {
+        var left = string.IsNullOrWhiteSpace(leftPath) ? defaultHome : leftPath;
+        var right = string.IsNullOrWhiteSpace(rightPath) ? defaultHome : rightPath;
+        return LoadInitialPanesAsync(left, right);
+    }
+
+    public (string LeftPath, string RightPath) GetCurrentPanePaths()
+    {
+        return (LeftPane.CurrentPath, RightPane.CurrentPath);
     }
 
     public async Task HandleKeyAsync(string key)
     {
-        switch (key)
+        var commandId = key switch
         {
-            case "Up":
+            "Up" => ApplicationCommandId.CursorUp,
+            "Down" => ApplicationCommandId.CursorDown,
+            "Tab" => ApplicationCommandId.PaneSwitch,
+            "Left" => ApplicationCommandId.CursorLeft,
+            "Right" => ApplicationCommandId.CursorRight,
+            "Enter" => ApplicationCommandId.DirectoryOpen,
+            "Backspace" => ApplicationCommandId.DirectoryParent,
+            "Space" => ApplicationCommandId.SelectionToggle,
+            "A" => ApplicationCommandId.SelectionAll,
+            "Escape" => ApplicationCommandId.SelectionClearAll,
+            _ => null,
+        };
+
+        if (commandId is not null)
+        {
+            await HandleCommandAsync(commandId);
+        }
+    }
+
+    public async Task HandleCommandAsync(string commandId)
+    {
+        switch (commandId)
+        {
+            case ApplicationCommandId.CursorUp:
                 ActivePane.MoveCursor(-1);
                 break;
-            case "Down":
+            case ApplicationCommandId.CursorDown:
                 ActivePane.MoveCursor(1);
                 break;
-            case "Tab":
+            case ApplicationCommandId.PaneSwitch:
                 SwitchActivePane();
                 break;
-            case "Left":
+            case ApplicationCommandId.CursorLeft:
                 await HandleHorizontalAsync(PaneDirection.Left);
                 break;
-            case "Right":
+            case ApplicationCommandId.CursorRight:
                 await HandleHorizontalAsync(PaneDirection.Right);
                 break;
-            case "Enter":
+            case ApplicationCommandId.DirectoryOpen:
                 await OpenCurrentDirectoryAsync();
                 break;
-            case "Back":
+            case ApplicationCommandId.DirectoryParent:
                 await NavigateParentAsync();
                 break;
-            case "Space":
+            case ApplicationCommandId.SelectionToggle:
                 ActivePane.ToggleCurrentSelectionAndMoveNext();
+                OnPropertyChanged(nameof(StatusSummary));
+                break;
+            case ApplicationCommandId.SelectionAll:
+                ActivePane.MarkAll();
+                OnPropertyChanged(nameof(StatusSummary));
+                break;
+            case ApplicationCommandId.SelectionClearAll:
+            case ApplicationCommandId.SelectionClear:
+                ActivePane.ClearMarks();
                 OnPropertyChanged(nameof(StatusSummary));
                 break;
         }
@@ -146,12 +190,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         return new RenameRequest(current);
     }
 
-    public async Task CopyAsync(FileOperationRequest request)
+    public async Task CopyAsync(
+        FileOperationRequest request,
+        Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync)
     {
         try
         {
             var sourcePaths = request.Targets.Select(item => item.FullPath).ToList();
-            await fileSystemProvider.CopyAsync(sourcePaths, request.DestinationDirectory);
+            await fileSystemProvider.CopyAsync(sourcePaths, request.DestinationDirectory, resolveConflictAsync);
             ActivePane.ClearMarks();
             await RefreshPaneAsync(InactivePane);
             StatusMessage = $"Copied {request.Targets.Count:N0} item(s)";
@@ -163,12 +209,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    public async Task MoveAsync(FileOperationRequest request)
+    public async Task MoveAsync(
+        FileOperationRequest request,
+        Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync)
     {
         try
         {
             var sourcePaths = request.Targets.Select(item => item.FullPath).ToList();
-            await fileSystemProvider.MoveAsync(sourcePaths, request.DestinationDirectory);
+            await fileSystemProvider.MoveAsync(sourcePaths, request.DestinationDirectory, resolveConflictAsync);
             ActivePane.ClearMarks();
             await RefreshPaneAsync(InactivePane);
             await RefreshPaneAsync(ActivePane);
@@ -246,21 +294,24 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         pane.Load(pane.CurrentPath, items);
     }
 
-    private async void LoadInitialPanes(IFileSystemProvider fileSystemProvider, string home)
+    private async Task LoadInitialPanesAsync(string leftPath, string rightPath)
+    {
+        await LoadPaneOrDefaultAsync(LeftPane, leftPath);
+        await LoadPaneOrDefaultAsync(RightPane, rightPath);
+        OnPropertyChanged(nameof(StatusSummary));
+    }
+
+    private async Task LoadPaneOrDefaultAsync(FilePaneViewModel pane, string path)
     {
         try
         {
-            var items = await fileSystemProvider.ListDirectoryAsync(home);
-            LeftPane.Load(home, items);
-            RightPane.Load(home, items);
-            OnPropertyChanged(nameof(StatusSummary));
+            var items = await fileSystemProvider.ListDirectoryAsync(path);
+            pane.Load(path, items);
         }
-        catch (Exception ex)
+        catch
         {
-            StatusMessage = ex.Message;
-            LeftPane.Load(home, []);
-            RightPane.Load(home, []);
-            OnPropertyChanged(nameof(StatusSummary));
+            var items = await fileSystemProvider.ListDirectoryAsync(defaultHome);
+            pane.Load(defaultHome, items);
         }
     }
 
@@ -276,6 +327,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         public Task CopyAsync(
             IReadOnlyList<string> sourcePaths,
             string destinationDirectory,
+            Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
             CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
@@ -284,6 +336,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         public Task MoveAsync(
             IReadOnlyList<string> sourcePaths,
             string destinationDirectory,
+            Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
             CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;

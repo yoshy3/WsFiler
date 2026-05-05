@@ -20,7 +20,7 @@ public static class DefaultKeyMap
         new(ApplicationCommandId.PaneSwitch, new("Tab")),
         new(ApplicationCommandId.SelectionToggle, new("Space")),
         new(ApplicationCommandId.SelectionAll, new("A")),
-        new(ApplicationCommandId.SelectionClearAll, new("U")),
+        new(ApplicationCommandId.SelectionClearAll, new("Escape")),
         new(ApplicationCommandId.SelectionClear, new("Escape")),
         new(ApplicationCommandId.FileCopy, new("C")),
         new(ApplicationCommandId.FileMove, new("M")),

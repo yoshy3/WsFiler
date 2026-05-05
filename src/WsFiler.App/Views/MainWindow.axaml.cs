@@ -1,16 +1,31 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using WsFiler.Core.Commands;
+using WsFiler.Core.Files;
+using WsFiler.Core.KeyMap;
 using WsFiler.Presentation.ViewModels;
 
 namespace WsFiler.App.Views;
 
 public partial class MainWindow : Window
 {
+    private readonly Dictionary<string, string> keyToCommandMap;
+
+    public MainWindow(IReadOnlyDictionary<string, string>? customKeyMap = null)
+    {
+        InitializeComponent();
+        keyToCommandMap = BuildKeyMap(customKeyMap);
+        AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+        Focusable = true;
+    }
+
     public MainWindow()
     {
         InitializeComponent();
+        keyToCommandMap = BuildKeyMap(null);
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
         Focusable = true;
     }
@@ -23,32 +38,32 @@ public partial class MainWindow : Window
         }
 
         var key = NormalizeKey(e.Key);
-        if (!IsHandledKey(key))
+        if (!TryResolveCommand(key, out var commandId))
         {
             return;
         }
 
         e.Handled = true;
 
-        if (key == "C")
+        if (commandId == ApplicationCommandId.FileCopy)
         {
             await ConfirmAndCopyAsync(viewModel);
         }
-        else if (key == "M")
+        else if (commandId == ApplicationCommandId.FileMove)
         {
             await ConfirmAndMoveAsync(viewModel);
         }
-        else if (key == "D")
+        else if (commandId == ApplicationCommandId.FileDelete)
         {
             await ConfirmAndDeleteAsync(viewModel);
         }
-        else if (key == "R")
+        else if (commandId == ApplicationCommandId.FileRename)
         {
             await ConfirmAndRenameAsync(viewModel);
         }
         else
         {
-            await viewModel.HandleKeyAsync(key);
+            await viewModel.HandleCommandAsync(commandId);
         }
 
         ScrollActiveSelectionIntoView(viewModel);
@@ -70,7 +85,7 @@ public partial class MainWindow : Window
 
         if (confirmed)
         {
-            await viewModel.CopyAsync(request);
+            await viewModel.CopyAsync(request, ResolveConflictAsync);
         }
     }
 
@@ -90,8 +105,15 @@ public partial class MainWindow : Window
 
         if (confirmed)
         {
-            await viewModel.MoveAsync(request);
+            await viewModel.MoveAsync(request, ResolveConflictAsync);
         }
+    }
+
+    private async Task<FileConflictDecision> ResolveConflictAsync(FileConflictInfo conflict)
+    {
+        var dialog = new ConflictConfirmDialog(conflict);
+        var decision = await dialog.ShowDialog<FileConflictDecision?>(this);
+        return decision ?? new FileConflictDecision(FileConflictAction.Cancel, ApplyToAll: false);
     }
 
     private async Task ConfirmAndDeleteAsync(MainWindowViewModel viewModel)
@@ -148,8 +170,9 @@ public partial class MainWindow : Window
         return key switch
         {
             Key.Return => "Enter",
-            Key.Back => "Back",
+            Key.Back => "Backspace",
             Key.Space => "Space",
+            Key.Escape => "Escape",
             Key.C => "C",
             Key.M => "M",
             Key.D => "D",
@@ -158,8 +181,46 @@ public partial class MainWindow : Window
         };
     }
 
-    private static bool IsHandledKey(string key)
+    private bool TryResolveCommand(string key, out string commandId)
     {
-        return key is "Up" or "Down" or "Tab" or "Left" or "Right" or "Enter" or "Back" or "Space" or "C" or "M" or "D" or "R";
+        return keyToCommandMap.TryGetValue(key, out commandId!);
+    }
+
+    private static Dictionary<string, string> BuildKeyMap(IReadOnlyDictionary<string, string>? customKeyMap)
+    {
+        var map = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+
+        foreach (var binding in DefaultKeyMap.Bindings)
+        {
+            if (binding.CommandId is ApplicationCommandId.DialogConfirm or ApplicationCommandId.DialogCancel)
+            {
+                continue;
+            }
+
+            map.TryAdd(NormalizeKeyName(binding.Gesture.Key), binding.CommandId);
+        }
+
+        if (customKeyMap is null)
+        {
+            return map;
+        }
+
+        foreach (var pair in customKeyMap)
+        {
+            map[NormalizeKeyName(pair.Value)] = pair.Key;
+        }
+
+        return map;
+    }
+
+    private static string NormalizeKeyName(string key)
+    {
+        return key.Trim() switch
+        {
+            "Esc" => "Escape",
+            "Back" => "Backspace",
+            "Return" => "Enter",
+            var normalized => normalized,
+        };
     }
 }

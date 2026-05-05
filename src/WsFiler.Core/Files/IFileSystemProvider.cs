@@ -7,11 +7,13 @@ public interface IFileSystemProvider
     Task CopyAsync(
         IReadOnlyList<string> sourcePaths,
         string destinationDirectory,
+        Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
         CancellationToken cancellationToken = default);
 
     Task MoveAsync(
         IReadOnlyList<string> sourcePaths,
         string destinationDirectory,
+        Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
         CancellationToken cancellationToken = default);
 
     Task DeleteAsync(

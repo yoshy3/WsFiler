@@ -47,7 +47,8 @@
               ColumnDefinitions="*,*"
               Margin="8"
               ColumnSpacing="8">
-            <Border Grid.Column="0"
+            <Border x:Name="LeftPaneBorder"
+                    Grid.Column="0"
                     BorderBrush="{DynamicResource SystemAccentColor}"
                     BorderThickness="2"
                     CornerRadius="4">
@@ -64,7 +65,8 @@
                               GridLinesVisibility="None"
                               HeadersVisibility="Column"
                               IsReadOnly="True"
-                              SelectionMode="Single">
+                              SelectionMode="Single"
+                              SelectionChanged="OnLeftFileGridSelectionChanged">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="" Binding="{Binding Kind}" Width="24"/>
                             <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="*"/>
@@ -76,7 +78,8 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Column="1"
+            <Border x:Name="RightPaneBorder"
+                    Grid.Column="1"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                     BorderThickness="1"
                     CornerRadius="4">
@@ -93,7 +96,8 @@
                               GridLinesVisibility="None"
                               HeadersVisibility="Column"
                               IsReadOnly="True"
-                              SelectionMode="Single">
+                              SelectionMode="Single"
+                              SelectionChanged="OnRightFileGridSelectionChanged">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="" Binding="{Binding Kind}" Width="24"/>
                             <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="*"/>

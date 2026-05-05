@@ -101,7 +101,10 @@ public partial class App : Application
 
         foreach (var binding in DefaultKeyMap.Bindings)
         {
-            if (binding.CommandId is ApplicationCommandId.DialogConfirm or ApplicationCommandId.DialogCancel)
+            if (binding.CommandId is
+                ApplicationCommandId.DialogConfirm or
+                ApplicationCommandId.DialogCancel or
+                ApplicationCommandId.FilePreview)
             {
                 continue;
             }

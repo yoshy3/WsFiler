@@ -1,6 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using WsFiler.Core.Commands;
@@ -18,7 +20,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         keyToCommandMap = BuildKeyMap(customKeyMap);
-        AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+        AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
+        DataContextChanged += (_, _) => UpdatePaneVisualState();
         Focusable = true;
     }
 
@@ -26,7 +29,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         keyToCommandMap = BuildKeyMap(null);
-        AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+        AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
+        DataContextChanged += (_, _) => UpdatePaneVisualState();
         Focusable = true;
     }
 
@@ -67,6 +71,33 @@ public partial class MainWindow : Window
         }
 
         ScrollActiveSelectionIntoView(viewModel);
+        UpdatePaneVisualState(viewModel);
+    }
+
+    private void OnLeftFileGridSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel ||
+            LeftFileGrid.SelectedItem is not FileItemViewModel selectedItem)
+        {
+            return;
+        }
+
+        viewModel.ActivateLeftPane(selectedItem);
+        UpdatePaneVisualState(viewModel);
+        LeftFileGrid.Focus();
+    }
+
+    private void OnRightFileGridSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel ||
+            RightFileGrid.SelectedItem is not FileItemViewModel selectedItem)
+        {
+            return;
+        }
+
+        viewModel.ActivateRightPane(selectedItem);
+        UpdatePaneVisualState(viewModel);
+        RightFileGrid.Focus();
     }
 
     private async Task ConfirmAndCopyAsync(MainWindowViewModel viewModel)
@@ -165,6 +196,28 @@ public partial class MainWindow : Window
         grid.Focus();
     }
 
+    private void UpdatePaneVisualState()
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            UpdatePaneVisualState(viewModel);
+        }
+    }
+
+    private void UpdatePaneVisualState(MainWindowViewModel viewModel)
+    {
+        SetPaneBorderState(LeftPaneBorder, viewModel.LeftPane.IsActive);
+        SetPaneBorderState(RightPaneBorder, viewModel.RightPane.IsActive);
+    }
+
+    private static void SetPaneBorderState(Border border, bool isActive)
+    {
+        border.BorderBrush = isActive
+            ? new SolidColorBrush(Color.FromRgb(0, 120, 212))
+            : new SolidColorBrush(Color.FromRgb(64, 64, 64));
+        border.BorderThickness = isActive ? new Thickness(2) : new Thickness(1);
+    }
+
     private static string NormalizeKey(Key key)
     {
         return key switch
@@ -192,7 +245,7 @@ public partial class MainWindow : Window
 
         foreach (var binding in DefaultKeyMap.Bindings)
         {
-            if (binding.CommandId is ApplicationCommandId.DialogConfirm or ApplicationCommandId.DialogCancel)
+            if (!IsMainWindowCommand(binding.CommandId))
             {
                 continue;
             }
@@ -207,10 +260,23 @@ public partial class MainWindow : Window
 
         foreach (var pair in customKeyMap)
         {
+            if (!IsMainWindowCommand(pair.Key))
+            {
+                continue;
+            }
+
             map[NormalizeKeyName(pair.Value)] = pair.Key;
         }
 
         return map;
+    }
+
+    private static bool IsMainWindowCommand(string commandId)
+    {
+        return commandId is not (
+            ApplicationCommandId.DialogConfirm or
+            ApplicationCommandId.DialogCancel or
+            ApplicationCommandId.FilePreview);
     }
 
     private static string NormalizeKeyName(string key)

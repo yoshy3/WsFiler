@@ -69,6 +69,18 @@ public sealed partial class FilePaneViewModel : ViewModelBase
         UpdateSelectedItem();
     }
 
+    public void MoveCursorTo(FileItemViewModel item)
+    {
+        var index = Items.IndexOf(item);
+        if (index < 0)
+        {
+            return;
+        }
+
+        cursorIndex = index;
+        UpdateSelectedItem();
+    }
+
     public void ToggleCurrentSelectionAndMoveNext()
     {
         var current = CurrentItem;

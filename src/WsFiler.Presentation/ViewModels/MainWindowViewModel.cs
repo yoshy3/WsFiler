@@ -105,10 +105,34 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     private FilePaneViewModel InactivePane => LeftPane.IsActive ? RightPane : LeftPane;
 
+    public void ActivateLeftPane(FileItemViewModel? selectedItem = null)
+    {
+        ActivatePane(LeftPane, RightPane, selectedItem);
+    }
+
+    public void ActivateRightPane(FileItemViewModel? selectedItem = null)
+    {
+        ActivatePane(RightPane, LeftPane, selectedItem);
+    }
+
     private void SwitchActivePane()
     {
         LeftPane.IsActive = !LeftPane.IsActive;
         RightPane.IsActive = !RightPane.IsActive;
+    }
+
+    private static void ActivatePane(
+        FilePaneViewModel activePane,
+        FilePaneViewModel inactivePane,
+        FileItemViewModel? selectedItem)
+    {
+        inactivePane.IsActive = false;
+        activePane.IsActive = true;
+
+        if (selectedItem is not null)
+        {
+            activePane.MoveCursorTo(selectedItem);
+        }
     }
 
     private async Task HandleHorizontalAsync(PaneDirection direction)
@@ -122,7 +146,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        SwitchActivePane();
+        if (direction == PaneDirection.Left)
+        {
+            ActivateLeftPane();
+        }
+        else
+        {
+            ActivateRightPane();
+        }
     }
 
     private async Task OpenCurrentDirectoryAsync()

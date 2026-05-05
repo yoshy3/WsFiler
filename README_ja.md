@@ -37,7 +37,9 @@ dotnet run --project src/WsFiler.App/WsFiler.App.csproj
 dotnet test src/WsFiler.slnx
 ```
 
-## NativeAOT ビルド（Windows x64）
+## NativeAOT ビルド
+
+### Windows x64
 
 実行前に `vswhere.exe` を PATH に追加してください（通常は `C:\Program Files (x86)\Microsoft Visual Studio\Installer`）。または Visual Studio の開発者コマンドプロンプトから実行してください。
 
@@ -48,6 +50,28 @@ dotnet publish src/WsFiler.App/WsFiler.App.csproj \
 ```
 
 出力先: `src/WsFiler.App/bin/Release/net10.0/win-x64/publish/`
+
+### macOS (arm64)
+
+```bash
+dotnet publish src/WsFiler.App/WsFiler.App.csproj \
+  -r osx-arm64 -c Release \
+  -p:PublishAot=true --self-contained true
+```
+
+> **注意:** 配布する `.dmg` はコードサイニングなしです。初回起動時に macOS Gatekeeper によってブロックされます。ターミナルで一度だけ以下を実行してください:
+>
+> ```bash
+> xattr -cr /Applications/WsFiler.app
+> ```
+
+### Linux (x64)
+
+```bash
+dotnet publish src/WsFiler.App/WsFiler.App.csproj \
+  -r linux-x64 -c Release \
+  -p:PublishAot=true --self-contained true
+```
 
 ## デフォルトキーバインド
 

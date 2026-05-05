@@ -37,7 +37,9 @@ dotnet run --project src/WsFiler.App/WsFiler.App.csproj
 dotnet test src/WsFiler.slnx
 ```
 
-## NativeAOT Build (Windows x64)
+## NativeAOT Build
+
+### Windows x64
 
 Before running, ensure `vswhere.exe` is in your PATH (typically `C:\Program Files (x86)\Microsoft Visual Studio\Installer`), or run from a Visual Studio Developer Command Prompt.
 
@@ -48,6 +50,28 @@ dotnet publish src/WsFiler.App/WsFiler.App.csproj \
 ```
 
 Output is placed in `src/WsFiler.App/bin/Release/net10.0/win-x64/publish/`.
+
+### macOS (arm64)
+
+```bash
+dotnet publish src/WsFiler.App/WsFiler.App.csproj \
+  -r osx-arm64 -c Release \
+  -p:PublishAot=true --self-contained true
+```
+
+> **Note:** The distributed `.dmg` is not code-signed. macOS Gatekeeper will block the app on first launch. To allow it, run once in Terminal:
+>
+> ```bash
+> xattr -cr /Applications/WsFiler.app
+> ```
+
+### Linux (x64)
+
+```bash
+dotnet publish src/WsFiler.App/WsFiler.App.csproj \
+  -r linux-x64 -c Release \
+  -p:PublishAot=true --self-contained true
+```
 
 ## Default Key Bindings
 

@@ -1,0 +1,219 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  # ── バージョン抽出 ──────────────────────────────────────────────────────
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+  # ── linux-x64 NativeAOT → .deb ─────────────────────────────────────────
+  build-linux:
+    needs: prepare
+    runs-on: ubuntu-22.04
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Install NativeAOT build dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y clang zlib1g-dev libkrb5-dev
+
+      - name: Publish NativeAOT linux-x64
+        run: |
+          dotnet publish src/WsFiler.App/WsFiler.App.csproj \
+            -r linux-x64 \
+            -c Release \
+            -p:PublishAot=true \
+            -p:Version=$VERSION \
+            --self-contained true \
+            -o publish/linux-x64
+
+      - name: Build .deb package
+        run: |
+          chmod +x installer/linux/build-deb.sh
+          installer/linux/build-deb.sh "$VERSION" "$(pwd)/publish/linux-x64" "$(pwd)/dist"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-deb
+          path: dist/wsfiler_${{ env.VERSION }}_amd64.deb
+
+  # ── win-x64 NativeAOT → InnoSetup .exe ─────────────────────────────────
+  build-windows:
+    needs: prepare
+    runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Publish NativeAOT win-x64
+        shell: pwsh
+        run: |
+          dotnet publish src/WsFiler.App/WsFiler.App.csproj `
+            -r win-x64 `
+            -c Release `
+            -p:PublishAot=true `
+            "-p:Version=$env:VERSION" `
+            --self-contained true `
+            -o publish\win-x64
+
+      - name: Install InnoSetup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer with InnoSetup
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          $sourceDir = Resolve-Path "publish\win-x64"
+          $outputDir = New-Item -ItemType Directory -Force -Path "dist" | Select-Object -ExpandProperty FullName
+          & $iscc `
+            "/DAppVersion=$env:VERSION" `
+            "/DSourceDir=$sourceDir" `
+            "/DOutputDir=$outputDir" `
+            "installer\windows\WsFiler.iss"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: dist/WsFiler-${{ env.VERSION }}-win-x64-setup.exe
+
+  # ── osx-arm64 NativeAOT → .dmg ─────────────────────────────────────────
+  build-macos:
+    needs: prepare
+    runs-on: macos-14
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Publish NativeAOT osx-arm64
+        run: |
+          dotnet publish src/WsFiler.App/WsFiler.App.csproj \
+            -r osx-arm64 \
+            -c Release \
+            -p:PublishAot=true \
+            -p:Version=$VERSION \
+            --self-contained true \
+            -o publish/osx-arm64
+
+      - name: Build .app bundle and .dmg
+        run: |
+          APP_BUNDLE="dist/WsFiler.app"
+          mkdir -p "$APP_BUNDLE/Contents/MacOS"
+          mkdir -p "$APP_BUNDLE/Contents/Resources"
+
+          cp -r publish/osx-arm64/* "$APP_BUNDLE/Contents/MacOS/"
+          chmod +x "$APP_BUNDLE/Contents/MacOS/WsFiler.App"
+
+          cat > "$APP_BUNDLE/Contents/Info.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+            "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>CFBundleName</key><string>WsFiler</string>
+            <key>CFBundleIdentifier</key><string>com.yoshy3.wsfiler</string>
+            <key>CFBundleVersion</key><string>${VERSION}</string>
+            <key>CFBundleShortVersionString</key><string>${VERSION}</string>
+            <key>CFBundleExecutable</key><string>WsFiler.App</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>NSHighResolutionCapable</key><true/>
+          </dict></plist>
+          PLIST
+
+          mkdir -p dist/dmg-staging
+          cp -r "$APP_BUNDLE" dist/dmg-staging/
+
+          hdiutil create \
+            -volname "WsFiler $VERSION" \
+            -srcfolder dist/dmg-staging \
+            -ov \
+            -format UDZO \
+            "dist/WsFiler-${VERSION}-osx-arm64.dmg"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg
+          path: dist/WsFiler-${{ env.VERSION }}-osx-arm64.dmg
+
+  # ── 通常 Release ビルド → .zip ──────────────────────────────────────────
+  build-zip:
+    needs: prepare
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Publish framework-dependent Release build
+        run: |
+          dotnet publish src/WsFiler.App/WsFiler.App.csproj \
+            -c Release \
+            -p:Version=$VERSION \
+            -o publish/zip
+
+      - name: Create zip archive
+        run: |
+          mkdir -p dist
+          cd publish
+          zip -r "../dist/WsFiler-${VERSION}-any.zip" zip/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zip-release
+          path: dist/WsFiler-${{ env.VERSION }}-any.zip
+
+  # ── GitHub Release 作成 ────────────────────────────────────────────────
+  release:
+    needs: [prepare, build-linux, build-windows, build-macos, build-zip]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Create GitHub Release
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "WsFiler $VERSION" \
+            --generate-notes \
+            "release-assets/linux-deb/wsfiler_${VERSION}_amd64.deb" \
+            "release-assets/windows-installer/WsFiler-${VERSION}-win-x64-setup.exe" \
+            "release-assets/macos-dmg/WsFiler-${VERSION}-osx-arm64.dmg" \
+            "release-assets/zip-release/WsFiler-${VERSION}-any.zip"

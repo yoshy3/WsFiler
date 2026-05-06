@@ -25,4 +25,15 @@ public static class ApplicationCommandId
     public const string LogToggle = "log.toggle";
     public const string DialogConfirm = "dialog.confirm";
     public const string DialogCancel = "dialog.cancel";
+    public const string DriveChange = "drive.change";
+    public const string DirectoryCreate = "directory.create";
+    public const string FileCreate = "file.create";
+    public const string DirectoryRoot = "directory.root";
+    public const string PaneSyncOpposite = "pane.syncOpposite";
+    public const string FileAttributes = "file.attributes";
+    public const string FileFilter = "file.filter";
+    public const string EditorLaunch = "editor.launch";
+    public const string FileDuplicate = "file.duplicate";
+    public const string ViewSort = "view.sort";
+    public const string AppExit = "app.exit";
 }

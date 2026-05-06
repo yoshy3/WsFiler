@@ -6,12 +6,14 @@ using Avalonia.Media;
 using System;
 using System.Collections.Specialized;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using WsFiler.Core.Commands;
 using WsFiler.Core.Files;
 using WsFiler.Core.KeyMap;
+using WsFiler.Infra.Settings;
 using WsFiler.Presentation.Resources;
 using WsFiler.Presentation.ViewModels;
 
@@ -50,7 +52,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var key = NormalizeKey(e.Key);
+        var key = NormalizeKeyWithModifiers(e.Key, e.KeyModifiers);
         if (!TryResolveCommand(key, out var commandId))
         {
             return;
@@ -78,6 +80,43 @@ public partial class MainWindow : Window
                  viewModel.ActivePane.CurrentItem is { IsDirectory: false } currentItem)
         {
             await PreviewTextFileAsync(currentItem);
+        }
+        else if (commandId == ApplicationCommandId.DriveChange)
+        {
+            await ShowDriveSelectDialogAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.DirectoryCreate)
+        {
+            await ShowCreateDirectoryDialogAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.FileCreate)
+        {
+            await ShowCreateFileDialogAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.FileAttributes)
+        {
+            await ShowAttributeDialogAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.FileFilter)
+        {
+            await ShowFilterDialogAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.EditorLaunch)
+        {
+            await LaunchEditorAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.FileDuplicate)
+        {
+            await DuplicateCurrentItemAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.ViewSort)
+        {
+            await ShowSortDialogAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.AppExit)
+        {
+            Close();
+            return;
         }
         else
         {
@@ -247,6 +286,177 @@ public partial class MainWindow : Window
         }
     }
 
+    private async Task ShowDriveSelectDialogAsync(MainWindowViewModel viewModel)
+    {
+        var dialog = new DriveSelectDialog(viewModel.ActivePane.CurrentPath);
+        var root = await dialog.ShowDialog<string?>(this);
+        if (!string.IsNullOrEmpty(root))
+        {
+            await viewModel.NavigateActivePaneAsync(root);
+        }
+    }
+
+    private async Task ShowCreateDirectoryDialogAsync(MainWindowViewModel viewModel)
+    {
+        var dialog = new InputDialog(
+            Strings.Dialog_DirectoryCreate_Title,
+            Strings.Dialog_DirectoryCreate_Prompt);
+        var name = await dialog.ShowDialog<string?>(this);
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            await viewModel.CreateDirectoryAsync(name);
+        }
+    }
+
+    private async Task ShowCreateFileDialogAsync(MainWindowViewModel viewModel)
+    {
+        var dialog = new InputDialog(
+            Strings.Dialog_FileCreate_Title,
+            Strings.Dialog_FileCreate_Prompt);
+        var name = await dialog.ShowDialog<string?>(this);
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            await viewModel.CreateFileAsync(name);
+        }
+    }
+
+    private async Task ShowAttributeDialogAsync(MainWindowViewModel viewModel)
+    {
+        var current = viewModel.ActivePane.CurrentItem;
+        if (current is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var attrs = await viewModel.GetAttributesAsync(current.FullPath);
+            var dialog = new AttributeDialog(current.Name, attrs);
+            var newAttrs = await dialog.ShowDialog<FileAttributes?>(this);
+            if (newAttrs.HasValue)
+            {
+                await viewModel.SetAttributesAsync(current.FullPath, newAttrs.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            viewModel.LogError(ex.Message);
+        }
+    }
+
+    private async Task ShowFilterDialogAsync(MainWindowViewModel viewModel)
+    {
+        var dialog = new InputDialog(
+            Strings.Dialog_Filter_Title,
+            Strings.Dialog_Filter_Prompt,
+            viewModel.ActivePane.FilterPattern ?? "");
+        var pattern = await dialog.ShowDialog<string?>(this);
+        if (pattern is not null)
+        {
+            await viewModel.ApplyFilterAsync(string.IsNullOrWhiteSpace(pattern) ? null : pattern);
+        }
+    }
+
+    private async Task ShowSortDialogAsync(MainWindowViewModel viewModel)
+    {
+        var pane = viewModel.ActivePane;
+        var dialog = new SortDialog(pane.SortField, pane.SortAscending);
+        var result = await dialog.ShowDialog<(PaneSortField Field, bool Ascending)?>(this);
+        if (result.HasValue)
+        {
+            await viewModel.ApplySortAsync(result.Value.Field, result.Value.Ascending);
+        }
+    }
+
+    private async Task LaunchEditorAsync(MainWindowViewModel viewModel)
+    {
+        var current = viewModel.ActivePane.CurrentItem;
+        if (current is null || current.IsDirectory)
+        {
+            return;
+        }
+
+        var settings = SettingsManager.Load();
+        if (string.IsNullOrWhiteSpace(settings.ExternalEditor))
+        {
+            var dialog = new InputDialog(
+                Strings.Dialog_Editor_Title,
+                Strings.Dialog_Editor_Prompt);
+            var editorPath = await dialog.ShowDialog<string?>(this);
+            if (string.IsNullOrWhiteSpace(editorPath))
+            {
+                return;
+            }
+
+            settings.ExternalEditor = editorPath;
+            SettingsManager.Save(settings);
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(settings.ExternalEditor!, current.FullPath)
+            {
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            viewModel.LogError(ex.Message);
+        }
+    }
+
+    private async Task DuplicateCurrentItemAsync(MainWindowViewModel viewModel)
+    {
+        var current = viewModel.ActivePane.CurrentItem;
+        if (current is null)
+        {
+            return;
+        }
+
+        var dialog = new RenameDialog(current.Name);
+        var newName = await dialog.ShowDialog<string?>(this);
+        if (string.IsNullOrWhiteSpace(newName) || newName == current.Name)
+        {
+            return;
+        }
+
+        var parent = Path.GetDirectoryName(current.FullPath) ?? current.FullPath;
+        var destPath = Path.Combine(parent, newName);
+
+        try
+        {
+            if (current.IsDirectory)
+            {
+                CopyDirectoryRecursive(current.FullPath, destPath);
+            }
+            else
+            {
+                File.Copy(current.FullPath, destPath);
+            }
+
+            await viewModel.RefreshActivePaneAsync();
+            viewModel.LogInfo(string.Format(Strings.Status_Duplicated, newName));
+        }
+        catch (Exception ex)
+        {
+            viewModel.LogError(ex.Message);
+        }
+    }
+
+    private static void CopyDirectoryRecursive(string source, string destination)
+    {
+        Directory.CreateDirectory(destination);
+        foreach (var file in Directory.EnumerateFiles(source))
+        {
+            File.Copy(file, Path.Combine(destination, Path.GetFileName(file)));
+        }
+
+        foreach (var dir in Directory.EnumerateDirectories(source))
+        {
+            CopyDirectoryRecursive(dir, Path.Combine(destination, Path.GetFileName(dir)));
+        }
+    }
+
     private static async Task<(string Text, bool IsTruncated)> ReadPreviewTextAsync(string path)
     {
         await using var stream = File.OpenRead(path);
@@ -304,21 +514,24 @@ public partial class MainWindow : Window
         border.BorderThickness = isActive ? new Thickness(2) : new Thickness(1);
     }
 
-    private static string NormalizeKey(Key key)
+    private static string NormalizeKeyWithModifiers(Key key, Avalonia.Input.KeyModifiers modifiers)
     {
-        return key switch
+        var keyStr = key switch
         {
             Key.Return => "Enter",
             Key.Back => "Backspace",
             Key.Space => "Space",
             Key.Escape => "Escape",
-            Key.C => "C",
-            Key.M => "M",
-            Key.D => "D",
-            Key.R => "R",
-            Key.V => "V",
             _ => key.ToString(),
         };
+
+        var parts = new List<string>();
+        if (modifiers.HasFlag(Avalonia.Input.KeyModifiers.Control)) parts.Add("Ctrl");
+        if (modifiers.HasFlag(Avalonia.Input.KeyModifiers.Shift)) parts.Add("Shift");
+        if (modifiers.HasFlag(Avalonia.Input.KeyModifiers.Alt)) parts.Add("Alt");
+        if (modifiers.HasFlag(Avalonia.Input.KeyModifiers.Meta)) parts.Add("Meta");
+        parts.Add(keyStr);
+        return string.Join("+", parts);
     }
 
     private bool TryResolveCommand(string key, out string commandId)
@@ -337,7 +550,7 @@ public partial class MainWindow : Window
                 continue;
             }
 
-            map.TryAdd(NormalizeKeyName(binding.Gesture.Key), binding.CommandId);
+            map.TryAdd(NormalizeKeyName(binding.Gesture.ToString()), binding.CommandId);
         }
 
         if (customKeyMap is null)

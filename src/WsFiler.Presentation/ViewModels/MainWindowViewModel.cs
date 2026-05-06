@@ -57,7 +57,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             "Enter" => ApplicationCommandId.DirectoryOpen,
             "Backspace" => ApplicationCommandId.DirectoryParent,
             "Space" => ApplicationCommandId.SelectionToggle,
-            "A" => ApplicationCommandId.SelectionAll,
+            "A" => ApplicationCommandId.FileAttributes,
             "V" => ApplicationCommandId.LogToggle,
             "Escape" => ApplicationCommandId.SelectionClearAll,
             _ => null,
@@ -109,6 +109,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                 break;
             case ApplicationCommandId.LogToggle:
                 IsLogVisible = !IsLogVisible;
+                break;
+            case ApplicationCommandId.DirectoryRoot:
+                await NavigateRootAsync();
+                break;
+            case ApplicationCommandId.PaneSyncOpposite:
+                await LoadPaneAsync(ActivePane, InactivePane.CurrentPath);
+                break;
+            case ApplicationCommandId.ViewSort:
                 break;
         }
     }
@@ -308,6 +316,114 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private async Task NavigateRootAsync()
+    {
+        var root = Path.GetPathRoot(ActivePane.CurrentPath);
+        if (string.IsNullOrEmpty(root))
+        {
+            StatusMessage = Strings.Status_AlreadyAtRoot;
+            return;
+        }
+
+        await LoadPaneAsync(ActivePane, root);
+    }
+
+    public async Task CreateDirectoryAsync(string name)
+    {
+        try
+        {
+            var path = Path.Combine(ActivePane.CurrentPath, name);
+            await fileSystemProvider.CreateDirectoryAsync(path);
+            await RefreshPaneAsync(ActivePane);
+            StatusMessage = string.Format(Strings.Status_DirectoryCreated, name);
+            LogInfo(StatusMessage);
+            OnPropertyChanged(nameof(StatusSummary));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex.Message);
+        }
+    }
+
+    public async Task CreateFileAsync(string name)
+    {
+        try
+        {
+            var path = Path.Combine(ActivePane.CurrentPath, name);
+            await fileSystemProvider.CreateFileAsync(path);
+            await RefreshPaneAsync(ActivePane);
+            StatusMessage = string.Format(Strings.Status_FileCreated, name);
+            LogInfo(StatusMessage);
+            OnPropertyChanged(nameof(StatusSummary));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex.Message);
+        }
+    }
+
+    public async Task ApplyFilterAsync(string? pattern)
+    {
+        try
+        {
+            ActivePane.ApplyFilter(pattern);
+            var items = await fileSystemProvider.ListDirectoryAsync(ActivePane.CurrentPath);
+            ActivePane.Load(ActivePane.CurrentPath, items);
+            OnPropertyChanged(nameof(StatusSummary));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex.Message);
+        }
+    }
+
+    public async Task DuplicateAsync(
+        Func<Core.Files.FileConflictInfo, Task<Core.Files.FileConflictDecision>> resolveConflictAsync)
+    {
+        var current = ActivePane.CurrentItem;
+        if (current is null)
+        {
+            StatusMessage = Strings.Status_NoItemToRename;
+            return;
+        }
+
+        try
+        {
+            await fileSystemProvider.CopyAsync(
+                [current.FullPath],
+                ActivePane.CurrentPath,
+                resolveConflictAsync);
+            await RefreshPaneAsync(ActivePane);
+            StatusMessage = string.Format(Strings.Status_Duplicated, current.Name);
+            LogInfo(StatusMessage);
+            OnPropertyChanged(nameof(StatusSummary));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex.Message);
+        }
+    }
+
+    public async Task SetAttributesAsync(string path, FileAttributes attributes)
+    {
+        try
+        {
+            await fileSystemProvider.SetAttributesAsync(path, attributes);
+            await RefreshPaneAsync(ActivePane);
+            StatusMessage = Strings.Status_AttributesChanged;
+            LogInfo(StatusMessage);
+        }
+        catch (Exception ex)
+        {
+            LogError(ex.Message);
+        }
+    }
+
+    public Task<FileAttributes> GetAttributesAsync(string path)
+    {
+        return fileSystemProvider.GetAttributesAsync(path);
+    }
+
     private async Task NavigateParentAsync()
     {
         var parent = Directory.GetParent(ActivePane.CurrentPath);
@@ -333,6 +449,17 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         {
             LogError(ex.Message);
         }
+    }
+
+    public Task RefreshActivePaneAsync() => RefreshPaneAsync(ActivePane);
+
+    public Task NavigateActivePaneAsync(string path) => LoadPaneAsync(ActivePane, path);
+
+    public async Task ApplySortAsync(PaneSortField field, bool ascending)
+    {
+        ActivePane.SetSort(field, ascending);
+        await RefreshPaneAsync(ActivePane);
+        StatusMessage = string.Format(Strings.Status_SortChanged, ActivePane.SortField);
     }
 
     private async Task RefreshPaneAsync(FilePaneViewModel pane)
@@ -425,6 +552,15 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         {
             return Task.CompletedTask;
         }
+
+        public Task CreateDirectoryAsync(string path, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task CreateFileAsync(string path, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task<FileAttributes> GetAttributesAsync(string path, CancellationToken cancellationToken = default) =>
+            Task.FromResult(FileAttributes.Normal);
+
+        public Task SetAttributesAsync(string path, FileAttributes attributes, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private enum PaneDirection

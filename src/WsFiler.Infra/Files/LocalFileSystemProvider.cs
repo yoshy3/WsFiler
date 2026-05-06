@@ -257,6 +257,33 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         }
     }
 
+    public Task CreateDirectoryAsync(string path, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        Directory.CreateDirectory(path);
+        return Task.CompletedTask;
+    }
+
+    public Task CreateFileAsync(string path, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        using var _ = File.Create(path);
+        return Task.CompletedTask;
+    }
+
+    public Task<FileAttributes> GetAttributesAsync(string path, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(File.GetAttributes(path));
+    }
+
+    public Task SetAttributesAsync(string path, FileAttributes attributes, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        File.SetAttributes(path, attributes);
+        return Task.CompletedTask;
+    }
+
     private static FileSystemItem ToItem(FileSystemInfo info)
     {
         var attributes = info.Attributes;

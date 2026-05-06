@@ -24,4 +24,12 @@ public interface IFileSystemProvider
         string sourcePath,
         string newName,
         CancellationToken cancellationToken = default);
+
+    Task CreateDirectoryAsync(string path, CancellationToken cancellationToken = default);
+
+    Task CreateFileAsync(string path, CancellationToken cancellationToken = default);
+
+    Task<FileAttributes> GetAttributesAsync(string path, CancellationToken cancellationToken = default);
+
+    Task SetAttributesAsync(string path, FileAttributes attributes, CancellationToken cancellationToken = default);
 }

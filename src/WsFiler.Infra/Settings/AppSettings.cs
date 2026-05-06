@@ -16,6 +16,9 @@ public sealed class AppSettings
 
     [JsonPropertyName("language")]
     public string? Language { get; set; } = "system";
+
+    [JsonPropertyName("externalEditor")]
+    public string? ExternalEditor { get; set; }
 }
 
 public sealed class LastSessionSettings

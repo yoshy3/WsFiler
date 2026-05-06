@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="using:WsFiler.App.Converters"
         xmlns:vm="using:WsFiler.Presentation.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,7 +8,11 @@
         x:Class="WsFiler.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="WsFiler">
+        Title="">
+
+    <Window.Resources>
+        <converters:ShellIconConverter x:Key="ShellIconConverter"/>
+    </Window.Resources>
 
     <Window.Styles>
         <Style Selector="DataGrid">
@@ -16,9 +21,37 @@
             <Setter Property="RowHeight" Value="20"/>
             <Setter Property="ColumnHeaderHeight" Value="22"/>
             <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="VerticalGridLinesBrush" Value="Transparent"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="Transparent"/>
+            <Setter Property="Focusable" Value="False"/>
         </Style>
         <Style Selector="DataGridCell">
-            <Setter Property="Padding" Value="5,0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusAdorner" Value="{x:Null}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+        </Style>
+        <Style Selector="DataGridCell:selected">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="DataGridCell:focus">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="DataGridRow:selected">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="DataGridRow">
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="MinHeight" Value="20"/>
+            <Setter Property="MaxHeight" Value="20"/>
         </Style>
         <Style Selector="DataGridColumnHeader">
             <Setter Property="Padding" Value="5,0"/>
@@ -46,18 +79,9 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*,Auto,Auto"
+    <Grid RowDefinitions="*,Auto,Auto"
           Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
-        <Border Grid.Row="0"
-                Padding="8,6"
-                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                BorderThickness="0,0,0,1">
-            <TextBlock Text="WsFiler"
-                       FontSize="15"
-                       FontWeight="SemiBold"/>
-        </Border>
-
-        <Grid Grid.Row="1"
+        <Grid Grid.Row="0"
               ColumnDefinitions="*,*"
               Margin="8"
               ColumnSpacing="8">
@@ -66,27 +90,112 @@
                     BorderBrush="{DynamicResource SystemAccentColor}"
                     BorderThickness="2"
                     CornerRadius="4">
-                <Grid RowDefinitions="Auto,*">
+                <Grid RowDefinitions="Auto,Auto,*">
                     <TextBlock Grid.Row="0"
                                Text="{Binding LeftPane.CurrentPath}"
-                               Margin="8,5"
-                               FontFamily="Consolas"/>
+                               Margin="8,4,8,0"
+                               FontFamily="Consolas"
+                               TextTrimming="CharacterEllipsis"/>
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="*,Auto"
+                          Margin="8,0,8,4"
+                          MinHeight="20">
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding LeftPane.PaneInfo}"
+                                   FontFamily="Consolas"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding LeftPane.FreeSpaceInfo}"
+                                   FontFamily="Consolas"
+                                   Margin="8,0,0,0"/>
+                    </Grid>
                     <DataGrid x:Name="LeftFileGrid"
-                              Grid.Row="1"
+                              Grid.Row="2"
                               ItemsSource="{Binding LeftPane.Items}"
-                              SelectedItem="{Binding LeftPane.SelectedItem, Mode=TwoWay}"
                               AutoGenerateColumns="False"
                               GridLinesVisibility="None"
                               HeadersVisibility="Column"
                               IsReadOnly="True"
                               SelectionMode="Single"
+                              LoadingRow="OnFileGridLoadingRow"
+                              UnloadingRow="OnFileGridUnloadingRow"
                               SelectionChanged="OnLeftFileGridSelectionChanged">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="" Binding="{Binding Kind}" Width="24"/>
-                            <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="*"/>
-                            <DataGridTextColumn Header="Ext" Binding="{Binding Extension}" Width="62"/>
-                            <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="92"/>
-                            <DataGridTextColumn Header="Modified" Binding="{Binding Modified}" Width="178"/>
+                            <DataGridTemplateColumn Header="" Width="32" CanUserResize="False">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:FileItemViewModel">
+                                        <Border Background="{Binding RowBackground}"
+                                                HorizontalAlignment="Stretch"
+                                                MinHeight="20">
+                                            <Image Source="{Binding FullPath, Converter={StaticResource ShellIconConverter}}"
+                                                   Width="14"
+                                                   Height="14"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Name" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:FileItemViewModel">
+                                        <Border Background="{Binding RowBackground}"
+                                                HorizontalAlignment="Stretch"
+                                                MinHeight="20">
+                                            <TextBlock Text="{Binding DisplayName}"
+                                                       Foreground="{Binding ForegroundColor}"
+                                                       Margin="4,0"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Ext" Width="78">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:FileItemViewModel">
+                                        <Border Background="{Binding RowBackground}"
+                                                HorizontalAlignment="Stretch"
+                                                MinHeight="20">
+                                            <TextBlock Text="{Binding Extension}"
+                                                       Foreground="{Binding ForegroundColor}"
+                                                       Margin="4,0"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Size" Width="112">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:FileItemViewModel">
+                                        <Border Background="{Binding RowBackground}"
+                                                HorizontalAlignment="Stretch"
+                                                MinHeight="20">
+                                            <TextBlock Text="{Binding Size}"
+                                                       Foreground="{Binding ForegroundColor}"
+                                                       Margin="4,0"
+                                                       TextAlignment="Right"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Modified" Width="154">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:FileItemViewModel">
+                                        <Border Background="{Binding RowBackground}"
+                                                HorizontalAlignment="Stretch"
+                                                MinHeight="20">
+                                            <TextBlock Text="{Binding Modified}"
+                                                       Foreground="{Binding ForegroundColor}"
+                                                       Margin="4,0"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -95,36 +204,121 @@
             <Border x:Name="RightPaneBorder"
                     Grid.Column="1"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                    BorderThickness="1"
+                    BorderThickness="2"
                     CornerRadius="4">
-                <Grid RowDefinitions="Auto,*">
+                <Grid RowDefinitions="Auto,Auto,*">
                     <TextBlock Grid.Row="0"
                                Text="{Binding RightPane.CurrentPath}"
-                               Margin="8,5"
-                               FontFamily="Consolas"/>
+                               Margin="8,4,8,0"
+                               FontFamily="Consolas"
+                               TextTrimming="CharacterEllipsis"/>
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="*,Auto"
+                          Margin="8,0,8,4"
+                          MinHeight="20">
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding RightPane.PaneInfo}"
+                                   FontFamily="Consolas"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding RightPane.FreeSpaceInfo}"
+                                   FontFamily="Consolas"
+                                   Margin="8,0,0,0"/>
+                    </Grid>
                     <DataGrid x:Name="RightFileGrid"
-                              Grid.Row="1"
+                              Grid.Row="2"
                               ItemsSource="{Binding RightPane.Items}"
-                              SelectedItem="{Binding RightPane.SelectedItem, Mode=TwoWay}"
                               AutoGenerateColumns="False"
                               GridLinesVisibility="None"
                               HeadersVisibility="Column"
                               IsReadOnly="True"
                               SelectionMode="Single"
+                              LoadingRow="OnFileGridLoadingRow"
+                              UnloadingRow="OnFileGridUnloadingRow"
                               SelectionChanged="OnRightFileGridSelectionChanged">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="" Binding="{Binding Kind}" Width="24"/>
-                            <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="*"/>
-                            <DataGridTextColumn Header="Ext" Binding="{Binding Extension}" Width="62"/>
-                            <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="92"/>
-                            <DataGridTextColumn Header="Modified" Binding="{Binding Modified}" Width="178"/>
+                            <DataGridTemplateColumn Header="" Width="32" CanUserResize="False">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:FileItemViewModel">
+                                        <Border Background="{Binding RowBackground}"
+                                                HorizontalAlignment="Stretch"
+                                                MinHeight="20">
+                                            <Image Source="{Binding FullPath, Converter={StaticResource ShellIconConverter}}"
+                                                   Width="14"
+                                                   Height="14"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Name" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:FileItemViewModel">
+                                        <Border Background="{Binding RowBackground}"
+                                                HorizontalAlignment="Stretch"
+                                                MinHeight="20">
+                                            <TextBlock Text="{Binding DisplayName}"
+                                                       Foreground="{Binding ForegroundColor}"
+                                                       Margin="4,0"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Ext" Width="78">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:FileItemViewModel">
+                                        <Border Background="{Binding RowBackground}"
+                                                HorizontalAlignment="Stretch"
+                                                MinHeight="20">
+                                            <TextBlock Text="{Binding Extension}"
+                                                       Foreground="{Binding ForegroundColor}"
+                                                       Margin="4,0"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Size" Width="112">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:FileItemViewModel">
+                                        <Border Background="{Binding RowBackground}"
+                                                HorizontalAlignment="Stretch"
+                                                MinHeight="20">
+                                            <TextBlock Text="{Binding Size}"
+                                                       Foreground="{Binding ForegroundColor}"
+                                                       Margin="4,0"
+                                                       TextAlignment="Right"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Modified" Width="154">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:FileItemViewModel">
+                                        <Border Background="{Binding RowBackground}"
+                                                HorizontalAlignment="Stretch"
+                                                MinHeight="20">
+                                            <TextBlock Text="{Binding Modified}"
+                                                       Foreground="{Binding ForegroundColor}"
+                                                       Margin="4,0"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
             </Border>
         </Grid>
 
-        <Border Grid.Row="2"
+        <Border Grid.Row="1"
                 IsVisible="{Binding IsLogVisible}"
                 Height="96"
                 Padding="8,4"
@@ -158,7 +352,7 @@
             </ListBox>
         </Border>
 
-        <Border Grid.Row="3"
+        <Border Grid.Row="2"
                 Padding="8,6"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                 BorderThickness="0,1,0,0">

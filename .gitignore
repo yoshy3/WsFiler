@@ -4,6 +4,7 @@ obj/
 .vscode/
 .idea/
 .jj/
+.claude/
 *.user
 *.suo
 TestResults/

@@ -111,4 +111,61 @@
   <data name="Pane.Summary" xml:space="preserve">
     <value>{0:N0} items, {1:N0} selected</value>
   </data>
+  <data name="Status.SortChanged" xml:space="preserve">
+    <value>Sort: {0}</value>
+  </data>
+  <data name="Status.DirectoryCreated" xml:space="preserve">
+    <value>Created directory: {0}</value>
+  </data>
+  <data name="Status.FileCreated" xml:space="preserve">
+    <value>Created file: {0}</value>
+  </data>
+  <data name="Status.Duplicated" xml:space="preserve">
+    <value>Duplicated: {0}</value>
+  </data>
+  <data name="Status.AttributesChanged" xml:space="preserve">
+    <value>Attributes changed</value>
+  </data>
+  <data name="Dialog.Drive.Title" xml:space="preserve">
+    <value>Change Drive</value>
+  </data>
+  <data name="Dialog.Attributes.Title" xml:space="preserve">
+    <value>Attributes</value>
+  </data>
+  <data name="Dialog.Attributes.ReadOnly" xml:space="preserve">
+    <value>Read Only</value>
+  </data>
+  <data name="Dialog.Attributes.Hidden" xml:space="preserve">
+    <value>Hidden</value>
+  </data>
+  <data name="Dialog.Attributes.Archive" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="Dialog.Attributes.System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Dialog.DirectoryCreate.Title" xml:space="preserve">
+    <value>Create Directory</value>
+  </data>
+  <data name="Dialog.DirectoryCreate.Prompt" xml:space="preserve">
+    <value>Directory name(N)</value>
+  </data>
+  <data name="Dialog.FileCreate.Title" xml:space="preserve">
+    <value>Create File</value>
+  </data>
+  <data name="Dialog.FileCreate.Prompt" xml:space="preserve">
+    <value>File name(N)</value>
+  </data>
+  <data name="Dialog.Filter.Title" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="Dialog.Filter.Prompt" xml:space="preserve">
+    <value>Wildcard pattern(P) (e.g. *.txt)</value>
+  </data>
+  <data name="Dialog.Editor.Title" xml:space="preserve">
+    <value>External Editor</value>
+  </data>
+  <data name="Dialog.Editor.Prompt" xml:space="preserve">
+    <value>Editor path(E)</value>
+  </data>
 </root>

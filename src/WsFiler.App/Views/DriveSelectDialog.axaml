@@ -1,0 +1,32 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WsFiler.App.Views.DriveSelectDialog"
+        Width="320"
+        Height="300"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Title="Drive">
+    <Grid RowDefinitions="*,Auto"
+          Margin="16"
+          RowSpacing="12">
+        <ListBox x:Name="DriveListBox"
+                 Grid.Row="0"
+                 DoubleTapped="OnDoubleTapped"/>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Spacing="12">
+            <Button x:Name="OkButton"
+                    Content="OK"
+                    Width="120"
+                    IsDefault="True"
+                    Click="OnOkClick"/>
+            <Button x:Name="CancelButton"
+                    Content="Cancel"
+                    Width="120"
+                    IsCancel="True"
+                    Click="OnCancelClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

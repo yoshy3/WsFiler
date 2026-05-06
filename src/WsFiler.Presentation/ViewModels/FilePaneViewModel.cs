@@ -1,12 +1,19 @@
 using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WsFiler.Core.Files;
 using WsFiler.Presentation.Resources;
 
 namespace WsFiler.Presentation.ViewModels;
 
+public enum PaneSortField { Name, Extension, Date, Size, Attributes, None }
+
 public sealed partial class FilePaneViewModel : ViewModelBase
 {
+    public PaneSortField SortField { get; private set; } = PaneSortField.Name;
+    public bool SortAscending { get; private set; } = true;
+    public string? FilterPattern { get; private set; }
+
     [ObservableProperty]
     private string currentPath = "";
 
@@ -32,13 +39,67 @@ public sealed partial class FilePaneViewModel : ViewModelBase
         Items.Clear();
         cursorIndex = 0;
 
-        foreach (var item in items)
+        var sorted = ApplySortAndFilter(items);
+        foreach (var item in sorted)
         {
             Items.Add(new FileItemViewModel(item));
         }
 
         UpdateSelectedItem();
         OnPropertyChanged(nameof(Summary));
+    }
+
+    public void SetSort(PaneSortField field, bool ascending)
+    {
+        SortField = field;
+        SortAscending = ascending;
+    }
+
+    public void ApplyFilter(string? pattern)
+    {
+        FilterPattern = string.IsNullOrWhiteSpace(pattern) ? null : pattern.Trim();
+    }
+
+    private IEnumerable<FileSystemItem> ApplySortAndFilter(IEnumerable<FileSystemItem> items)
+    {
+        IEnumerable<FileSystemItem> result = items;
+
+        if (FilterPattern is not null)
+        {
+            var regex = WildcardToRegex(FilterPattern);
+            result = result.Where(item =>
+                item.IsDirectory || regex.IsMatch(item.Name));
+        }
+
+        result = SortField switch
+        {
+            PaneSortField.Extension => SortAscending
+                ? result.OrderByDescending(i => i.IsDirectory).ThenBy(i => i.Extension, StringComparer.CurrentCultureIgnoreCase).ThenBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase)
+                : result.OrderByDescending(i => i.IsDirectory).ThenByDescending(i => i.Extension, StringComparer.CurrentCultureIgnoreCase).ThenBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase),
+            PaneSortField.Date => SortAscending
+                ? result.OrderByDescending(i => i.IsDirectory).ThenBy(i => i.ModifiedAt)
+                : result.OrderByDescending(i => i.IsDirectory).ThenByDescending(i => i.ModifiedAt),
+            PaneSortField.Size => SortAscending
+                ? result.OrderByDescending(i => i.IsDirectory).ThenBy(i => i.Size ?? 0)
+                : result.OrderByDescending(i => i.IsDirectory).ThenByDescending(i => i.Size ?? 0),
+            PaneSortField.Attributes => SortAscending
+                ? result.OrderByDescending(i => i.IsDirectory).ThenBy(i => i.IsHidden).ThenBy(i => i.IsReadOnly).ThenBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase)
+                : result.OrderByDescending(i => i.IsDirectory).ThenByDescending(i => i.IsHidden).ThenByDescending(i => i.IsReadOnly).ThenBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase),
+            PaneSortField.None => result,
+            _ => SortAscending
+                ? result.OrderByDescending(i => i.IsDirectory).ThenBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase)
+                : result.OrderByDescending(i => i.IsDirectory).ThenByDescending(i => i.Name, StringComparer.CurrentCultureIgnoreCase),
+        };
+
+        return result;
+    }
+
+    private static Regex WildcardToRegex(string pattern)
+    {
+        var escaped = Regex.Escape(pattern)
+            .Replace(@"\*", ".*")
+            .Replace(@"\?", ".");
+        return new Regex($"^{escaped}$", RegexOptions.IgnoreCase);
     }
 
     public FileItemViewModel? CurrentItem => Items.Count == 0 ? null : Items[cursorIndex];

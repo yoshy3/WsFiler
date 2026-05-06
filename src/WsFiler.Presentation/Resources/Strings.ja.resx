@@ -111,4 +111,61 @@
   <data name="Pane.Summary" xml:space="preserve">
     <value>{0:N0} 項目, {1:N0} 選択</value>
   </data>
+  <data name="Status.SortChanged" xml:space="preserve">
+    <value>ソート: {0}</value>
+  </data>
+  <data name="Status.DirectoryCreated" xml:space="preserve">
+    <value>ディレクトリを作成しました: {0}</value>
+  </data>
+  <data name="Status.FileCreated" xml:space="preserve">
+    <value>ファイルを作成しました: {0}</value>
+  </data>
+  <data name="Status.Duplicated" xml:space="preserve">
+    <value>複製しました: {0}</value>
+  </data>
+  <data name="Status.AttributesChanged" xml:space="preserve">
+    <value>属性を変更しました</value>
+  </data>
+  <data name="Dialog.Drive.Title" xml:space="preserve">
+    <value>ドライブの変更</value>
+  </data>
+  <data name="Dialog.Attributes.Title" xml:space="preserve">
+    <value>属性</value>
+  </data>
+  <data name="Dialog.Attributes.ReadOnly" xml:space="preserve">
+    <value>読み取り専用</value>
+  </data>
+  <data name="Dialog.Attributes.Hidden" xml:space="preserve">
+    <value>隠しファイル</value>
+  </data>
+  <data name="Dialog.Attributes.Archive" xml:space="preserve">
+    <value>アーカイブ</value>
+  </data>
+  <data name="Dialog.Attributes.System" xml:space="preserve">
+    <value>システム</value>
+  </data>
+  <data name="Dialog.DirectoryCreate.Title" xml:space="preserve">
+    <value>ディレクトリの作成</value>
+  </data>
+  <data name="Dialog.DirectoryCreate.Prompt" xml:space="preserve">
+    <value>ディレクトリ名(N)</value>
+  </data>
+  <data name="Dialog.FileCreate.Title" xml:space="preserve">
+    <value>ファイルの作成</value>
+  </data>
+  <data name="Dialog.FileCreate.Prompt" xml:space="preserve">
+    <value>ファイル名(N)</value>
+  </data>
+  <data name="Dialog.Filter.Title" xml:space="preserve">
+    <value>フィルタ</value>
+  </data>
+  <data name="Dialog.Filter.Prompt" xml:space="preserve">
+    <value>ワイルドカードパターン(P) (例: *.txt)</value>
+  </data>
+  <data name="Dialog.Editor.Title" xml:space="preserve">
+    <value>外部エディタ</value>
+  </data>
+  <data name="Dialog.Editor.Prompt" xml:space="preserve">
+    <value>エディタのパス(E)</value>
+  </data>
 </root>

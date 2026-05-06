@@ -1,0 +1,55 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WsFiler.App.Views.SortDialog"
+        Width="380"
+        Height="380"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Title="ソート">
+    <Grid ColumnDefinitions="*,*"
+          RowDefinitions="*,Auto"
+          Margin="16"
+          ColumnSpacing="16"
+          RowSpacing="12">
+
+        <GroupBox Grid.Column="0"
+                  Grid.Row="0"
+                  Header="ソート方法"
+                  MinHeight="260">
+            <StackPanel Spacing="6" Margin="4">
+                <RadioButton x:Name="SortName"       Content="名前順(_N)"       GroupName="SortField"/>
+                <RadioButton x:Name="SortExtension"  Content="拡張子順(_E)"     GroupName="SortField"/>
+                <RadioButton x:Name="SortDate"       Content="日付順(_D)"       GroupName="SortField"/>
+                <RadioButton x:Name="SortSize"       Content="サイズ順(_S)"     GroupName="SortField"/>
+                <RadioButton x:Name="SortAttributes" Content="属性順(_I)"       GroupName="SortField"/>
+                <RadioButton x:Name="SortNone"       Content="ソートしない(_O)" GroupName="SortField"/>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox Grid.Column="1"
+                  Grid.Row="0"
+                  Header="順序"
+                  MinHeight="260">
+            <StackPanel Spacing="6" Margin="4" VerticalAlignment="Top">
+                <RadioButton x:Name="OrderAscending"  Content="昇順(_A)" GroupName="SortOrder"/>
+                <RadioButton x:Name="OrderDescending" Content="降順(_R)" GroupName="SortOrder"/>
+            </StackPanel>
+        </GroupBox>
+
+        <StackPanel Grid.Column="1"
+                    Grid.Row="1"
+                    Spacing="8"
+                    VerticalAlignment="Bottom">
+            <Button x:Name="OkButton"
+                    Content="OK"
+                    IsDefault="True"
+                    HorizontalAlignment="Stretch"
+                    Click="OnOkClick"/>
+            <Button x:Name="CancelButton"
+                    Content="キャンセル"
+                    IsCancel="True"
+                    HorizontalAlignment="Stretch"
+                    Click="OnCancelClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

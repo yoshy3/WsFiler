@@ -110,4 +110,42 @@ public class Strings
     public static string Grid_Column_Modified => ResourceManager.GetString("Grid.Column.Modified", resourceCulture)!;
 
     public static string Pane_Summary => ResourceManager.GetString("Pane.Summary", resourceCulture)!;
+
+    public static string Status_SortChanged => ResourceManager.GetString("Status.SortChanged", resourceCulture)!;
+
+    public static string Status_DirectoryCreated => ResourceManager.GetString("Status.DirectoryCreated", resourceCulture)!;
+
+    public static string Status_FileCreated => ResourceManager.GetString("Status.FileCreated", resourceCulture)!;
+
+    public static string Status_Duplicated => ResourceManager.GetString("Status.Duplicated", resourceCulture)!;
+
+    public static string Status_AttributesChanged => ResourceManager.GetString("Status.AttributesChanged", resourceCulture)!;
+
+    public static string Dialog_Drive_Title => ResourceManager.GetString("Dialog.Drive.Title", resourceCulture)!;
+
+    public static string Dialog_Attributes_Title => ResourceManager.GetString("Dialog.Attributes.Title", resourceCulture)!;
+
+    public static string Dialog_Attributes_ReadOnly => ResourceManager.GetString("Dialog.Attributes.ReadOnly", resourceCulture)!;
+
+    public static string Dialog_Attributes_Hidden => ResourceManager.GetString("Dialog.Attributes.Hidden", resourceCulture)!;
+
+    public static string Dialog_Attributes_Archive => ResourceManager.GetString("Dialog.Attributes.Archive", resourceCulture)!;
+
+    public static string Dialog_Attributes_System => ResourceManager.GetString("Dialog.Attributes.System", resourceCulture)!;
+
+    public static string Dialog_DirectoryCreate_Title => ResourceManager.GetString("Dialog.DirectoryCreate.Title", resourceCulture)!;
+
+    public static string Dialog_DirectoryCreate_Prompt => ResourceManager.GetString("Dialog.DirectoryCreate.Prompt", resourceCulture)!;
+
+    public static string Dialog_FileCreate_Title => ResourceManager.GetString("Dialog.FileCreate.Title", resourceCulture)!;
+
+    public static string Dialog_FileCreate_Prompt => ResourceManager.GetString("Dialog.FileCreate.Prompt", resourceCulture)!;
+
+    public static string Dialog_Filter_Title => ResourceManager.GetString("Dialog.Filter.Title", resourceCulture)!;
+
+    public static string Dialog_Filter_Prompt => ResourceManager.GetString("Dialog.Filter.Prompt", resourceCulture)!;
+
+    public static string Dialog_Editor_Title => ResourceManager.GetString("Dialog.Editor.Title", resourceCulture)!;
+
+    public static string Dialog_Editor_Prompt => ResourceManager.GetString("Dialog.Editor.Prompt", resourceCulture)!;
 }

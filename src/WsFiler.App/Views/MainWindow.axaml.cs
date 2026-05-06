@@ -6,8 +6,10 @@ using Avalonia.Media;
 using System;
 using System.Collections.Specialized;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using WsFiler.Core.Commands;
@@ -24,10 +26,13 @@ public partial class MainWindow : Window
     private const int PreviewByteLimit = 100 * 1024;
 
     private readonly Dictionary<string, string> keyToCommandMap;
+    private readonly Dictionary<FileItemViewModel, List<DataGridRow>> itemRows = [];
+    private bool isClearingGridSelection;
 
     public MainWindow(IReadOnlyDictionary<string, string>? customKeyMap = null)
     {
         InitializeComponent();
+        ApplyTitle();
         ApplyLocalizedText();
         keyToCommandMap = BuildKeyMap(customKeyMap);
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -38,6 +43,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        ApplyTitle();
         ApplyLocalizedText();
         keyToCommandMap = BuildKeyMap(null);
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -124,6 +130,7 @@ public partial class MainWindow : Window
         }
 
         ScrollActiveSelectionIntoView(viewModel);
+        RefreshCursorUnderlines();
         UpdatePaneVisualState(viewModel);
     }
 
@@ -131,6 +138,27 @@ public partial class MainWindow : Window
     {
         ApplyLocalizedColumnHeaders(LeftFileGrid);
         ApplyLocalizedColumnHeaders(RightFileGrid);
+    }
+
+    private void ApplyTitle()
+    {
+        var assembly = typeof(MainWindow).Assembly;
+        var informationalVersion = assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion;
+        var version = string.IsNullOrWhiteSpace(informationalVersion)
+            ? assembly.GetName().Version?.ToString()
+            : informationalVersion;
+
+        Title = string.IsNullOrWhiteSpace(version) ? "" : $"v{NormalizeVersionText(version)}";
+    }
+
+    private static string NormalizeVersionText(string version)
+    {
+        var normalized = version.Split('+', 2)[0].Trim();
+        return normalized.StartsWith("v", StringComparison.OrdinalIgnoreCase)
+            ? normalized[1..]
+            : normalized;
     }
 
     private void OnDataContextChanged()
@@ -161,28 +189,118 @@ public partial class MainWindow : Window
 
     private void OnLeftFileGridSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (DataContext is not MainWindowViewModel viewModel ||
+        if (isClearingGridSelection ||
+            DataContext is not MainWindowViewModel viewModel ||
             LeftFileGrid.SelectedItem is not FileItemViewModel selectedItem)
         {
             return;
         }
 
         viewModel.ActivateLeftPane(selectedItem);
+        ClearGridSelection(LeftFileGrid);
+        RefreshCursorUnderlines();
         UpdatePaneVisualState(viewModel);
-        LeftFileGrid.Focus();
+        Focus();
     }
 
     private void OnRightFileGridSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (DataContext is not MainWindowViewModel viewModel ||
+        if (isClearingGridSelection ||
+            DataContext is not MainWindowViewModel viewModel ||
             RightFileGrid.SelectedItem is not FileItemViewModel selectedItem)
         {
             return;
         }
 
         viewModel.ActivateRightPane(selectedItem);
+        ClearGridSelection(RightFileGrid);
+        RefreshCursorUnderlines();
         UpdatePaneVisualState(viewModel);
-        RightFileGrid.Focus();
+        Focus();
+    }
+
+    private void OnFileGridLoadingRow(object? sender, DataGridRowEventArgs e)
+    {
+        if (e.Row.DataContext is not FileItemViewModel item)
+        {
+            return;
+        }
+
+        ApplyCursorUnderline(e.Row, item);
+        if (!itemRows.TryGetValue(item, out var rows))
+        {
+            rows = [];
+            itemRows[item] = rows;
+        }
+
+        rows.Add(e.Row);
+        item.PropertyChanged += OnFileGridRowItemPropertyChanged;
+    }
+
+    private void OnFileGridUnloadingRow(object? sender, DataGridRowEventArgs e)
+    {
+        if (e.Row.DataContext is FileItemViewModel item)
+        {
+            item.PropertyChanged -= OnFileGridRowItemPropertyChanged;
+            if (itemRows.TryGetValue(item, out var rows))
+            {
+                rows.Remove(e.Row);
+                if (rows.Count == 0)
+                {
+                    itemRows.Remove(item);
+                }
+            }
+        }
+    }
+
+    private void OnFileGridRowItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(FileItemViewModel.IsCursor) ||
+            sender is not FileItemViewModel item)
+        {
+            return;
+        }
+
+        if (!itemRows.TryGetValue(item, out var rows))
+        {
+            return;
+        }
+
+        foreach (var row in rows)
+        {
+            ApplyCursorUnderline(row, item);
+        }
+    }
+
+    private static void ApplyCursorUnderline(DataGridRow row, FileItemViewModel item)
+    {
+        row.Height = 20;
+        row.MinHeight = 20;
+        row.MaxHeight = 20;
+        row.BorderBrush = item.IsCursor
+            ? new SolidColorBrush(Colors.White)
+            : Brushes.Transparent;
+        row.BorderThickness = item.IsCursor
+            ? new Thickness(0, 0, 0, 1)
+            : new Thickness(0);
+    }
+
+    private void ClearGridSelection(DataGrid grid)
+    {
+        isClearingGridSelection = true;
+        grid.SelectedItem = null;
+        isClearingGridSelection = false;
+    }
+
+    private void RefreshCursorUnderlines()
+    {
+        foreach (var pair in itemRows)
+        {
+            foreach (var row in pair.Value)
+            {
+                ApplyCursorUnderline(row, pair.Key);
+            }
+        }
     }
 
     private async Task ConfirmAndCopyAsync(MainWindowViewModel viewModel)
@@ -489,7 +607,7 @@ public partial class MainWindow : Window
 
         var grid = viewModel.LeftPane.IsActive ? LeftFileGrid : RightFileGrid;
         grid.ScrollIntoView(selectedItem, null);
-        grid.Focus();
+        Focus();
     }
 
     private void UpdatePaneVisualState()
@@ -511,7 +629,7 @@ public partial class MainWindow : Window
         border.BorderBrush = isActive
             ? new SolidColorBrush(Color.FromRgb(0, 120, 212))
             : new SolidColorBrush(Color.FromRgb(64, 64, 64));
-        border.BorderThickness = isActive ? new Thickness(2) : new Thickness(1);
+        border.BorderThickness = new Thickness(2);
     }
 
     private static string NormalizeKeyWithModifiers(Key key, Avalonia.Input.KeyModifiers modifiers)

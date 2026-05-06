@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WsFiler.Core.Files;
@@ -33,6 +34,12 @@ public sealed partial class FilePaneViewModel : ViewModelBase
 
     public int MarkedCount => Items.Count(item => item.IsMarked);
 
+    public string PaneInfo => $"Marked {MarkedCount:N0}/{Items.Count:N0} {FormatByteSize(MarkedSize)}";
+
+    public string FreeSpaceInfo => FormatFreeSpace(CurrentPath);
+
+    private long MarkedSize => Items.Where(item => item.IsMarked && !item.IsDirectory).Sum(item => item.RawSize);
+
     public void Load(string path, IEnumerable<FileSystemItem> items)
     {
         CurrentPath = path;
@@ -46,7 +53,7 @@ public sealed partial class FilePaneViewModel : ViewModelBase
         }
 
         UpdateSelectedItem();
-        OnPropertyChanged(nameof(Summary));
+        OnPaneInfoChanged();
     }
 
     public void SetSort(PaneSortField field, bool ascending)
@@ -152,8 +159,7 @@ public sealed partial class FilePaneViewModel : ViewModelBase
         }
 
         current.ToggleMark();
-        OnPropertyChanged(nameof(MarkedCount));
-        OnPropertyChanged(nameof(Summary));
+        OnPaneInfoChanged();
         MoveCursor(1);
     }
 
@@ -164,8 +170,7 @@ public sealed partial class FilePaneViewModel : ViewModelBase
             item.ClearMark();
         }
 
-        OnPropertyChanged(nameof(MarkedCount));
-        OnPropertyChanged(nameof(Summary));
+        OnPaneInfoChanged();
     }
 
     public void MarkAll()
@@ -175,8 +180,12 @@ public sealed partial class FilePaneViewModel : ViewModelBase
             item.MarkSelected();
         }
 
-        OnPropertyChanged(nameof(MarkedCount));
-        OnPropertyChanged(nameof(Summary));
+        OnPaneInfoChanged();
+    }
+
+    partial void OnCurrentPathChanged(string value)
+    {
+        OnPropertyChanged(nameof(FreeSpaceInfo));
     }
 
     partial void OnIsActiveChanged(bool value)
@@ -200,6 +209,11 @@ public sealed partial class FilePaneViewModel : ViewModelBase
 
     private void UpdateSelectedItem()
     {
+        foreach (var item in Items)
+        {
+            item.IsCursor = false;
+        }
+
         if (!IsActive || Items.Count == 0)
         {
             SelectedItem = null;
@@ -207,6 +221,51 @@ public sealed partial class FilePaneViewModel : ViewModelBase
         }
 
         cursorIndex = Math.Clamp(cursorIndex, 0, Items.Count - 1);
-        SelectedItem = Items[cursorIndex];
+        var selected = Items[cursorIndex];
+        selected.IsCursor = true;
+        SelectedItem = selected;
+    }
+
+    private void OnPaneInfoChanged()
+    {
+        OnPropertyChanged(nameof(MarkedCount));
+        OnPropertyChanged(nameof(Summary));
+        OnPropertyChanged(nameof(PaneInfo));
+    }
+
+    private static string FormatFreeSpace(string path)
+    {
+        try
+        {
+            var root = Path.GetPathRoot(path);
+            if (string.IsNullOrWhiteSpace(root) || root.StartsWith(@"\\", StringComparison.Ordinal))
+            {
+                return "";
+            }
+
+            var drive = new DriveInfo(root);
+            return drive.IsReady ? $"{FormatByteSize(drive.AvailableFreeSpace)} Free" : "";
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    private static string FormatByteSize(long size)
+    {
+        string[] units = ["B", "KB", "MB", "GB", "TB"];
+        var value = (double)size;
+        var unitIndex = 0;
+
+        while (value >= 1024 && unitIndex < units.Length - 1)
+        {
+            value /= 1024;
+            unitIndex++;
+        }
+
+        return unitIndex == 0
+            ? $"{value:N0} {units[unitIndex]}"
+            : $"{value:N2} {units[unitIndex]}";
     }
 }

@@ -181,13 +181,13 @@ jobs:
           dotnet publish src/WsFiler.App/WsFiler.App.csproj \
             -c Release \
             -p:Version=$VERSION \
-            -o publish/zip
+            -o publish/WsFiler
 
       - name: Create zip archive
         run: |
           mkdir -p dist
           cd publish
-          zip -r "../dist/WsFiler-${VERSION}-any.zip" zip/
+          zip -r "../dist/WsFiler-${VERSION}-any.zip" WsFiler/
 
       - uses: actions/upload-artifact@v4
         with:

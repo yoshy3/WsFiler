@@ -6,15 +6,12 @@
   <!-- CommunityToolkit.Mvvm source-gen base types -->
   <assembly fullname="CommunityToolkit.Mvvm" preserve="all" />
 
-  <!-- Newtonsoft.Json uses runtime reflection for serialization -->
-  <assembly fullname="Newtonsoft.Json" preserve="all" />
-
   <!-- ViewModels referenced via XAML DataContext bindings -->
   <assembly fullname="WsFiler.Presentation">
     <type fullname="WsFiler.Presentation.ViewModels.*" preserve="all" />
   </assembly>
 
-  <!-- Settings types deserialized by Newtonsoft.Json -->
+  <!-- Settings types deserialized by System.Text.Json (source-gen used, but keeping types just in case) -->
   <assembly fullname="WsFiler.Infra">
     <type fullname="WsFiler.Infra.Settings.*" preserve="all" />
   </assembly>

@@ -12,6 +12,7 @@
     <TrimmerRootDescriptor>AotTrimmerRoots.xml</TrimmerRootDescriptor>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+    <NoWarn>$(NoWarn);IL2104;IL3053</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

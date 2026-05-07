@@ -34,10 +34,17 @@ public partial class App : Application
             var viewModel = new MainWindowViewModel(new LocalFileSystemProvider());
             _ = viewModel.InitializeAsync(settings.LastSession?.LeftPath, settings.LastSession?.RightPath);
 
-            desktop.MainWindow = new MainWindow(settings.KeyMap)
+            var mainWindow = new MainWindow(settings.KeyMap)
             {
                 DataContext = viewModel
             };
+
+            RestoreWindowBounds(mainWindow, settings.Window);
+            desktop.MainWindow = mainWindow;
+
+            WindowSettings? lastWindowSettings = null;
+            mainWindow.PositionChanged += (_, _) => lastWindowSettings = CaptureWindowBounds(mainWindow);
+            mainWindow.SizeChanged += (_, _) => lastWindowSettings = CaptureWindowBounds(mainWindow);
 
             desktop.ShutdownRequested += (_, _) =>
             {
@@ -53,6 +60,7 @@ public partial class App : Application
                         LeftPath = paths.LeftPath,
                         RightPath = paths.RightPath,
                     };
+                    currentSettings.Window = lastWindowSettings ?? CaptureWindowBounds(desktop.MainWindow);
                     SettingsManager.Save(currentSettings);
                 }
             };
@@ -103,6 +111,36 @@ public partial class App : Application
             : string.Equals(theme, "dark", StringComparison.OrdinalIgnoreCase)
                 ? "dark"
                 : "system";
+    }
+
+    private static void RestoreWindowBounds(Avalonia.Controls.Window window, WindowSettings? saved)
+    {
+        if (saved is null || saved.Width <= 0 || saved.Height <= 0)
+        {
+            return;
+        }
+
+        window.Position = new Avalonia.PixelPoint(saved.X, saved.Y);
+        window.Width = saved.Width;
+        window.Height = saved.Height;
+
+        if (saved.IsMaximized)
+        {
+            window.WindowState = Avalonia.Controls.WindowState.Maximized;
+        }
+    }
+
+    private static WindowSettings CaptureWindowBounds(Avalonia.Controls.Window window)
+    {
+        var isMaximized = window.WindowState == Avalonia.Controls.WindowState.Maximized;
+        return new WindowSettings
+        {
+            X = window.Position.X,
+            Y = window.Position.Y,
+            Width = (int)window.Width,
+            Height = (int)window.Height,
+            IsMaximized = isMaximized,
+        };
     }
 
     private static Dictionary<string, string> CreateDefaultKeyMapSettings()

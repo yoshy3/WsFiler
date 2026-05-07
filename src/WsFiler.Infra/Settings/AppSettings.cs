@@ -19,6 +19,9 @@ public sealed class AppSettings
 
     [JsonPropertyName("externalEditor")]
     public string? ExternalEditor { get; set; }
+
+    [JsonPropertyName("window")]
+    public WindowSettings? Window { get; set; }
 }
 
 public sealed class LastSessionSettings
@@ -28,4 +31,22 @@ public sealed class LastSessionSettings
 
     [JsonPropertyName("rightPath")]
     public string? RightPath { get; set; }
+}
+
+public sealed class WindowSettings
+{
+    [JsonPropertyName("x")]
+    public int X { get; set; }
+
+    [JsonPropertyName("y")]
+    public int Y { get; set; }
+
+    [JsonPropertyName("width")]
+    public int Width { get; set; }
+
+    [JsonPropertyName("height")]
+    public int Height { get; set; }
+
+    [JsonPropertyName("isMaximized")]
+    public bool IsMaximized { get; set; }
 }

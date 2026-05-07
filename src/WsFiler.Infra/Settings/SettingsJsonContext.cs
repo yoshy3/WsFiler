@@ -7,6 +7,7 @@ namespace WsFiler.Infra.Settings;
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     WriteIndented = true)]
 [JsonSerializable(typeof(AppSettings))]
+[JsonSerializable(typeof(WindowSettings))]
 internal partial class SettingsJsonContext : JsonSerializerContext
 {
 }

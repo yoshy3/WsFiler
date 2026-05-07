@@ -37,6 +37,7 @@ public partial class MainWindow : Window
         keyToCommandMap = BuildKeyMap(customKeyMap);
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
         DataContextChanged += (_, _) => OnDataContextChanged();
+        Loaded += (_, _) => UpdatePaneVisualState();
         Focusable = true;
     }
 
@@ -48,6 +49,7 @@ public partial class MainWindow : Window
         keyToCommandMap = BuildKeyMap(null);
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
         DataContextChanged += (_, _) => OnDataContextChanged();
+        Loaded += (_, _) => UpdatePaneVisualState();
         Focusable = true;
     }
 

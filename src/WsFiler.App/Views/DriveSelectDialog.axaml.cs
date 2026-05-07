@@ -27,13 +27,13 @@ public partial class DriveSelectDialog : Window
         OkButton.Content = Strings.Dialog_Common_Ok;
         CancelButton.Content = Strings.Dialog_Common_Cancel;
 
-        drives = DriveInfo.GetDrives()
-            .Where(d => d.IsReady)
-            .ToList();
+        drives = OperatingSystem.IsLinux()
+            ? GetLinuxCommonDirectories()
+            : DriveInfo.GetDrives().Where(d => d.IsReady).ToList();
 
-        DriveListBox.ItemsSource = drives
-            .Select(d => $"{d.Name.TrimEnd(Path.DirectorySeparatorChar)} ({d.DriveType})")
-            .ToList();
+        DriveListBox.ItemsSource = OperatingSystem.IsLinux()
+            ? drives.Select(d => d.Name.TrimEnd(Path.DirectorySeparatorChar)).Select(p => string.IsNullOrEmpty(p) ? "/" : p).ToList()
+            : drives.Select(d => $"{d.Name.TrimEnd(Path.DirectorySeparatorChar)} ({d.DriveType})").ToList();
 
         if (drives.Count > 0)
         {
@@ -115,6 +115,13 @@ public partial class DriveSelectDialog : Window
 
         driveLetter = '\0';
         return false;
+    }
+
+    private static List<DriveInfo> GetLinuxCommonDirectories()
+    {
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var paths = new[] { home, "/", "/etc", "/usr", "/var", "/mnt", "/opt" };
+        return paths.Where(Directory.Exists).Select(p => new DriveInfo(p)).ToList();
     }
 
     private int GetInitialDriveIndex(string? currentPath)

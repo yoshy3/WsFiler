@@ -60,6 +60,7 @@ Icon=wsfiler
 Categories=Utility;FileManager;
 Keywords=files;file manager;dual pane;
 StartupNotify=true
+StartupWMClass=WsFiler
 DESKTOP
 
 # ── DEBIAN/control ───────────────────────────────────────────────────────

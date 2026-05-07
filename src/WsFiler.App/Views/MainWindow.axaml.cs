@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform;
 using System;
 using System.Collections.Specialized;
 using System.Collections.Generic;
@@ -32,6 +33,7 @@ public partial class MainWindow : Window
     public MainWindow(IReadOnlyDictionary<string, string>? customKeyMap = null)
     {
         InitializeComponent();
+        SetupWindowIcon();
         ApplyTitle();
         ApplyLocalizedText();
         keyToCommandMap = BuildKeyMap(customKeyMap);
@@ -44,6 +46,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        SetupWindowIcon();
         ApplyTitle();
         ApplyLocalizedText();
         keyToCommandMap = BuildKeyMap(null);
@@ -51,6 +54,17 @@ public partial class MainWindow : Window
         DataContextChanged += (_, _) => OnDataContextChanged();
         Loaded += (_, _) => UpdatePaneVisualState();
         Focusable = true;
+    }
+
+    private void SetupWindowIcon()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        using var stream = AssetLoader.Open(new Uri("avares://WsFiler.App/Assets/linux/wsfiler-256.png"));
+        Icon = new WindowIcon(stream);
     }
 
     private async void OnKeyDown(object? sender, KeyEventArgs e)

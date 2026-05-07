@@ -150,7 +150,7 @@ public partial class MainWindow : Window
             ? assembly.GetName().Version?.ToString()
             : informationalVersion;
 
-        Title = string.IsNullOrWhiteSpace(version) ? "" : $"v{NormalizeVersionText(version)}";
+        Title = string.IsNullOrWhiteSpace(version) ? "WsFilter" : $"WsFilter v{NormalizeVersionText(version)}";
     }
 
     private static string NormalizeVersionText(string version)

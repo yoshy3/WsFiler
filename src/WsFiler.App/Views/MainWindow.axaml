@@ -7,7 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="680"
         x:Class="WsFiler.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/WsFiler.ico"
         Title="">
 
     <Window.Resources>

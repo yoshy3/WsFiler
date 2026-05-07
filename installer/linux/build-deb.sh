@@ -19,6 +19,7 @@ mkdir -p "$DEB_ROOT/DEBIAN"
 mkdir -p "$DEB_ROOT${INSTALL_PREFIX}/bin"
 mkdir -p "$DEB_ROOT${INSTALL_PREFIX}/share/wsfiler"
 mkdir -p "$DEB_ROOT${INSTALL_PREFIX}/share/applications"
+mkdir -p "$DEB_ROOT${INSTALL_PREFIX}/share/icons/hicolor"
 
 # ── Copy binary and native libs ──────────────────────────────────────────
 cp "$SOURCE_DIR/WsFiler.App" "$DEB_ROOT${INSTALL_PREFIX}/share/wsfiler/WsFiler.App"
@@ -30,6 +31,18 @@ if [ -d "$SOURCE_DIR/ja" ]; then
   mkdir -p "$DEB_ROOT${INSTALL_PREFIX}/share/wsfiler/ja"
   cp -r "$SOURCE_DIR/ja/"* "$DEB_ROOT${INSTALL_PREFIX}/share/wsfiler/ja/"
 fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ICON_SOURCE_DIR="$REPO_ROOT/src/WsFiler.App/Assets/linux"
+for size in 16 32 48 64 128 256 512; do
+  icon_source="$ICON_SOURCE_DIR/wsfiler-${size}.png"
+  icon_dest="$DEB_ROOT${INSTALL_PREFIX}/share/icons/hicolor/${size}x${size}/apps"
+  if [ -f "$icon_source" ]; then
+    mkdir -p "$icon_dest"
+    cp "$icon_source" "$icon_dest/wsfiler.png"
+  fi
+done
 
 # ── Launcher symlink ─────────────────────────────────────────────────────
 ln -s "${INSTALL_PREFIX}/share/wsfiler/WsFiler.App" \
@@ -72,6 +85,9 @@ cat > "$DEB_ROOT/DEBIAN/postinst" <<'POSTINST'
 set -e
 if command -v update-desktop-database >/dev/null 2>&1; then
   update-desktop-database -q /usr/share/applications
+fi
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+  gtk-update-icon-cache -q /usr/share/icons/hicolor || true
 fi
 POSTINST
 chmod 755 "$DEB_ROOT/DEBIAN/postinst"

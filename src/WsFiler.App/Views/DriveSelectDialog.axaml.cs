@@ -29,9 +29,11 @@ public partial class DriveSelectDialog : Window
 
         drives = OperatingSystem.IsLinux()
             ? GetLinuxCommonDirectories()
-            : DriveInfo.GetDrives().Where(d => d.IsReady).ToList();
+            : OperatingSystem.IsMacOS()
+                ? GetMacCommonDirectories()
+                : DriveInfo.GetDrives().Where(d => d.IsReady).ToList();
 
-        DriveListBox.ItemsSource = OperatingSystem.IsLinux()
+        DriveListBox.ItemsSource = (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             ? drives.Select(d => d.Name.TrimEnd(Path.DirectorySeparatorChar)).Select(p => string.IsNullOrEmpty(p) ? "/" : p).ToList()
             : drives.Select(d => $"{d.Name.TrimEnd(Path.DirectorySeparatorChar)} ({d.DriveType})").ToList();
 
@@ -122,6 +124,23 @@ public partial class DriveSelectDialog : Window
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var paths = new[] { home, "/", "/etc", "/usr", "/var", "/mnt", "/opt" };
         return paths.Where(Directory.Exists).Select(p => new DriveInfo(p)).ToList();
+    }
+
+    private static List<DriveInfo> GetMacCommonDirectories()
+    {
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var paths = new[] { home, "/", "/Applications", "/Users", "/opt", "/usr" };
+        var result = paths.Where(Directory.Exists).Select(p => new DriveInfo(p)).ToList();
+
+        if (Directory.Exists("/Volumes"))
+        {
+            var volumes = Directory.GetDirectories("/Volumes")
+                .Where(Directory.Exists)
+                .Select(p => new DriveInfo(p));
+            result.AddRange(volumes);
+        }
+
+        return result;
     }
 
     private int GetInitialDriveIndex(string? currentPath)

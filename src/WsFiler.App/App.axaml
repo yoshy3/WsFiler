@@ -5,21 +5,9 @@
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
-    <NativeMenu.Menu>
-        <NativeMenu>
-            <NativeMenuItem Header="WsFiler">
-                <NativeMenuItem.Menu>
-                    <NativeMenu>
-                        <NativeMenuItem Header="Quit WsFiler" Gesture="⌘+Q" Command="{Binding QuitCommand}" x:DataType="local:App" />
-                    </NativeMenu>
-                </NativeMenuItem.Menu>
-            </NativeMenuItem>
-        </NativeMenu>
-    </NativeMenu.Menu>
-
     <Application.DataTemplates>
     </Application.DataTemplates>
-
+  
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />

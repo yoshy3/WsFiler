@@ -7,7 +7,9 @@ using Avalonia.Markup.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Windows.Input;
 using Avalonia.Styling;
+using CommunityToolkit.Mvvm.Input;
 using WsFiler.Core.Commands;
 using WsFiler.Core.KeyMap;
 using WsFiler.App.Views;
@@ -19,6 +21,14 @@ namespace WsFiler.App;
 
 public partial class App : Application
 {
+    public ICommand QuitCommand { get; } = new RelayCommand(() =>
+    {
+        if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            desktop.Shutdown();
+        }
+    });
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);

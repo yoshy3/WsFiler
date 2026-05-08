@@ -47,6 +47,12 @@ public class Strings
 
     public static string App_Title => ResourceManager.GetString("App.Title", resourceCulture)!;
 
+    public static string Menu_AboutWsFiler => ResourceManager.GetString("Menu.AboutWsFiler", resourceCulture)!;
+
+    public static string About_Title => ResourceManager.GetString("About.Title", resourceCulture)!;
+
+    public static string About_Description => ResourceManager.GetString("About.Description", resourceCulture)!;
+
     public static string Status_Ready => ResourceManager.GetString("Status.Ready", resourceCulture)!;
 
     public static string Status_PreviewUnavailable => ResourceManager.GetString("Status.PreviewUnavailable", resourceCulture)!;

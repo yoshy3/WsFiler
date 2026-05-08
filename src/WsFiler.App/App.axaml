@@ -2,8 +2,17 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="WsFiler.App.App"
              xmlns:local="using:WsFiler.App"
+             xmlns:resources="using:WsFiler.Presentation.Resources"
+             Name="WsFiler"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="{x:Static resources:Strings.Menu_AboutWsFiler}"
+                            Click="OnAboutWsFilerClick" />
+        </NativeMenu>
+    </NativeMenu.Menu>
 
     <Application.DataTemplates>
     </Application.DataTemplates>

@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
@@ -13,6 +14,7 @@ using WsFiler.Core.KeyMap;
 using WsFiler.App.Views;
 using WsFiler.Infra.Files;
 using WsFiler.Infra.Settings;
+using WsFiler.Presentation.Resources;
 using WsFiler.Presentation.ViewModels;
 
 namespace WsFiler.App;
@@ -67,6 +69,54 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private async void OnAboutWsFilerClick(object? sender, EventArgs e)
+    {
+        if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime { MainWindow: { } owner })
+        {
+            return;
+        }
+
+        var dialog = new Window
+        {
+            Title = Strings.About_Title,
+            Width = 360,
+            Height = 180,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Content = new StackPanel
+            {
+                Spacing = 12,
+                Margin = new Thickness(24),
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = Strings.App_Title,
+                        FontSize = 22,
+                        FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                    },
+                    new TextBlock
+                    {
+                        Text = Strings.About_Description,
+                        TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                    },
+                    new Button
+                    {
+                        Content = Strings.Dialog_Common_Ok,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                    },
+                },
+            },
+        };
+
+        if (dialog.Content is StackPanel panel && panel.Children[^1] is Button okButton)
+        {
+            okButton.Click += (_, _) => dialog.Close();
+        }
+
+        await dialog.ShowDialog(owner);
     }
 
     private void ApplyTheme(string? theme)

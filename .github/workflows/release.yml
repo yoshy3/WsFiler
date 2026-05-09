@@ -157,7 +157,7 @@ jobs:
           DMG_RW="dist/WsFiler-${VERSION}-osx-arm64.rw.dmg"
           DMG_FINAL="dist/WsFiler-${VERSION}-osx-arm64.dmg"
           VOLUME_NAME="WsFiler $VERSION"
-          MOUNT_DIR="$(mktemp -d)"
+          MOUNT_DIR=""
 
           hdiutil create \
             -volname "$VOLUME_NAME" \
@@ -167,7 +167,8 @@ jobs:
             -fs HFS+ \
             "$DMG_RW"
 
-          hdiutil attach "$DMG_RW" -mountpoint "$MOUNT_DIR" -nobrowse -quiet
+          MOUNT_DIR="$(hdiutil attach "$DMG_RW" -nobrowse | awk -F '\t' 'END { print $NF }')"
+          trap 'if [ -n "$MOUNT_DIR" ]; then hdiutil detach "$MOUNT_DIR" -quiet || true; fi' EXIT
 
           osascript <<APPLESCRIPT
           tell application "Finder"
@@ -190,7 +191,8 @@ jobs:
           APPLESCRIPT
 
           hdiutil detach "$MOUNT_DIR" -quiet
-          rmdir "$MOUNT_DIR"
+          MOUNT_DIR=""
+          trap - EXIT
           hdiutil convert "$DMG_RW" -format UDZO -o "$DMG_FINAL" -ov
           rm "$DMG_RW"
 

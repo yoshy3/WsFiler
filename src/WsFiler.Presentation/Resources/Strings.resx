@@ -261,4 +261,43 @@
   <data name="Dialog.Diff.Title" xml:space="preserve">
     <value>Compare</value>
   </data>
+  <data name="ContextMenu.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="ContextMenu.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="ContextMenu.Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="ContextMenu.Move" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="ContextMenu.Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="ContextMenu.Duplicate" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="ContextMenu.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="ContextMenu.CopyPath" xml:space="preserve">
+    <value>Copy Path</value>
+  </data>
+  <data name="ContextMenu.Properties" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="ContextMenu.NewFolder" xml:space="preserve">
+    <value>New Folder</value>
+  </data>
+  <data name="ContextMenu.NewFile" xml:space="preserve">
+    <value>New File</value>
+  </data>
+  <data name="ContextMenu.OpenInTerminal" xml:space="preserve">
+    <value>Open in Terminal</value>
+  </data>
+  <data name="ContextMenu.Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
 </root>

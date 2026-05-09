@@ -6,14 +6,19 @@
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         Title="Drive">
-    <Grid RowDefinitions="*,Auto"
+    <Grid RowDefinitions="*,Auto,Auto"
           Margin="16"
           RowSpacing="12">
         <ListBox x:Name="DriveListBox"
                  Grid.Row="0"
                  DoubleTapped="OnDoubleTapped"/>
 
-        <StackPanel Grid.Row="1"
+        <TextBox x:Name="PathInput"
+                 Grid.Row="1"
+                 FontFamily="Consolas"
+                 KeyDown="OnPathInputKeyDown"/>
+
+        <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Center"
                     Spacing="12">

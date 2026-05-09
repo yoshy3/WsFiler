@@ -42,6 +42,8 @@ public partial class DriveSelectDialog : Window
             DriveListBox.SelectedIndex = GetInitialDriveIndex(currentPath);
         }
 
+        PathInput.Text = currentPath ?? string.Empty;
+
         Opened += (_, _) => DriveListBox.Focus();
     }
 
@@ -53,6 +55,19 @@ public partial class DriveSelectDialog : Window
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Tab && (e.KeyModifiers & KeyModifiers.Shift) == 0 && !PathInput.IsFocused)
+        {
+            e.Handled = true;
+            PathInput.Focus();
+            PathInput.SelectAll();
+            return;
+        }
+
+        if (PathInput.IsFocused)
+        {
+            return;
+        }
+
         if (e.Key == Key.Escape)
         {
             e.Handled = true;
@@ -72,6 +87,24 @@ public partial class DriveSelectDialog : Window
         {
             e.Handled = true;
             SelectDriveByLetter(driveLetter);
+        }
+    }
+
+    private void OnPathInputKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            var path = PathInput.Text?.Trim();
+            if (!string.IsNullOrEmpty(path))
+            {
+                Close(path);
+            }
+        }
+        else if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            Close(null);
         }
     }
 

@@ -5,6 +5,8 @@ using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
+using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using System;
 using System.Collections.Specialized;
 using System.Collections.Generic;
@@ -16,6 +18,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using WsFiler.App.Shell;
 using WsFiler.Core.Commands;
 using WsFiler.Core.Files;
 using WsFiler.Core.KeyMap;
@@ -44,6 +47,7 @@ public partial class MainWindow : Window
         DataContextChanged += (_, _) => OnDataContextChanged();
         Loaded += (_, _) => UpdatePaneVisualState();
         Focusable = true;
+        RegisterFileGridDragDrop();
     }
 
     public MainWindow()
@@ -57,6 +61,335 @@ public partial class MainWindow : Window
         DataContextChanged += (_, _) => OnDataContextChanged();
         Loaded += (_, _) => UpdatePaneVisualState();
         Focusable = true;
+        RegisterFileGridDragDrop();
+    }
+
+    private Point? dragStartPoint;
+    private DataGrid? dragSourceGrid;
+    private PointerPressedEventArgs? dragPressArgs;
+    private bool dragInProgress;
+
+    private void RegisterFileGridDragDrop()
+    {
+        foreach (var grid in new[] { LeftFileGrid, RightFileGrid })
+        {
+            grid.AddHandler(DragDrop.DragOverEvent, OnFileGridDragOver);
+            grid.AddHandler(DragDrop.DropEvent, OnFileGridDrop);
+            grid.AddHandler(PointerPressedEvent, OnFileGridPointerPressed, RoutingStrategies.Tunnel);
+            grid.AddHandler(PointerMovedEvent, OnFileGridPointerMoved, RoutingStrategies.Tunnel);
+            grid.AddHandler(PointerReleasedEvent, OnFileGridPointerReleased, RoutingStrategies.Tunnel);
+            grid.AddHandler(ContextRequestedEvent, OnFileGridContextRequested);
+        }
+    }
+
+    private async void OnFileGridContextRequested(object? sender, ContextRequestedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel || sender is not DataGrid grid)
+        {
+            return;
+        }
+
+        if (grid == LeftFileGrid)
+        {
+            viewModel.ActivateLeftPane();
+        }
+        else
+        {
+            viewModel.ActivateRightPane();
+        }
+
+        FileItemViewModel? targetItem = null;
+        var pointerPos = new Point();
+        var hasPos = e.TryGetPosition(grid, out pointerPos);
+        if (hasPos)
+        {
+            var hit = grid.InputHitTest(pointerPos);
+            var row = (hit as Visual)?
+                .GetSelfAndVisualAncestors()
+                .OfType<DataGridRow>()
+                .FirstOrDefault();
+            if (row?.DataContext is FileItemViewModel item && !item.IsParent)
+            {
+                targetItem = item;
+                viewModel.ActivePane.MoveCursorTo(item);
+            }
+        }
+
+        e.Handled = true;
+
+        if (OperatingSystem.IsWindows() && hasPos)
+        {
+            var hwnd = TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
+            var screen = grid.PointToScreen(pointerPos);
+            try
+            {
+                if (targetItem is not null)
+                {
+                    var paths = viewModel.ActivePane.OperationTargets
+                        .Select(item => item.FullPath)
+                        .ToList();
+                    if (paths.Count == 0)
+                    {
+                        paths.Add(targetItem.FullPath);
+                    }
+                    ShellContextMenu.ShowForFiles(hwnd, paths, screen.X, screen.Y);
+                }
+                else
+                {
+                    ShellContextMenu.ShowForFolderBackground(hwnd, viewModel.ActivePane.CurrentPath, screen.X, screen.Y);
+                }
+            }
+            catch (Exception ex)
+            {
+                viewModel.LogError(ex.Message);
+            }
+
+            await viewModel.RefreshActivePaneAsync();
+            ScrollActiveSelectionIntoView(viewModel);
+            RefreshCursorUnderlines();
+            UpdatePaneVisualState(viewModel);
+            return;
+        }
+
+        var menu = BuildContextMenu(viewModel, targetItem);
+        menu.Placement = PlacementMode.Pointer;
+        menu.Open(grid);
+
+        ScrollActiveSelectionIntoView(viewModel);
+        RefreshCursorUnderlines();
+        UpdatePaneVisualState(viewModel);
+    }
+
+    private ContextMenu BuildContextMenu(MainWindowViewModel viewModel, FileItemViewModel? targetItem)
+    {
+        var items = new List<object>();
+
+        if (targetItem is not null)
+        {
+            items.Add(MakeMenuItem(Strings.ContextMenu_Open,
+                () => viewModel.HandleCommandAsync(ApplicationCommandId.DirectoryOpen)));
+            if (!targetItem.IsDirectory)
+            {
+                items.Add(MakeMenuItem(Strings.ContextMenu_Edit,
+                    () => LaunchEditorAsync(viewModel)));
+            }
+            items.Add(new Separator());
+            items.Add(MakeMenuItem(Strings.ContextMenu_Copy, () => ConfirmAndCopyAsync(viewModel)));
+            items.Add(MakeMenuItem(Strings.ContextMenu_Move, () => ConfirmAndMoveAsync(viewModel)));
+            items.Add(MakeMenuItem(Strings.ContextMenu_Rename, () => ConfirmAndRenameAsync(viewModel)));
+            items.Add(MakeMenuItem(Strings.ContextMenu_Duplicate, () => DuplicateCurrentItemAsync(viewModel)));
+            items.Add(MakeMenuItem(Strings.ContextMenu_Delete, () => ConfirmAndDeleteAsync(viewModel)));
+            items.Add(new Separator());
+            items.Add(MakeMenuItem(Strings.ContextMenu_CopyPath, () => CopyCurrentPathAsync(viewModel)));
+            items.Add(MakeMenuItem(Strings.ContextMenu_Properties, () => ShowPropertiesAsync(viewModel)));
+        }
+        else
+        {
+            items.Add(MakeMenuItem(Strings.ContextMenu_NewFolder, () => ShowCreateDirectoryDialogAsync(viewModel)));
+            items.Add(MakeMenuItem(Strings.ContextMenu_NewFile, () => ShowCreateFileDialogAsync(viewModel)));
+            items.Add(new Separator());
+            items.Add(MakeMenuItem(Strings.ContextMenu_OpenInTerminal, () =>
+            {
+                LaunchTerminal(viewModel);
+                return Task.CompletedTask;
+            }));
+            items.Add(MakeMenuItem(Strings.ContextMenu_Refresh,
+                () => viewModel.HandleCommandAsync(ApplicationCommandId.ViewRefresh)));
+            items.Add(new Separator());
+            items.Add(MakeMenuItem(Strings.ContextMenu_Properties,
+                () => ShowPropertiesForPathAsync(viewModel.ActivePane.CurrentPath, viewModel)));
+        }
+
+        return new ContextMenu { ItemsSource = items };
+    }
+
+    private static MenuItem MakeMenuItem(string header, Func<Task> action)
+    {
+        var item = new MenuItem { Header = header };
+        item.Click += async (_, _) =>
+        {
+            try
+            {
+                await action();
+            }
+            catch
+            {
+            }
+        };
+        return item;
+    }
+
+    private async Task ShowPropertiesForPathAsync(string path, MainWindowViewModel viewModel)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            ShowWindowsProperties(path, viewModel);
+            return;
+        }
+
+        var info = $"Path: {path}";
+        var dialog = new TextPreviewDialog(path, info, isTruncated: false);
+        dialog.FitToOwner(this);
+        await dialog.ShowDialog(this);
+    }
+
+    private void OnFileGridDragOver(object? sender, DragEventArgs e)
+    {
+        e.DragEffects = e.DataTransfer.Contains(DataFormat.File)
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private async void OnFileGridDrop(object? sender, DragEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel ||
+            sender is not DataGrid grid ||
+            !e.DataTransfer.Contains(DataFormat.File))
+        {
+            return;
+        }
+
+        var files = e.DataTransfer.TryGetFiles();
+        if (files is null)
+        {
+            return;
+        }
+
+        var sourcePaths = files
+            .Select(item => item.TryGetLocalPath())
+            .Where(path => !string.IsNullOrEmpty(path))
+            .Select(path => path!)
+            .ToList();
+
+        if (sourcePaths.Count == 0)
+        {
+            return;
+        }
+
+        var destinationPane = grid == LeftFileGrid ? viewModel.LeftPane : viewModel.RightPane;
+        e.Handled = true;
+        await viewModel.CopyExternalFilesAsync(sourcePaths, destinationPane, ResolveConflictAsync);
+    }
+
+    private void OnFileGridPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is not DataGrid grid)
+        {
+            return;
+        }
+
+        var point = e.GetCurrentPoint(grid);
+        if (!point.Properties.IsLeftButtonPressed)
+        {
+            dragStartPoint = null;
+            dragSourceGrid = null;
+            return;
+        }
+
+        dragStartPoint = point.Position;
+        dragSourceGrid = grid;
+        dragPressArgs = e;
+        dragInProgress = false;
+    }
+
+    private void OnFileGridPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        dragStartPoint = null;
+        dragSourceGrid = null;
+        dragPressArgs = null;
+        dragInProgress = false;
+    }
+
+    private async void OnFileGridPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (dragInProgress ||
+            dragStartPoint is null ||
+            dragSourceGrid is null ||
+            sender is not DataGrid grid ||
+            grid != dragSourceGrid ||
+            DataContext is not MainWindowViewModel viewModel)
+        {
+            return;
+        }
+
+        if (!e.GetCurrentPoint(grid).Properties.IsLeftButtonPressed)
+        {
+            dragStartPoint = null;
+            dragSourceGrid = null;
+            return;
+        }
+
+        var current = e.GetCurrentPoint(grid).Position;
+        var delta = current - dragStartPoint.Value;
+        if (Math.Abs(delta.X) < 6 && Math.Abs(delta.Y) < 6)
+        {
+            return;
+        }
+
+        var pane = grid == LeftFileGrid ? viewModel.LeftPane : viewModel.RightPane;
+        var paths = pane.OperationTargets.Select(item => item.FullPath).ToList();
+        if (paths.Count == 0)
+        {
+            dragStartPoint = null;
+            dragSourceGrid = null;
+            return;
+        }
+
+        var dataTransfer = await BuildFileDataTransferAsync(paths);
+        if (dataTransfer is null || dragPressArgs is null)
+        {
+            return;
+        }
+
+        dragInProgress = true;
+        try
+        {
+            await DragDrop.DoDragDropAsync(dragPressArgs, dataTransfer, DragDropEffects.Copy);
+        }
+        catch (Exception ex)
+        {
+            viewModel.LogError(ex.Message);
+        }
+        finally
+        {
+            dragInProgress = false;
+            dragStartPoint = null;
+            dragSourceGrid = null;
+            dragPressArgs = null;
+        }
+    }
+
+    private async Task<DataTransfer?> BuildFileDataTransferAsync(IReadOnlyList<string> paths)
+    {
+        var storageProvider = StorageProvider;
+        if (storageProvider is null)
+        {
+            return null;
+        }
+
+        var transfer = new DataTransfer();
+        foreach (var path in paths)
+        {
+            try
+            {
+                var uri = new Uri(path);
+                IStorageItem? item = Directory.Exists(path)
+                    ? await storageProvider.TryGetFolderFromPathAsync(uri)
+                    : await storageProvider.TryGetFileFromPathAsync(uri);
+                if (item is not null)
+                {
+                    var transferItem = new DataTransferItem();
+                    transferItem.SetFile(item);
+                    transfer.Add(transferItem);
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        return transfer.Items.Count == 0 ? null : transfer;
     }
 
     private void SetupWindowIcon()
@@ -263,7 +596,10 @@ public partial class MainWindow : Window
         ClearGridSelection(LeftFileGrid);
         RefreshCursorUnderlines();
         UpdatePaneVisualState(viewModel);
-        Focus();
+        if (!HasOpenDialog)
+        {
+            Focus();
+        }
     }
 
     private void OnRightFileGridSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -279,8 +615,13 @@ public partial class MainWindow : Window
         ClearGridSelection(RightFileGrid);
         RefreshCursorUnderlines();
         UpdatePaneVisualState(viewModel);
-        Focus();
+        if (!HasOpenDialog)
+        {
+            Focus();
+        }
     }
+
+    private bool HasOpenDialog => OwnedWindows.Count > 0;
 
     private void OnFileGridLoadingRow(object? sender, DataGridRowEventArgs e)
     {
@@ -449,12 +790,56 @@ public partial class MainWindow : Window
         }
     }
 
+    private static readonly HashSet<string> ImagePreviewExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp", ".ico"
+    };
+
+    private static readonly HashSet<string> BinaryPreviewExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".exe", ".dll", ".so", ".dylib", ".o", ".obj", ".a", ".lib", ".pdb",
+        ".class", ".jar", ".wasm",
+        ".zip", ".gz", ".tgz", ".7z", ".rar", ".tar", ".bz2", ".xz",
+        ".pdf",
+        ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+        ".mp3", ".mp4", ".m4a", ".mov", ".avi", ".mkv", ".wav", ".flac", ".ogg", ".webm",
+        ".iso", ".img", ".bin", ".dat", ".db", ".sqlite", ".sqlite3",
+    };
+
     private async Task PreviewTextFileAsync(FileItemViewModel item)
     {
         try
         {
-            var (text, isTruncated) = await ReadPreviewTextAsync(item.FullPath);
-            var dialog = new TextPreviewDialog(item.FullPath, text, isTruncated);
+            var ext = Path.GetExtension(item.FullPath);
+            if (ImagePreviewExtensions.Contains(ext))
+            {
+                var bitmap = await Task.Run(() => ImagePreviewDialog.LoadBitmap(item.FullPath));
+                var imageDialog = new ImagePreviewDialog(item.FullPath, bitmap, NavigateImagePreviewAsync);
+                imageDialog.FitToOwner(this);
+                await imageDialog.ShowDialog(this);
+                return;
+            }
+
+            var (bytes, isTruncated) = await ReadPreviewBytesAsync(item.FullPath);
+            var isBinary = BinaryPreviewExtensions.Contains(ext) || LooksBinary(bytes);
+            var textView = Encoding.UTF8.GetString(bytes);
+            var hexView = FormatHexDump(bytes);
+            var primary = isBinary ? hexView : textView;
+            var alternate = isBinary ? textView : hexView;
+            var capturedPath = item.FullPath;
+            var dialog = new TextPreviewDialog(
+                capturedPath,
+                primary,
+                isTruncated,
+                alternate,
+                isInitiallyHex: isBinary,
+                editAction: () =>
+                {
+                    if (DataContext is MainWindowViewModel vm)
+                    {
+                        _ = LaunchEditorForPathAsync(capturedPath, vm);
+                    }
+                });
             dialog.FitToOwner(this);
             await dialog.ShowDialog(this);
         }
@@ -465,6 +850,57 @@ public partial class MainWindow : Window
                 viewModel.LogError(ex.Message);
             }
         }
+    }
+
+    private async Task<(string Path, Avalonia.Media.Imaging.Bitmap Bitmap)?> NavigateImagePreviewAsync(int direction)
+    {
+        if (DataContext is not MainWindowViewModel viewModel)
+        {
+            return null;
+        }
+
+        var pane = viewModel.ActivePane;
+        var items = pane.Items;
+        var current = pane.CurrentItem;
+        if (current is null || items.Count == 0)
+        {
+            return null;
+        }
+
+        var startIndex = items.IndexOf(current);
+        if (startIndex < 0)
+        {
+            return null;
+        }
+
+        for (var step = 1; step <= items.Count; step++)
+        {
+            var idx = startIndex + direction * step;
+            if (idx < 0 || idx >= items.Count)
+            {
+                return null;
+            }
+
+            var candidate = items[idx];
+            if (candidate.IsParent || candidate.IsDirectory)
+            {
+                continue;
+            }
+            if (!ImagePreviewExtensions.Contains(Path.GetExtension(candidate.FullPath)))
+            {
+                continue;
+            }
+
+            pane.MoveCursorTo(candidate);
+            ScrollActiveSelectionIntoView(viewModel);
+            RefreshCursorUnderlines();
+            UpdatePaneVisualState(viewModel);
+
+            var bitmap = await Task.Run(() => ImagePreviewDialog.LoadBitmap(candidate.FullPath));
+            return (candidate.FullPath, bitmap);
+        }
+
+        return null;
     }
 
     private async Task ShowDriveSelectDialogAsync(MainWindowViewModel viewModel)
@@ -612,18 +1048,27 @@ public partial class MainWindow : Window
 
     private void LaunchTerminal(MainWindowViewModel viewModel)
     {
+        var workingDirectory = viewModel.ActivePane.CurrentPath;
         try
         {
             if (OperatingSystem.IsWindows())
             {
-                LaunchWindowsTerminal(viewModel.ActivePane.CurrentPath);
+                LaunchWindowsTerminal(workingDirectory);
                 return;
             }
 
-            var fileName = "x-terminal-emulator";
-            Process.Start(new ProcessStartInfo(fileName)
+            if (OperatingSystem.IsMacOS())
             {
-                WorkingDirectory = viewModel.ActivePane.CurrentPath,
+                Process.Start(new ProcessStartInfo("open", $"-a Terminal \"{workingDirectory}\"")
+                {
+                    UseShellExecute = true,
+                });
+                return;
+            }
+
+            Process.Start(new ProcessStartInfo("x-terminal-emulator")
+            {
+                WorkingDirectory = workingDirectory,
                 UseShellExecute = true,
             });
         }
@@ -637,9 +1082,8 @@ public partial class MainWindow : Window
     {
         try
         {
-            Process.Start(new ProcessStartInfo("wt.exe")
+            Process.Start(new ProcessStartInfo("wt.exe", $"-d \"{workingDirectory}\"")
             {
-                WorkingDirectory = workingDirectory,
                 UseShellExecute = true,
             });
             return;
@@ -801,6 +1245,11 @@ public partial class MainWindow : Window
             return;
         }
 
+        await LaunchEditorForPathAsync(current.FullPath, viewModel);
+    }
+
+    private async Task LaunchEditorForPathAsync(string path, MainWindowViewModel viewModel)
+    {
         var settings = SettingsManager.Load();
         if (string.IsNullOrWhiteSpace(settings.ExternalEditor))
         {
@@ -819,7 +1268,7 @@ public partial class MainWindow : Window
 
         try
         {
-            Process.Start(new ProcessStartInfo(settings.ExternalEditor!, current.FullPath)
+            Process.Start(new ProcessStartInfo(settings.ExternalEditor!, path)
             {
                 UseShellExecute = true,
             });
@@ -882,7 +1331,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private static async Task<(string Text, bool IsTruncated)> ReadPreviewTextAsync(string path)
+    private static async Task<(byte[] Bytes, bool IsTruncated)> ReadPreviewBytesAsync(string path)
     {
         await using var stream = File.OpenRead(path);
         var bufferSize = (int)System.Math.Min(stream.Length, PreviewByteLimit);
@@ -900,8 +1349,73 @@ public partial class MainWindow : Window
             totalRead += read;
         }
 
-        var text = Encoding.UTF8.GetString(buffer, 0, totalRead);
-        return (text, stream.Length > PreviewByteLimit);
+        if (totalRead < buffer.Length)
+        {
+            Array.Resize(ref buffer, totalRead);
+        }
+
+        return (buffer, stream.Length > PreviewByteLimit);
+    }
+
+    private static bool LooksBinary(byte[] bytes)
+    {
+        var sample = System.Math.Min(bytes.Length, 8192);
+        for (var i = 0; i < sample; i++)
+        {
+            if (bytes[i] == 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static string FormatHexDump(byte[] bytes)
+    {
+        var sb = new StringBuilder(bytes.Length * 4);
+        for (var offset = 0; offset < bytes.Length; offset += 16)
+        {
+            sb.Append(offset.ToString("x8"));
+            sb.Append(": ");
+
+            for (var i = 0; i < 16; i++)
+            {
+                var idx = offset + i;
+                if (idx < bytes.Length)
+                {
+                    sb.Append(bytes[idx].ToString("x2"));
+                }
+                else
+                {
+                    sb.Append("  ");
+                }
+
+                if (i == 7)
+                {
+                    sb.Append('-');
+                }
+                else if (i < 15)
+                {
+                    sb.Append(' ');
+                }
+            }
+
+            sb.Append(' ');
+            for (var i = 0; i < 16; i++)
+            {
+                var idx = offset + i;
+                if (idx >= bytes.Length)
+                {
+                    break;
+                }
+
+                var b = bytes[idx];
+                sb.Append(b is >= 0x20 and < 0x7F ? (char)b : '.');
+            }
+
+            sb.Append('\n');
+        }
+        return sb.ToString();
     }
 
     private void ScrollActiveSelectionIntoView(MainWindowViewModel viewModel)
@@ -914,7 +1428,10 @@ public partial class MainWindow : Window
 
         var grid = viewModel.LeftPane.IsActive ? LeftFileGrid : RightFileGrid;
         grid.ScrollIntoView(selectedItem, null);
-        Focus();
+        if (!HasOpenDialog)
+        {
+            Focus();
+        }
     }
 
     private int GetVisibleFileRowCount(MainWindowViewModel viewModel)

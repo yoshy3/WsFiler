@@ -292,6 +292,30 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    public async Task CopyExternalFilesAsync(
+        IReadOnlyList<string> sourcePaths,
+        FilePaneViewModel destinationPane,
+        Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync)
+    {
+        if (sourcePaths.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await fileSystemProvider.CopyAsync(sourcePaths, destinationPane.CurrentPath, resolveConflictAsync);
+            await RefreshPaneAsync(destinationPane);
+            StatusMessage = string.Format(Strings.Status_Copied, sourcePaths.Count);
+            LogInfo(StatusMessage);
+            OnPropertyChanged(nameof(StatusSummary));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex.Message);
+        }
+    }
+
     public async Task MoveAsync(
         FileOperationRequest request,
         Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync)

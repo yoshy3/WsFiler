@@ -210,4 +210,30 @@ public class Strings
     public static string Status_PropertiesUnavailable => ResourceManager.GetString("Status.PropertiesUnavailable", resourceCulture)!;
 
     public static string Dialog_Diff_Title => ResourceManager.GetString("Dialog.Diff.Title", resourceCulture)!;
+
+    public static string ContextMenu_Open => ResourceManager.GetString("ContextMenu.Open", resourceCulture)!;
+
+    public static string ContextMenu_Edit => ResourceManager.GetString("ContextMenu.Edit", resourceCulture)!;
+
+    public static string ContextMenu_Copy => ResourceManager.GetString("ContextMenu.Copy", resourceCulture)!;
+
+    public static string ContextMenu_Move => ResourceManager.GetString("ContextMenu.Move", resourceCulture)!;
+
+    public static string ContextMenu_Rename => ResourceManager.GetString("ContextMenu.Rename", resourceCulture)!;
+
+    public static string ContextMenu_Duplicate => ResourceManager.GetString("ContextMenu.Duplicate", resourceCulture)!;
+
+    public static string ContextMenu_Delete => ResourceManager.GetString("ContextMenu.Delete", resourceCulture)!;
+
+    public static string ContextMenu_CopyPath => ResourceManager.GetString("ContextMenu.CopyPath", resourceCulture)!;
+
+    public static string ContextMenu_Properties => ResourceManager.GetString("ContextMenu.Properties", resourceCulture)!;
+
+    public static string ContextMenu_NewFolder => ResourceManager.GetString("ContextMenu.NewFolder", resourceCulture)!;
+
+    public static string ContextMenu_NewFile => ResourceManager.GetString("ContextMenu.NewFile", resourceCulture)!;
+
+    public static string ContextMenu_OpenInTerminal => ResourceManager.GetString("ContextMenu.OpenInTerminal", resourceCulture)!;
+
+    public static string ContextMenu_Refresh => ResourceManager.GetString("ContextMenu.Refresh", resourceCulture)!;
 }

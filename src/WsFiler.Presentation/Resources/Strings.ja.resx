@@ -318,6 +318,9 @@
   <data name="ContextMenu.CopyPath" xml:space="preserve">
     <value>パスをコピー</value>
   </data>
+  <data name="ContextMenu.RevealInFinder" xml:space="preserve">
+    <value>Finderで表示</value>
+  </data>
   <data name="ContextMenu.Properties" xml:space="preserve">
     <value>プロパティ</value>
   </data>

@@ -318,6 +318,9 @@
   <data name="ContextMenu.CopyPath" xml:space="preserve">
     <value>Copy Path</value>
   </data>
+  <data name="ContextMenu.RevealInFinder" xml:space="preserve">
+    <value>Reveal in Finder</value>
+  </data>
   <data name="ContextMenu.Properties" xml:space="preserve">
     <value>Properties</value>
   </data>

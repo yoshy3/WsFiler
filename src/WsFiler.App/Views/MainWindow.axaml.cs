@@ -181,6 +181,11 @@ public partial class MainWindow : Window
             items.Add(MakeMenuItem(Strings.ContextMenu_Delete, () => ConfirmAndDeleteAsync(viewModel)));
             items.Add(new Separator());
             items.Add(MakeMenuItem(Strings.ContextMenu_CopyPath, () => CopyCurrentPathAsync(viewModel)));
+            if (OperatingSystem.IsMacOS())
+            {
+                items.Add(MakeMenuItem(Strings.ContextMenu_RevealInFinder,
+                    () => RevealInFinderAsync(targetItem.FullPath, viewModel)));
+            }
             items.Add(MakeMenuItem(Strings.ContextMenu_Properties, () => ShowPropertiesAsync(viewModel)));
         }
         else
@@ -217,6 +222,42 @@ public partial class MainWindow : Window
             }
         };
         return item;
+    }
+
+    private static async Task RevealInFinderAsync(string path, MainWindowViewModel viewModel)
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return;
+        }
+
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "open",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            startInfo.ArgumentList.Add("-R");
+            startInfo.ArgumentList.Add(Path.GetFullPath(path));
+
+            using var process = Process.Start(startInfo);
+            if (process is null)
+            {
+                throw new InvalidOperationException(Strings.Status_PropertiesUnavailable);
+            }
+
+            await process.WaitForExitAsync();
+            if (process.ExitCode != 0)
+            {
+                throw new InvalidOperationException(Strings.Status_PropertiesUnavailable);
+            }
+        }
+        catch (Exception ex)
+        {
+            viewModel.LogError(ex.Message);
+        }
     }
 
     private async Task ShowPropertiesForPathAsync(string path, MainWindowViewModel viewModel)
@@ -1174,6 +1215,11 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (await TryShowMacFinderPropertiesAsync(current.FullPath))
+        {
+            return;
+        }
+
         if (await TryShowGnomeFilesPropertiesAsync(current.FullPath))
         {
             return;
@@ -1197,6 +1243,50 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             viewModel.LogError(ex.Message);
+        }
+    }
+
+    private static async Task<bool> TryShowMacFinderPropertiesAsync(string path)
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return false;
+        }
+
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "osascript",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            startInfo.ArgumentList.Add("-e");
+            startInfo.ArgumentList.Add("""
+                on run argv
+                    set targetPath to item 1 of argv
+                    set targetItem to POSIX file targetPath as alias
+                    tell application "Finder"
+                        activate
+                        open information window of targetItem
+                    end tell
+                end run
+                """);
+            startInfo.ArgumentList.Add(Path.GetFullPath(path));
+
+            using var process = Process.Start(startInfo);
+            if (process is null)
+            {
+                return false;
+            }
+
+            await process.WaitForExitAsync();
+            return process.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
         }
     }
 

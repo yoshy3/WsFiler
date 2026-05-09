@@ -249,6 +249,8 @@ public class Strings
 
     public static string ContextMenu_CopyPath => ResourceManager.GetString("ContextMenu.CopyPath", resourceCulture)!;
 
+    public static string ContextMenu_RevealInFinder => ResourceManager.GetString("ContextMenu.RevealInFinder", resourceCulture)!;
+
     public static string ContextMenu_Properties => ResourceManager.GetString("ContextMenu.Properties", resourceCulture)!;
 
     public static string ContextMenu_NewFolder => ResourceManager.GetString("ContextMenu.NewFolder", resourceCulture)!;

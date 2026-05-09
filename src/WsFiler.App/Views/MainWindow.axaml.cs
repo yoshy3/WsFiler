@@ -227,6 +227,11 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (await TryShowGnomeFilesPropertiesAsync(path))
+        {
+            return;
+        }
+
         var info = $"Path: {path}";
         var dialog = new TextPreviewDialog(path, info, isTruncated: false);
         dialog.FitToOwner(this);
@@ -947,12 +952,26 @@ public partial class MainWindow : Window
 
         try
         {
-            var attrs = await viewModel.GetAttributesAsync(current.FullPath);
-            var dialog = new AttributeDialog(current.Name, attrs);
-            var newAttrs = await dialog.ShowDialog<FileAttributes?>(this);
-            if (newAttrs.HasValue)
+            if (OperatingSystem.IsWindows())
             {
-                await viewModel.SetAttributesAsync(current.FullPath, newAttrs.Value);
+                var attrs = await viewModel.GetAttributesAsync(current.FullPath);
+                var dialog = new AttributeDialog(current.Name, attrs);
+                var newAttrs = await dialog.ShowDialog<FileAttributes?>(this);
+                if (newAttrs.HasValue)
+                {
+                    await viewModel.SetAttributesAsync(current.FullPath, newAttrs.Value);
+                }
+
+                return;
+            }
+
+            var mode = await viewModel.GetUnixFileModeAsync(current.FullPath);
+            var canEdit = await viewModel.CanSetUnixFileModeAsync(current.FullPath);
+            var unixDialog = new UnixAttributeDialog(current.Name, mode, canEdit);
+            var newMode = await unixDialog.ShowDialog<UnixFileMode?>(this);
+            if (newMode.HasValue)
+            {
+                await viewModel.SetUnixFileModeAsync(current.FullPath, newMode.Value);
             }
         }
         catch (Exception ex)
@@ -1155,6 +1174,11 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (await TryShowGnomeFilesPropertiesAsync(current.FullPath))
+        {
+            return;
+        }
+
         var info = BuildPropertiesText(current);
         var dialog = new TextPreviewDialog(current.FullPath, info, isTruncated: false);
         dialog.FitToOwner(this);
@@ -1175,6 +1199,64 @@ public partial class MainWindow : Window
             viewModel.LogError(ex.Message);
         }
     }
+
+    private static async Task<bool> TryShowGnomeFilesPropertiesAsync(string path)
+    {
+        if (!OperatingSystem.IsLinux() || !IsGnomeDesktop())
+        {
+            return false;
+        }
+
+        try
+        {
+            var uri = new Uri(Path.GetFullPath(path)).AbsoluteUri;
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "dbus-send",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            startInfo.ArgumentList.Add("--session");
+            startInfo.ArgumentList.Add("--type=method_call");
+            startInfo.ArgumentList.Add("--print-reply");
+            startInfo.ArgumentList.Add("--reply-timeout=1000");
+            startInfo.ArgumentList.Add("--dest=org.freedesktop.FileManager1");
+            startInfo.ArgumentList.Add("/org/freedesktop/FileManager1");
+            startInfo.ArgumentList.Add("org.freedesktop.FileManager1.ShowItemProperties");
+            startInfo.ArgumentList.Add($"array:string:{uri}");
+            startInfo.ArgumentList.Add("string:");
+
+            using var process = Process.Start(startInfo);
+            if (process is null)
+            {
+                return false;
+            }
+
+            await process.WaitForExitAsync();
+            return process.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool IsGnomeDesktop()
+    {
+        var currentDesktop = Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP");
+        if (ContainsDesktopName(currentDesktop, "GNOME"))
+        {
+            return true;
+        }
+
+        var desktopSession = Environment.GetEnvironmentVariable("DESKTOP_SESSION");
+        return ContainsDesktopName(desktopSession, "gnome") ||
+            ContainsDesktopName(desktopSession, "ubuntu");
+    }
+
+    private static bool ContainsDesktopName(string? value, string name) =>
+        value?.Contains(name, StringComparison.OrdinalIgnoreCase) == true;
 
     private static string BuildPropertiesText(FileItemViewModel item)
     {

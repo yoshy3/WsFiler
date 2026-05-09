@@ -32,4 +32,10 @@ public interface IFileSystemProvider
     Task<FileAttributes> GetAttributesAsync(string path, CancellationToken cancellationToken = default);
 
     Task SetAttributesAsync(string path, FileAttributes attributes, CancellationToken cancellationToken = default);
+
+    Task<UnixFileMode> GetUnixFileModeAsync(string path, CancellationToken cancellationToken = default);
+
+    Task SetUnixFileModeAsync(string path, UnixFileMode mode, CancellationToken cancellationToken = default);
+
+    Task<bool> CanSetUnixFileModeAsync(string path, CancellationToken cancellationToken = default);
 }

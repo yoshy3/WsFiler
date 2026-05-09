@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Globalization;
 using WsFiler.Core.Files;
 
 namespace WsFiler.Infra.Files;
@@ -282,6 +284,95 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         cancellationToken.ThrowIfCancellationRequested();
         File.SetAttributes(path, attributes);
         return Task.CompletedTask;
+    }
+
+    public Task<UnixFileMode> GetUnixFileModeAsync(string path, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException("Unix file mode is not supported on Windows.");
+        }
+
+        return Task.FromResult(File.GetUnixFileMode(path));
+    }
+
+    public Task SetUnixFileModeAsync(string path, UnixFileMode mode, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException("Unix file mode is not supported on Windows.");
+        }
+
+        File.SetUnixFileMode(path, mode);
+        return Task.CompletedTask;
+    }
+
+    public async Task<bool> CanSetUnixFileModeAsync(string path, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        var currentUserId = await GetCurrentUnixUserIdAsync(cancellationToken);
+        if (currentUserId == 0)
+        {
+            return true;
+        }
+
+        var ownerUserId = await GetOwnerUnixUserIdAsync(path, cancellationToken);
+        return currentUserId == ownerUserId;
+    }
+
+    private static async Task<uint> GetCurrentUnixUserIdAsync(CancellationToken cancellationToken)
+    {
+        var output = await RunProcessAsync("id", ["-u"], cancellationToken);
+        return uint.Parse(output, CultureInfo.InvariantCulture);
+    }
+
+    private static async Task<uint> GetOwnerUnixUserIdAsync(string path, CancellationToken cancellationToken)
+    {
+        var arguments = OperatingSystem.IsMacOS()
+            ? new[] { "-f", "%u", path }
+            : new[] { "-c", "%u", path };
+        var output = await RunProcessAsync("stat", arguments, cancellationToken);
+        return uint.Parse(output, CultureInfo.InvariantCulture);
+    }
+
+    private static async Task<string> RunProcessAsync(
+        string fileName,
+        IReadOnlyList<string> arguments,
+        CancellationToken cancellationToken)
+    {
+        using var process = new Process();
+        process.StartInfo = new ProcessStartInfo(fileName)
+        {
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+        };
+
+        foreach (var argument in arguments)
+        {
+            process.StartInfo.ArgumentList.Add(argument);
+        }
+
+        process.Start();
+        var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+        var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
+        await process.WaitForExitAsync(cancellationToken);
+
+        var output = await outputTask;
+        if (process.ExitCode == 0)
+        {
+            return output.Trim();
+        }
+
+        var error = await errorTask;
+        throw new IOException(error.Trim());
     }
 
     private static FileSystemItem ToItem(FileSystemInfo info)

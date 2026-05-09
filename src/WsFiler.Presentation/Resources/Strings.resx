@@ -153,6 +153,39 @@
   <data name="Dialog.Attributes.System" xml:space="preserve">
     <value>System</value>
   </data>
+  <data name="Dialog.UnixAttributes.Title" xml:space="preserve">
+    <value>Permissions</value>
+  </data>
+  <data name="Dialog.UnixAttributes.Owner" xml:space="preserve">
+    <value>Owner</value>
+  </data>
+  <data name="Dialog.UnixAttributes.Group" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="Dialog.UnixAttributes.Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Dialog.UnixAttributes.Read" xml:space="preserve">
+    <value>Read</value>
+  </data>
+  <data name="Dialog.UnixAttributes.Write" xml:space="preserve">
+    <value>Write</value>
+  </data>
+  <data name="Dialog.UnixAttributes.Execute" xml:space="preserve">
+    <value>Execute</value>
+  </data>
+  <data name="Dialog.UnixAttributes.SetUserId" xml:space="preserve">
+    <value>Set user ID</value>
+  </data>
+  <data name="Dialog.UnixAttributes.SetGroupId" xml:space="preserve">
+    <value>Set group ID</value>
+  </data>
+  <data name="Dialog.UnixAttributes.StickyBit" xml:space="preserve">
+    <value>Sticky bit</value>
+  </data>
+  <data name="Dialog.UnixAttributes.ReadOnlyMessage" xml:space="preserve">
+    <value>Permissions can be changed only by root or the file owner.</value>
+  </data>
   <data name="Dialog.DirectoryCreate.Title" xml:space="preserve">
     <value>Create Directory</value>
   </data>

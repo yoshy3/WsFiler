@@ -139,6 +139,28 @@ public class Strings
 
     public static string Dialog_Attributes_System => ResourceManager.GetString("Dialog.Attributes.System", resourceCulture)!;
 
+    public static string Dialog_UnixAttributes_Title => ResourceManager.GetString("Dialog.UnixAttributes.Title", resourceCulture)!;
+
+    public static string Dialog_UnixAttributes_Owner => ResourceManager.GetString("Dialog.UnixAttributes.Owner", resourceCulture)!;
+
+    public static string Dialog_UnixAttributes_Group => ResourceManager.GetString("Dialog.UnixAttributes.Group", resourceCulture)!;
+
+    public static string Dialog_UnixAttributes_Other => ResourceManager.GetString("Dialog.UnixAttributes.Other", resourceCulture)!;
+
+    public static string Dialog_UnixAttributes_Read => ResourceManager.GetString("Dialog.UnixAttributes.Read", resourceCulture)!;
+
+    public static string Dialog_UnixAttributes_Write => ResourceManager.GetString("Dialog.UnixAttributes.Write", resourceCulture)!;
+
+    public static string Dialog_UnixAttributes_Execute => ResourceManager.GetString("Dialog.UnixAttributes.Execute", resourceCulture)!;
+
+    public static string Dialog_UnixAttributes_SetUserId => ResourceManager.GetString("Dialog.UnixAttributes.SetUserId", resourceCulture)!;
+
+    public static string Dialog_UnixAttributes_SetGroupId => ResourceManager.GetString("Dialog.UnixAttributes.SetGroupId", resourceCulture)!;
+
+    public static string Dialog_UnixAttributes_StickyBit => ResourceManager.GetString("Dialog.UnixAttributes.StickyBit", resourceCulture)!;
+
+    public static string Dialog_UnixAttributes_ReadOnlyMessage => ResourceManager.GetString("Dialog.UnixAttributes.ReadOnlyMessage", resourceCulture)!;
+
     public static string Dialog_DirectoryCreate_Title => ResourceManager.GetString("Dialog.DirectoryCreate.Title", resourceCulture)!;
 
     public static string Dialog_DirectoryCreate_Prompt => ResourceManager.GetString("Dialog.DirectoryCreate.Prompt", resourceCulture)!;

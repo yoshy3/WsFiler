@@ -482,6 +482,31 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         return fileSystemProvider.GetAttributesAsync(path);
     }
 
+    public async Task SetUnixFileModeAsync(string path, UnixFileMode mode)
+    {
+        try
+        {
+            await fileSystemProvider.SetUnixFileModeAsync(path, mode);
+            await RefreshPaneAsync(ActivePane);
+            StatusMessage = Strings.Status_AttributesChanged;
+            LogInfo(StatusMessage);
+        }
+        catch (Exception ex)
+        {
+            LogError(ex.Message);
+        }
+    }
+
+    public Task<UnixFileMode> GetUnixFileModeAsync(string path)
+    {
+        return fileSystemProvider.GetUnixFileModeAsync(path);
+    }
+
+    public Task<bool> CanSetUnixFileModeAsync(string path)
+    {
+        return fileSystemProvider.CanSetUnixFileModeAsync(path);
+    }
+
     private async Task NavigateParentAsync()
     {
         var parent = Directory.GetParent(ActivePane.CurrentPath);
@@ -668,6 +693,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             Task.FromResult(FileAttributes.Normal);
 
         public Task SetAttributesAsync(string path, FileAttributes attributes, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task<UnixFileMode> GetUnixFileModeAsync(string path, CancellationToken cancellationToken = default) =>
+            Task.FromResult(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
+
+        public Task SetUnixFileModeAsync(string path, UnixFileMode mode, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task<bool> CanSetUnixFileModeAsync(string path, CancellationToken cancellationToken = default) =>
+            Task.FromResult(true);
     }
 
     private enum PaneDirection

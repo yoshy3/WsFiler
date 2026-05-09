@@ -132,6 +132,7 @@ jobs:
 
           cp -r publish/osx-arm64/* "$APP_BUNDLE/Contents/MacOS/"
           chmod +x "$APP_BUNDLE/Contents/MacOS/WsFiler.App"
+          cp src/WsFiler.App/Assets/WsFiler.icns "$APP_BUNDLE/Contents/Resources/WsFiler.icns"
 
           cat > "$APP_BUNDLE/Contents/Info.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
@@ -143,6 +144,7 @@ jobs:
             <key>CFBundleVersion</key><string>${VERSION}</string>
             <key>CFBundleShortVersionString</key><string>${VERSION}</string>
             <key>CFBundleExecutable</key><string>WsFiler.App</string>
+            <key>CFBundleIconFile</key><string>WsFiler</string>
             <key>CFBundlePackageType</key><string>APPL</string>
             <key>NSHighResolutionCapable</key><true/>
           </dict></plist>
@@ -150,13 +152,47 @@ jobs:
 
           mkdir -p dist/dmg-staging
           cp -r "$APP_BUNDLE" dist/dmg-staging/
+          ln -s /Applications dist/dmg-staging/Applications
+
+          DMG_RW="dist/WsFiler-${VERSION}-osx-arm64.rw.dmg"
+          DMG_FINAL="dist/WsFiler-${VERSION}-osx-arm64.dmg"
+          VOLUME_NAME="WsFiler $VERSION"
+          MOUNT_DIR="$(mktemp -d)"
 
           hdiutil create \
-            -volname "WsFiler $VERSION" \
+            -volname "$VOLUME_NAME" \
             -srcfolder dist/dmg-staging \
             -ov \
-            -format UDZO \
-            "dist/WsFiler-${VERSION}-osx-arm64.dmg"
+            -format UDRW \
+            -fs HFS+ \
+            "$DMG_RW"
+
+          hdiutil attach "$DMG_RW" -mountpoint "$MOUNT_DIR" -nobrowse -quiet
+
+          osascript <<APPLESCRIPT
+          tell application "Finder"
+            tell disk "$VOLUME_NAME"
+              open
+              set current view of container window to icon view
+              set toolbar visible of container window to false
+              set statusbar visible of container window to false
+              set bounds of container window to {100, 100, 620, 360}
+              set arrangement of icon view options of container window to not arranged
+              set icon size of icon view options of container window to 96
+              set position of item "WsFiler.app" of container window to {150, 130}
+              set position of item "Applications" of container window to {370, 130}
+              close
+              open
+              update without registering applications
+              delay 1
+            end tell
+          end tell
+          APPLESCRIPT
+
+          hdiutil detach "$MOUNT_DIR" -quiet
+          rmdir "$MOUNT_DIR"
+          hdiutil convert "$DMG_RW" -format UDZO -o "$DMG_FINAL" -ov
+          rm "$DMG_RW"
 
       - uses: actions/upload-artifact@v4
         with:

@@ -177,4 +177,85 @@
   <data name="Dialog.Editor.Prompt" xml:space="preserve">
     <value>Editor path(E)</value>
   </data>
+  <data name="Status.SearchNotFound" xml:space="preserve">
+    <value>Not found: {0}</value>
+  </data>
+  <data name="Status.PathCopied" xml:space="preserve">
+    <value>Copied path: {0}</value>
+  </data>
+  <data name="Status.BookmarkAdded" xml:space="preserve">
+    <value>Bookmarked: {0}</value>
+  </data>
+  <data name="Status.CompareRequiresFiles" xml:space="preserve">
+    <value>Select files in both panes to compare</value>
+  </data>
+  <data name="Status.CompareSame" xml:space="preserve">
+    <value>Files are identical</value>
+  </data>
+  <data name="Status.CompareDifferent" xml:space="preserve">
+    <value>Files are different</value>
+  </data>
+  <data name="Dialog.Search.Title" xml:space="preserve">
+    <value>Find File</value>
+  </data>
+  <data name="Dialog.Search.Prompt" xml:space="preserve">
+    <value>File name(F)</value>
+  </data>
+  <data name="Dialog.Bookmark.Title" xml:space="preserve">
+    <value>Directory Bookmarks</value>
+  </data>
+  <data name="Dialog.Bookmark.Prompt" xml:space="preserve">
+    <value>Bookmarks:{0}{1}</value>
+  </data>
+  <data name="Dialog.History.Title" xml:space="preserve">
+    <value>Directory History</value>
+  </data>
+  <data name="Dialog.History.Prompt" xml:space="preserve">
+    <value>History:{0}{1}</value>
+  </data>
+  <data name="Dialog.FileSearch.Title" xml:space="preserve">
+    <value>File Search</value>
+  </data>
+  <data name="Dialog.FileSearch.FileName" xml:space="preserve">
+    <value>Search file name(F)</value>
+  </data>
+  <data name="Dialog.FileSearch.BaseDirectory" xml:space="preserve">
+    <value>Base directory(B)</value>
+  </data>
+  <data name="Dialog.FileSearch.SearchDirectories" xml:space="preserve">
+    <value>Search directory names(D)</value>
+  </data>
+  <data name="Dialog.FileSearch.Start" xml:space="preserve">
+    <value>Search(S)</value>
+  </data>
+  <data name="Dialog.FileSearch.Jump" xml:space="preserve">
+    <value>Jump(J)</value>
+  </data>
+  <data name="Dialog.FileSearch.Results" xml:space="preserve">
+    <value>Search results</value>
+  </data>
+  <data name="Dialog.FileSearch.Count" xml:space="preserve">
+    <value>{0:N0} found</value>
+  </data>
+  <data name="Dialog.FileSearch.BaseDirectoryNotFound" xml:space="preserve">
+    <value>Base directory was not found</value>
+  </data>
+  <data name="Dialog.Bookmark.CurrentPath" xml:space="preserve">
+    <value>Current directory</value>
+  </data>
+  <data name="Dialog.Bookmark.Add" xml:space="preserve">
+    <value>Add(A)</value>
+  </data>
+  <data name="Dialog.Bookmark.Delete" xml:space="preserve">
+    <value>Delete(D)</value>
+  </data>
+  <data name="Dialog.Bookmark.Jump" xml:space="preserve">
+    <value>Jump(J)</value>
+  </data>
+  <data name="Status.PropertiesUnavailable" xml:space="preserve">
+    <value>Properties are not available for this item</value>
+  </data>
+  <data name="Dialog.Diff.Title" xml:space="preserve">
+    <value>Compare</value>
+  </data>
 </root>

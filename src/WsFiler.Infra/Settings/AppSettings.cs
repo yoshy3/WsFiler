@@ -20,6 +20,9 @@ public sealed class AppSettings
     [JsonPropertyName("externalEditor")]
     public string? ExternalEditor { get; set; }
 
+    [JsonPropertyName("directoryBookmarks")]
+    public List<string>? DirectoryBookmarks { get; set; }
+
     [JsonPropertyName("window")]
     public WindowSettings? Window { get; set; }
 }

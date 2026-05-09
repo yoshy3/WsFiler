@@ -1,0 +1,30 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WsFiler.App.Views.DiffViewerDialog"
+        MinWidth="900"
+        MinHeight="520"
+        WindowStartupLocation="CenterOwner"
+        Title="Compare">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Grid.Row="0"
+              ColumnDefinitions="*,*"
+              ColumnSpacing="8"
+              Margin="8,6">
+            <TextBlock x:Name="LeftPathTextBlock"
+                       Grid.Column="0"
+                       FontFamily="Consolas"
+                       TextTrimming="CharacterEllipsis"/>
+            <TextBlock x:Name="RightPathTextBlock"
+                       Grid.Column="1"
+                       FontFamily="Consolas"
+                       TextTrimming="CharacterEllipsis"/>
+        </Grid>
+
+        <ScrollViewer Grid.Row="1"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="RowsPanel"
+                        Margin="8,0,8,8"/>
+        </ScrollViewer>
+    </Grid>
+</Window>

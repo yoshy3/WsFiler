@@ -154,4 +154,58 @@ public class Strings
     public static string Dialog_Editor_Title => ResourceManager.GetString("Dialog.Editor.Title", resourceCulture)!;
 
     public static string Dialog_Editor_Prompt => ResourceManager.GetString("Dialog.Editor.Prompt", resourceCulture)!;
+
+    public static string Status_SearchNotFound => ResourceManager.GetString("Status.SearchNotFound", resourceCulture)!;
+
+    public static string Status_PathCopied => ResourceManager.GetString("Status.PathCopied", resourceCulture)!;
+
+    public static string Status_BookmarkAdded => ResourceManager.GetString("Status.BookmarkAdded", resourceCulture)!;
+
+    public static string Status_CompareRequiresFiles => ResourceManager.GetString("Status.CompareRequiresFiles", resourceCulture)!;
+
+    public static string Status_CompareSame => ResourceManager.GetString("Status.CompareSame", resourceCulture)!;
+
+    public static string Status_CompareDifferent => ResourceManager.GetString("Status.CompareDifferent", resourceCulture)!;
+
+    public static string Dialog_Search_Title => ResourceManager.GetString("Dialog.Search.Title", resourceCulture)!;
+
+    public static string Dialog_Search_Prompt => ResourceManager.GetString("Dialog.Search.Prompt", resourceCulture)!;
+
+    public static string Dialog_Bookmark_Title => ResourceManager.GetString("Dialog.Bookmark.Title", resourceCulture)!;
+
+    public static string Dialog_Bookmark_Prompt => ResourceManager.GetString("Dialog.Bookmark.Prompt", resourceCulture)!;
+
+    public static string Dialog_History_Title => ResourceManager.GetString("Dialog.History.Title", resourceCulture)!;
+
+    public static string Dialog_History_Prompt => ResourceManager.GetString("Dialog.History.Prompt", resourceCulture)!;
+
+    public static string Dialog_FileSearch_Title => ResourceManager.GetString("Dialog.FileSearch.Title", resourceCulture)!;
+
+    public static string Dialog_FileSearch_FileName => ResourceManager.GetString("Dialog.FileSearch.FileName", resourceCulture)!;
+
+    public static string Dialog_FileSearch_BaseDirectory => ResourceManager.GetString("Dialog.FileSearch.BaseDirectory", resourceCulture)!;
+
+    public static string Dialog_FileSearch_SearchDirectories => ResourceManager.GetString("Dialog.FileSearch.SearchDirectories", resourceCulture)!;
+
+    public static string Dialog_FileSearch_Start => ResourceManager.GetString("Dialog.FileSearch.Start", resourceCulture)!;
+
+    public static string Dialog_FileSearch_Jump => ResourceManager.GetString("Dialog.FileSearch.Jump", resourceCulture)!;
+
+    public static string Dialog_FileSearch_Results => ResourceManager.GetString("Dialog.FileSearch.Results", resourceCulture)!;
+
+    public static string Dialog_FileSearch_Count => ResourceManager.GetString("Dialog.FileSearch.Count", resourceCulture)!;
+
+    public static string Dialog_FileSearch_BaseDirectoryNotFound => ResourceManager.GetString("Dialog.FileSearch.BaseDirectoryNotFound", resourceCulture)!;
+
+    public static string Dialog_Bookmark_CurrentPath => ResourceManager.GetString("Dialog.Bookmark.CurrentPath", resourceCulture)!;
+
+    public static string Dialog_Bookmark_Add => ResourceManager.GetString("Dialog.Bookmark.Add", resourceCulture)!;
+
+    public static string Dialog_Bookmark_Delete => ResourceManager.GetString("Dialog.Bookmark.Delete", resourceCulture)!;
+
+    public static string Dialog_Bookmark_Jump => ResourceManager.GetString("Dialog.Bookmark.Jump", resourceCulture)!;
+
+    public static string Status_PropertiesUnavailable => ResourceManager.GetString("Status.PropertiesUnavailable", resourceCulture)!;
+
+    public static string Dialog_Diff_Title => ResourceManager.GetString("Dialog.Diff.Title", resourceCulture)!;
 }

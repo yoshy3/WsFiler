@@ -138,9 +138,74 @@ public sealed partial class FilePaneViewModel : ViewModelBase
         UpdateSelectedItem();
     }
 
+    public void MoveCursorPage(int pageSize, int direction)
+    {
+        MoveCursor(Math.Max(1, pageSize) * direction);
+    }
+
+    public void MoveCursorFirst()
+    {
+        cursorIndex = 0;
+        UpdateSelectedItem();
+    }
+
+    public void MoveCursorLast()
+    {
+        cursorIndex = Math.Max(0, Items.Count - 1);
+        UpdateSelectedItem();
+    }
+
+    public bool MoveCursorToFirstNameMatch(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return false;
+        }
+
+        var index = -1;
+        for (var i = 0; i < Items.Count; i++)
+        {
+            if (Items[i].Name.Contains(query, StringComparison.CurrentCultureIgnoreCase))
+            {
+                index = i;
+                break;
+            }
+        }
+
+        if (index < 0 || index >= Items.Count)
+        {
+            return false;
+        }
+
+        cursorIndex = index;
+        UpdateSelectedItem();
+        return true;
+    }
+
     public void MoveCursorTo(FileItemViewModel item)
     {
         var index = Items.IndexOf(item);
+        if (index < 0)
+        {
+            return;
+        }
+
+        cursorIndex = index;
+        UpdateSelectedItem();
+    }
+
+    public void MoveCursorToPath(string fullPath)
+    {
+        var index = -1;
+        for (var i = 0; i < Items.Count; i++)
+        {
+            if (string.Equals(Items[i].FullPath, fullPath, StringComparison.OrdinalIgnoreCase))
+            {
+                index = i;
+                break;
+            }
+        }
+
         if (index < 0)
         {
             return;

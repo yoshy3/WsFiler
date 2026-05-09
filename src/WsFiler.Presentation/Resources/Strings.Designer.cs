@@ -151,6 +151,8 @@ public class Strings
 
     public static string Dialog_Filter_Prompt => ResourceManager.GetString("Dialog.Filter.Prompt", resourceCulture)!;
 
+    public static string Dialog_Filter_ShowHidden => ResourceManager.GetString("Dialog.Filter.ShowHidden", resourceCulture)!;
+
     public static string Dialog_Editor_Title => ResourceManager.GetString("Dialog.Editor.Title", resourceCulture)!;
 
     public static string Dialog_Editor_Prompt => ResourceManager.GetString("Dialog.Editor.Prompt", resourceCulture)!;

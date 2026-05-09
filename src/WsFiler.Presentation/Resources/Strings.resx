@@ -171,6 +171,9 @@
   <data name="Dialog.Filter.Prompt" xml:space="preserve">
     <value>Wildcard pattern(P) (e.g. *.txt)</value>
   </data>
+  <data name="Dialog.Filter.ShowHidden" xml:space="preserve">
+    <value>Show hidden files</value>
+  </data>
   <data name="Dialog.Editor.Title" xml:space="preserve">
     <value>External Editor</value>
   </data>

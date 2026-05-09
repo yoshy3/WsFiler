@@ -527,15 +527,43 @@ public partial class MainWindow : Window
 
     private async Task ShowFilterDialogAsync(MainWindowViewModel viewModel)
     {
-        var dialog = new InputDialog(
-            Strings.Dialog_Filter_Title,
-            Strings.Dialog_Filter_Prompt,
-            viewModel.ActivePane.FilterPattern ?? "");
-        var pattern = await dialog.ShowDialog<string?>(this);
-        if (pattern is not null)
+        var dialog = new FilterDialog(viewModel.ActivePane.ShowHiddenFiles);
+        var result = await dialog.ShowDialog<FilterDialogResult?>(this);
+        if (result is not null)
         {
-            await viewModel.ApplyFilterAsync(string.IsNullOrWhiteSpace(pattern) ? null : pattern);
+            var pattern = string.IsNullOrWhiteSpace(result.Pattern) ? null : result.Pattern;
+            await viewModel.ApplyFilterAsync(pattern, result.ShowHiddenFiles);
         }
+    }
+
+    private async void OnFileGridDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel)
+        {
+            return;
+        }
+
+        if (sender is DataGrid grid && grid.SelectedItem is FileItemViewModel item)
+        {
+            viewModel.ActivePane.MoveCursorTo(item);
+        }
+
+        e.Handled = true;
+        viewModel.RecordActiveDirectoryInHistory();
+
+        var current = viewModel.ActivePane.CurrentItem;
+        if (current is { IsDirectory: false })
+        {
+            await PreviewTextFileAsync(current);
+        }
+        else
+        {
+            await viewModel.HandleCommandAsync(ApplicationCommandId.DirectoryOpen);
+        }
+
+        ScrollActiveSelectionIntoView(viewModel);
+        RefreshCursorUnderlines();
+        UpdatePaneVisualState(viewModel);
     }
 
     private async Task ShowSortDialogAsync(MainWindowViewModel viewModel)

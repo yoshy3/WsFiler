@@ -8,7 +8,8 @@ public sealed record FileSystemItem(
     DateTimeOffset ModifiedAt,
     string Extension,
     bool IsHidden,
-    bool IsReadOnly)
+    bool IsReadOnly,
+    bool IsSystem = false)
 {
     public bool IsDirectory => ItemType == FileSystemItemType.Directory;
 }

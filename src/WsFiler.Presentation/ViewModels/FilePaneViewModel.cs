@@ -14,6 +14,9 @@ public sealed partial class FilePaneViewModel : ViewModelBase
     public PaneSortField SortField { get; private set; } = PaneSortField.Name;
     public bool SortAscending { get; private set; } = true;
     public string? FilterPattern { get; private set; }
+    public bool ShowHiddenFiles { get; private set; }
+
+    private readonly Dictionary<string, string> cursorMemory = new(StringComparer.OrdinalIgnoreCase);
 
     [ObservableProperty]
     private string currentPath = "";
@@ -42,9 +45,25 @@ public sealed partial class FilePaneViewModel : ViewModelBase
 
     public void Load(string path, IEnumerable<FileSystemItem> items)
     {
+        SaveCursorMemory();
+
         CurrentPath = path;
         Items.Clear();
         cursorIndex = 0;
+
+        if (HasParentDirectory(path))
+        {
+            var parent = new FileSystemItem(
+                "..",
+                path,
+                FileSystemItemType.Directory,
+                null,
+                default,
+                "",
+                false,
+                false);
+            Items.Add(new FileItemViewModel(parent));
+        }
 
         var sorted = ApplySortAndFilter(items);
         foreach (var item in sorted)
@@ -52,8 +71,67 @@ public sealed partial class FilePaneViewModel : ViewModelBase
             Items.Add(new FileItemViewModel(item));
         }
 
+        RestoreCursorFromMemory(path);
         UpdateSelectedItem();
         OnPaneInfoChanged();
+    }
+
+    public void RememberCursorForPath(string path, string itemName)
+    {
+        if (!string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(itemName))
+        {
+            cursorMemory[path] = itemName;
+        }
+    }
+
+    private void SaveCursorMemory()
+    {
+        if (string.IsNullOrEmpty(CurrentPath) || Items.Count == 0)
+        {
+            return;
+        }
+
+        if (cursorIndex < 0 || cursorIndex >= Items.Count)
+        {
+            return;
+        }
+
+        var name = Items[cursorIndex].Name;
+        if (name == "..")
+        {
+            return;
+        }
+
+        cursorMemory[CurrentPath] = name;
+    }
+
+    private void RestoreCursorFromMemory(string path)
+    {
+        if (!cursorMemory.TryGetValue(path, out var name))
+        {
+            return;
+        }
+
+        for (var i = 0; i < Items.Count; i++)
+        {
+            if (string.Equals(Items[i].Name, name, StringComparison.OrdinalIgnoreCase))
+            {
+                cursorIndex = i;
+                return;
+            }
+        }
+    }
+
+    private static bool HasParentDirectory(string path)
+    {
+        try
+        {
+            return Directory.GetParent(path) is not null;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public void SetSort(PaneSortField field, bool ascending)
@@ -64,18 +142,39 @@ public sealed partial class FilePaneViewModel : ViewModelBase
 
     public void ApplyFilter(string? pattern)
     {
-        FilterPattern = string.IsNullOrWhiteSpace(pattern) ? null : pattern.Trim();
+        if (string.IsNullOrWhiteSpace(pattern))
+        {
+            FilterPattern = null;
+            return;
+        }
+
+        var trimmed = pattern.Trim();
+        if (!trimmed.Contains('*') && !trimmed.Contains('?'))
+        {
+            trimmed = $"*{trimmed}*";
+        }
+
+        FilterPattern = trimmed;
+    }
+
+    public void SetShowHiddenFiles(bool value)
+    {
+        ShowHiddenFiles = value;
     }
 
     private IEnumerable<FileSystemItem> ApplySortAndFilter(IEnumerable<FileSystemItem> items)
     {
         IEnumerable<FileSystemItem> result = items;
 
+        if (!ShowHiddenFiles)
+        {
+            result = result.Where(item => !item.IsHidden);
+        }
+
         if (FilterPattern is not null)
         {
             var regex = WildcardToRegex(FilterPattern);
-            result = result.Where(item =>
-                item.IsDirectory || regex.IsMatch(item.Name));
+            result = result.Where(item => regex.IsMatch(item.Name));
         }
 
         result = SortField switch
@@ -115,13 +214,13 @@ public sealed partial class FilePaneViewModel : ViewModelBase
     {
         get
         {
-            var markedItems = Items.Where(item => item.IsMarked).ToList();
+            var markedItems = Items.Where(item => item.IsMarked && !item.IsParent).ToList();
             if (markedItems.Count > 0)
             {
                 return markedItems;
             }
 
-            return CurrentItem is null ? [] : [CurrentItem];
+            return CurrentItem is null || CurrentItem.IsParent ? [] : [CurrentItem];
         }
     }
 

@@ -171,6 +171,9 @@
   <data name="Dialog.Filter.Prompt" xml:space="preserve">
     <value>ワイルドカードパターン(P) (例: *.txt)</value>
   </data>
+  <data name="Dialog.Filter.ShowHidden" xml:space="preserve">
+    <value>隠しファイルを表示</value>
+  </data>
   <data name="Dialog.Editor.Title" xml:space="preserve">
     <value>外部エディタ</value>
   </data>

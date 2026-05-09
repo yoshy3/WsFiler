@@ -305,6 +305,7 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
             info.LastWriteTime,
             isDirectory ? "" : info.Extension.TrimStart('.'),
             attributes.HasFlag(FileAttributes.Hidden),
-            attributes.HasFlag(FileAttributes.ReadOnly));
+            attributes.HasFlag(FileAttributes.ReadOnly),
+            attributes.HasFlag(FileAttributes.System));
     }
 }

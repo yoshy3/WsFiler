@@ -16,7 +16,9 @@ public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBa
 
     public long RawSize { get; } = item.Size ?? 0;
 
-    public string Modified { get; } = item.ModifiedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm");
+    public string Modified { get; } = item.ModifiedAt == default
+        ? ""
+        : item.ModifiedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm");
 
     public string Kind { get; } = item.ItemType switch
     {
@@ -26,11 +28,29 @@ public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBa
         _ => "O",
     };
 
-    public string ForegroundColor => IsDirectory ? "#6fb7ff" : "#f4f4f4";
+    public string ForegroundColor
+    {
+        get
+        {
+            if (IsParent) return "#f4f4f4";
+            if (IsHidden) return "#808080";
+            if (IsReadOnly) return "#ffd070";
+            if (IsDirectory) return "#6fb7ff";
+            return "#f4f4f4";
+        }
+    }
 
     public string RowBackground => IsMarked ? "#804C709F" : "Transparent";
 
     public bool IsDirectory { get; } = item.IsDirectory;
+
+    public bool IsHidden { get; } = item.IsHidden;
+
+    public bool IsReadOnly { get; } = item.IsReadOnly;
+
+    public bool IsSystem { get; } = item.IsSystem;
+
+    public bool IsParent => Name == "..";
 
     private bool isMarked;
 
@@ -48,6 +68,7 @@ public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBa
 
     public void ToggleMark()
     {
+        if (IsParent) return;
         IsMarked = !IsMarked;
         Mark = IsMarked ? ">" : "";
         OnPropertyChanged(nameof(DisplayName));
@@ -64,6 +85,7 @@ public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBa
 
     public void MarkSelected()
     {
+        if (IsParent) return;
         IsMarked = true;
         Mark = ">";
         OnPropertyChanged(nameof(DisplayName));

@@ -117,7 +117,8 @@
                               SelectionMode="Single"
                               LoadingRow="OnFileGridLoadingRow"
                               UnloadingRow="OnFileGridUnloadingRow"
-                              SelectionChanged="OnLeftFileGridSelectionChanged">
+                              SelectionChanged="OnLeftFileGridSelectionChanged"
+                              DoubleTapped="OnFileGridDoubleTapped">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Header="" Width="32" CanUserResize="False">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -232,7 +233,8 @@
                               SelectionMode="Single"
                               LoadingRow="OnFileGridLoadingRow"
                               UnloadingRow="OnFileGridUnloadingRow"
-                              SelectionChanged="OnRightFileGridSelectionChanged">
+                              SelectionChanged="OnRightFileGridSelectionChanged"
+                              DoubleTapped="OnFileGridDoubleTapped">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Header="" Width="32" CanUserResize="False">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -354,13 +356,7 @@
                 Padding="8,6"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                 BorderThickness="0,1,0,0">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Grid.Column="0"
-                           Text="{Binding StatusMessage}"/>
-                <TextBlock Grid.Column="1"
-                           Text="{Binding StatusSummary}"
-                           FontFamily="Consolas"/>
-            </Grid>
+            <TextBlock Text="{Binding StatusMessage}"/>
         </Border>
     </Grid>
 

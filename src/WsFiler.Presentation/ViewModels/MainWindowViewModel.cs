@@ -209,6 +209,12 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (current.IsParent)
+        {
+            await NavigateParentAsync();
+            return;
+        }
+
         if (!current.IsDirectory)
         {
             StatusMessage = Strings.Status_PreviewUnavailable;
@@ -387,10 +393,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    public async Task ApplyFilterAsync(string? pattern)
+    public Task ApplyFilterAsync(string? pattern) => ApplyFilterAsync(pattern, ActivePane.ShowHiddenFiles);
+
+    public async Task ApplyFilterAsync(string? pattern, bool showHiddenFiles)
     {
         try
         {
+            ActivePane.SetShowHiddenFiles(showHiddenFiles);
             ActivePane.ApplyFilter(pattern);
             var items = await fileSystemProvider.ListDirectoryAsync(ActivePane.CurrentPath);
             ActivePane.Load(ActivePane.CurrentPath, items);
@@ -456,6 +465,12 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         {
             StatusMessage = Strings.Status_AlreadyAtRoot;
             return;
+        }
+
+        var leaf = Path.GetFileName(ActivePane.CurrentPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        if (!string.IsNullOrEmpty(leaf))
+        {
+            ActivePane.RememberCursorForPath(parent.FullName, leaf);
         }
 
         await LoadPaneAsync(ActivePane, parent.FullName);

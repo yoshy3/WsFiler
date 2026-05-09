@@ -51,6 +51,13 @@ public partial class AttributeDialog : Window
         {
             e.Handled = true;
             Close(null);
+            return;
+        }
+
+        if (e.Key == Key.Enter || e.Key == Key.Return)
+        {
+            e.Handled = true;
+            OnOkClick(this, new RoutedEventArgs());
         }
     }
 }

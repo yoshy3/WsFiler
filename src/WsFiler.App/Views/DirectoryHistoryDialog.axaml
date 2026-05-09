@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WsFiler.App.Views.DirectoryHistoryDialog"
+        Width="560"
+        Height="340"
+        MinWidth="460"
+        MinHeight="260"
+        WindowStartupLocation="CenterOwner"
+        Title="Directory History">
+    <Grid RowDefinitions="Auto,*"
+          ColumnDefinitions="*,130"
+          Margin="12"
+          RowSpacing="8"
+          ColumnSpacing="12">
+        <TextBlock x:Name="HistoryLabel"
+                   Grid.Row="0"
+                   Grid.Column="0"/>
+
+        <StackPanel Grid.Row="0"
+                    Grid.Column="1"
+                    Grid.RowSpan="2"
+                    Spacing="6">
+            <Button x:Name="JumpButton"
+                    Height="32"
+                    Click="OnJumpClick"/>
+            <Button x:Name="CloseButton"
+                    Height="32"
+                    IsCancel="True"
+                    Click="OnCloseClick"/>
+        </StackPanel>
+
+        <ListBox x:Name="HistoryListBox"
+                 Grid.Row="1"
+                 Grid.Column="0"
+                 FontFamily="Consolas"
+                 DoubleTapped="OnDoubleTapped"/>
+    </Grid>
+</Window>

@@ -40,5 +40,14 @@ public static class DefaultKeyMap
         new(ApplicationCommandId.FileDuplicate, new("W")),
         new(ApplicationCommandId.ViewSort, new("S")),
         new(ApplicationCommandId.AppExit, new("Q")),
+        new(ApplicationCommandId.FileExecute, new("X")),
+        new(ApplicationCommandId.FileCopyPath, new("C", KeyModifiers.Control)),
+        new(ApplicationCommandId.TerminalOpen, new("Oem2")),
+        new(ApplicationCommandId.FileSearch, new("F")),
+        new(ApplicationCommandId.ViewRefresh, new("F5")),
+        new(ApplicationCommandId.DirectoryBookmark, new("D0")),
+        new(ApplicationCommandId.DirectoryHistory, new("H")),
+        new(ApplicationCommandId.FileProperties, new("O")),
+        new(ApplicationCommandId.FileCompare, new("J")),
     ];
 }

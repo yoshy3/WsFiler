@@ -36,4 +36,13 @@ public static class ApplicationCommandId
     public const string FileDuplicate = "file.duplicate";
     public const string ViewSort = "view.sort";
     public const string AppExit = "app.exit";
+    public const string FileExecute = "file.execute";
+    public const string FileCopyPath = "file.copyPath";
+    public const string TerminalOpen = "terminal.open";
+    public const string FileSearch = "file.search";
+    public const string ViewRefresh = "view.refresh";
+    public const string DirectoryBookmark = "directory.bookmark";
+    public const string DirectoryHistory = "directory.history";
+    public const string FileProperties = "file.properties";
+    public const string FileCompare = "file.compare";
 }

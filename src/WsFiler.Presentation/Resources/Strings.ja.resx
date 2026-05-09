@@ -177,4 +177,85 @@
   <data name="Dialog.Editor.Prompt" xml:space="preserve">
     <value>エディタのパス(E)</value>
   </data>
+  <data name="Status.SearchNotFound" xml:space="preserve">
+    <value>見つかりません: {0}</value>
+  </data>
+  <data name="Status.PathCopied" xml:space="preserve">
+    <value>パスをコピーしました: {0}</value>
+  </data>
+  <data name="Status.BookmarkAdded" xml:space="preserve">
+    <value>ブックマークしました: {0}</value>
+  </data>
+  <data name="Status.CompareRequiresFiles" xml:space="preserve">
+    <value>比較するには左右のペインでファイルを選択してください</value>
+  </data>
+  <data name="Status.CompareSame" xml:space="preserve">
+    <value>ファイルは同一です</value>
+  </data>
+  <data name="Status.CompareDifferent" xml:space="preserve">
+    <value>ファイルは異なります</value>
+  </data>
+  <data name="Dialog.Search.Title" xml:space="preserve">
+    <value>ファイル検索</value>
+  </data>
+  <data name="Dialog.Search.Prompt" xml:space="preserve">
+    <value>ファイル名(F)</value>
+  </data>
+  <data name="Dialog.Bookmark.Title" xml:space="preserve">
+    <value>ディレクトリブックマーク</value>
+  </data>
+  <data name="Dialog.Bookmark.Prompt" xml:space="preserve">
+    <value>ブックマーク:{0}{1}</value>
+  </data>
+  <data name="Dialog.History.Title" xml:space="preserve">
+    <value>ディレクトリ履歴</value>
+  </data>
+  <data name="Dialog.History.Prompt" xml:space="preserve">
+    <value>履歴:{0}{1}</value>
+  </data>
+  <data name="Dialog.FileSearch.Title" xml:space="preserve">
+    <value>ファイル検索</value>
+  </data>
+  <data name="Dialog.FileSearch.FileName" xml:space="preserve">
+    <value>検索ファイル名(F)</value>
+  </data>
+  <data name="Dialog.FileSearch.BaseDirectory" xml:space="preserve">
+    <value>基準ディレクトリ(B)</value>
+  </data>
+  <data name="Dialog.FileSearch.SearchDirectories" xml:space="preserve">
+    <value>ディレクトリ自体も検索(D)</value>
+  </data>
+  <data name="Dialog.FileSearch.Start" xml:space="preserve">
+    <value>検索開始(S)</value>
+  </data>
+  <data name="Dialog.FileSearch.Jump" xml:space="preserve">
+    <value>ジャンプ(J)</value>
+  </data>
+  <data name="Dialog.FileSearch.Results" xml:space="preserve">
+    <value>検索結果</value>
+  </data>
+  <data name="Dialog.FileSearch.Count" xml:space="preserve">
+    <value>{0:N0} 個発見</value>
+  </data>
+  <data name="Dialog.FileSearch.BaseDirectoryNotFound" xml:space="preserve">
+    <value>基準ディレクトリが見つかりません</value>
+  </data>
+  <data name="Dialog.Bookmark.CurrentPath" xml:space="preserve">
+    <value>現在のディレクトリ</value>
+  </data>
+  <data name="Dialog.Bookmark.Add" xml:space="preserve">
+    <value>追加(A)</value>
+  </data>
+  <data name="Dialog.Bookmark.Delete" xml:space="preserve">
+    <value>削除(D)</value>
+  </data>
+  <data name="Dialog.Bookmark.Jump" xml:space="preserve">
+    <value>ジャンプ(J)</value>
+  </data>
+  <data name="Status.PropertiesUnavailable" xml:space="preserve">
+    <value>この項目のプロパティを表示できません</value>
+  </data>
+  <data name="Dialog.Diff.Title" xml:space="preserve">
+    <value>比較</value>
+  </data>
 </root>

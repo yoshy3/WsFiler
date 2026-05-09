@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
@@ -10,7 +11,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using WsFiler.Core.Commands;
@@ -81,6 +84,10 @@ public partial class MainWindow : Window
         }
 
         e.Handled = true;
+        if (ShouldRecordWorkingDirectory(commandId))
+        {
+            viewModel.RecordActiveDirectoryInHistory();
+        }
 
         if (commandId == ApplicationCommandId.FileCopy)
         {
@@ -139,6 +146,46 @@ public partial class MainWindow : Window
         {
             Close();
             return;
+        }
+        else if (commandId == ApplicationCommandId.FileExecute)
+        {
+            await ExecuteCurrentItemAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.FileCopyPath)
+        {
+            await CopyCurrentPathAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.TerminalOpen)
+        {
+            LaunchTerminal(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.FileSearch)
+        {
+            await ShowSearchDialogAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.DirectoryBookmark)
+        {
+            await ShowBookmarkDialogAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.DirectoryHistory)
+        {
+            await ShowDirectoryHistoryDialogAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.FileProperties)
+        {
+            await ShowPropertiesAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.FileCompare)
+        {
+            await CompareCurrentItemsAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.CursorPageUp)
+        {
+            viewModel.MoveActivePanePage(GetVisibleFileRowCount(viewModel), -1);
+        }
+        else if (commandId == ApplicationCommandId.CursorPageDown)
+        {
+            viewModel.MoveActivePanePage(GetVisibleFileRowCount(viewModel), 1);
         }
         else
         {
@@ -502,6 +549,222 @@ public partial class MainWindow : Window
         }
     }
 
+    private Task ExecuteCurrentItemAsync(MainWindowViewModel viewModel)
+    {
+        var current = viewModel.ActivePane.CurrentItem;
+        if (current is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(current.FullPath) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            viewModel.LogError(ex.Message);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task CopyCurrentPathAsync(MainWindowViewModel viewModel)
+    {
+        var text = viewModel.ActivePane.CurrentItem?.FullPath ?? viewModel.ActivePane.CurrentPath;
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (clipboard is null)
+        {
+            return;
+        }
+
+        await clipboard.SetTextAsync(text);
+        viewModel.StatusMessage = string.Format(Strings.Status_PathCopied, text);
+    }
+
+    private void LaunchTerminal(MainWindowViewModel viewModel)
+    {
+        try
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                LaunchWindowsTerminal(viewModel.ActivePane.CurrentPath);
+                return;
+            }
+
+            var fileName = "x-terminal-emulator";
+            Process.Start(new ProcessStartInfo(fileName)
+            {
+                WorkingDirectory = viewModel.ActivePane.CurrentPath,
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            viewModel.LogError(ex.Message);
+        }
+    }
+
+    private static void LaunchWindowsTerminal(string workingDirectory)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("wt.exe")
+            {
+                WorkingDirectory = workingDirectory,
+                UseShellExecute = true,
+            });
+            return;
+        }
+        catch
+        {
+        }
+
+        Process.Start(new ProcessStartInfo("cmd.exe", $"/k cd /d \"{workingDirectory}\"")
+        {
+            UseShellExecute = true,
+        });
+    }
+
+    private async Task ShowSearchDialogAsync(MainWindowViewModel viewModel)
+    {
+        var dialog = new FileSearchDialog(viewModel.ActivePane.CurrentPath);
+        var path = await dialog.ShowDialog<string?>(this);
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            await viewModel.NavigateActivePaneToItemAsync(path);
+        }
+    }
+
+    private async Task ShowBookmarkDialogAsync(MainWindowViewModel viewModel)
+    {
+        var settings = SettingsManager.Load();
+        settings.DirectoryBookmarks ??= [];
+
+        var dialog = new DirectoryBookmarkDialog(
+            viewModel.ActivePane.CurrentPath,
+            settings.DirectoryBookmarks);
+        var result = await dialog.ShowDialog<DirectoryBookmarkDialogResult?>(this);
+        if (result is null)
+        {
+            return;
+        }
+
+        settings.DirectoryBookmarks = result.Bookmarks.ToList();
+        SettingsManager.Save(settings);
+
+        if (!string.IsNullOrWhiteSpace(result.JumpPath))
+        {
+            await viewModel.NavigateActivePaneAsync(result.JumpPath);
+        }
+    }
+
+    private async Task ShowDirectoryHistoryDialogAsync(MainWindowViewModel viewModel)
+    {
+        var dialog = new DirectoryHistoryDialog(viewModel.DirectoryHistory);
+        var path = await dialog.ShowDialog<string?>(this);
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            await viewModel.NavigateActivePaneAsync(path);
+        }
+    }
+
+    private async Task ShowPropertiesAsync(MainWindowViewModel viewModel)
+    {
+        var current = viewModel.ActivePane.CurrentItem;
+        if (current is null)
+        {
+            return;
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            ShowWindowsProperties(current.FullPath, viewModel);
+            return;
+        }
+
+        var info = BuildPropertiesText(current);
+        var dialog = new TextPreviewDialog(current.FullPath, info, isTruncated: false);
+        dialog.FitToOwner(this);
+        await dialog.ShowDialog(this);
+    }
+
+    private static void ShowWindowsProperties(string path, MainWindowViewModel viewModel)
+    {
+        try
+        {
+            if (!NativeMethods.ShowProperties(path))
+            {
+                throw new InvalidOperationException(Strings.Status_PropertiesUnavailable);
+            }
+        }
+        catch (Exception ex)
+        {
+            viewModel.LogError(ex.Message);
+        }
+    }
+
+    private static string BuildPropertiesText(FileItemViewModel item)
+    {
+        var attributes = File.GetAttributes(item.FullPath);
+        var size = item.IsDirectory ? "" : $"{new FileInfo(item.FullPath).Length:N0} bytes";
+        return string.Join(Environment.NewLine, [
+            $"Name: {item.Name}",
+            $"Path: {item.FullPath}",
+            $"Type: {(item.IsDirectory ? "Directory" : "File")}",
+            $"Size: {size}",
+            $"Modified: {item.Modified}",
+            $"Attributes: {attributes}",
+        ]);
+    }
+
+    private async Task CompareCurrentItemsAsync(MainWindowViewModel viewModel)
+    {
+        var targets = ResolveCompareTargets(viewModel);
+        if (targets is null)
+        {
+            viewModel.StatusMessage = Strings.Status_CompareRequiresFiles;
+            return;
+        }
+
+        try
+        {
+            var dialog = await DiffViewerDialog.CreateAsync(targets.Value.Left.FullPath, targets.Value.Right.FullPath);
+            dialog.FitToOwner(this);
+            await dialog.ShowDialog(this);
+        }
+        catch (Exception ex)
+        {
+            viewModel.LogError(ex.Message);
+        }
+    }
+
+    private static (FileItemViewModel Left, FileItemViewModel Right)? ResolveCompareTargets(MainWindowViewModel viewModel)
+    {
+        var leftMarked = viewModel.LeftPane.Items.Where(item => item.IsMarked && !item.IsDirectory).ToList();
+        var rightMarked = viewModel.RightPane.Items.Where(item => item.IsMarked && !item.IsDirectory).ToList();
+
+        if (leftMarked.Count > 0 && rightMarked.Count > 0)
+        {
+            return (leftMarked[0], rightMarked[0]);
+        }
+
+        var activeMarked = viewModel.ActivePane.Items.Where(item => item.IsMarked && !item.IsDirectory).ToList();
+        if (activeMarked.Count >= 2)
+        {
+            return (activeMarked[0], activeMarked[1]);
+        }
+
+        var left = viewModel.LeftPane.CurrentItem;
+        var right = viewModel.RightPane.CurrentItem;
+        if (left is null || right is null || left.IsDirectory || right.IsDirectory)
+        {
+            return null;
+        }
+
+        return (left, right);
+    }
+
     private async Task LaunchEditorAsync(MainWindowViewModel viewModel)
     {
         var current = viewModel.ActivePane.CurrentItem;
@@ -626,6 +889,15 @@ public partial class MainWindow : Window
         Focus();
     }
 
+    private int GetVisibleFileRowCount(MainWindowViewModel viewModel)
+    {
+        var grid = viewModel.LeftPane.IsActive ? LeftFileGrid : RightFileGrid;
+        const double rowHeight = 20;
+        var headerHeight = grid.ColumnHeaderHeight;
+        var availableHeight = Math.Max(0, grid.Bounds.Height - headerHeight);
+        return Math.Max(1, (int)Math.Floor(availableHeight / rowHeight));
+    }
+
     private void UpdatePaneVisualState()
     {
         if (DataContext is MainWindowViewModel viewModel)
@@ -656,6 +928,8 @@ public partial class MainWindow : Window
             Key.Back => "Backspace",
             Key.Space => "Space",
             Key.Escape => "Escape",
+            Key.Oem2 => "/",
+            Key.Divide => "/",
             _ => key.ToString(),
         };
 
@@ -713,6 +987,26 @@ public partial class MainWindow : Window
             ApplicationCommandId.FilePreview);
     }
 
+    private static bool ShouldRecordWorkingDirectory(string commandId)
+    {
+        return commandId is not (
+            ApplicationCommandId.CursorUp or
+            ApplicationCommandId.CursorDown or
+            ApplicationCommandId.CursorLeft or
+            ApplicationCommandId.CursorRight or
+            ApplicationCommandId.CursorPageUp or
+            ApplicationCommandId.CursorPageDown or
+            ApplicationCommandId.CursorFirst or
+            ApplicationCommandId.CursorLast or
+            ApplicationCommandId.PaneSwitch or
+            ApplicationCommandId.DirectoryOpen or
+            ApplicationCommandId.DirectoryParent or
+            ApplicationCommandId.DirectoryRoot or
+            ApplicationCommandId.DriveChange or
+            ApplicationCommandId.PaneSyncOpposite or
+            ApplicationCommandId.DirectoryHistory);
+    }
+
     private static string NormalizeKeyName(string key)
     {
         return key.Trim() switch
@@ -720,7 +1014,54 @@ public partial class MainWindow : Window
             "Esc" => "Escape",
             "Back" => "Backspace",
             "Return" => "Enter",
+            "Oem2" => "/",
+            "OemQuestion" => "/",
+            "Divide" => "/",
             var normalized => normalized,
         };
+    }
+
+    private static class NativeMethods
+    {
+        private const int SwShow = 5;
+        private const uint SeeMaskInvokeIdList = 0x0000000C;
+
+        public static bool ShowProperties(string path)
+        {
+            var info = new ShellExecuteInfo
+            {
+                cbSize = Marshal.SizeOf<ShellExecuteInfo>(),
+                fMask = SeeMaskInvokeIdList,
+                lpVerb = "properties",
+                lpFile = path,
+                nShow = SwShow,
+            };
+
+            return ShellExecuteEx(ref info);
+        }
+
+        [DllImport("shell32.dll", EntryPoint = "ShellExecuteExW", SetLastError = true, CharSet = CharSet.Unicode)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool ShellExecuteEx(ref ShellExecuteInfo lpExecInfo);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        private struct ShellExecuteInfo
+        {
+            public int cbSize;
+            public uint fMask;
+            public IntPtr hwnd;
+            public string? lpVerb;
+            public string? lpFile;
+            public string? lpParameters;
+            public string? lpDirectory;
+            public int nShow;
+            public IntPtr hInstApp;
+            public IntPtr lpIDList;
+            public string? lpClass;
+            public IntPtr hkeyClass;
+            public uint dwHotKey;
+            public IntPtr hIcon;
+            public IntPtr hProcess;
+        }
     }
 }

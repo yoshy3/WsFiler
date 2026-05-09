@@ -9,8 +9,11 @@ namespace WsFiler.Presentation.ViewModels;
 
 public sealed partial class MainWindowViewModel : ViewModelBase
 {
+    private const int MaxDirectoryHistoryCount = 50;
+
     private readonly IFileSystemProvider fileSystemProvider;
     private readonly string defaultHome;
+    private readonly List<string> directoryHistory = [];
     private int nextLogNumber = 1;
 
     [ObservableProperty]
@@ -79,6 +82,18 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             case ApplicationCommandId.CursorDown:
                 ActivePane.MoveCursor(1);
                 break;
+            case ApplicationCommandId.CursorPageUp:
+                ActivePane.MoveCursorPage(10, -1);
+                break;
+            case ApplicationCommandId.CursorPageDown:
+                ActivePane.MoveCursorPage(10, 1);
+                break;
+            case ApplicationCommandId.CursorFirst:
+                ActivePane.MoveCursorFirst();
+                break;
+            case ApplicationCommandId.CursorLast:
+                ActivePane.MoveCursorLast();
+                break;
             case ApplicationCommandId.PaneSwitch:
                 SwitchActivePane();
                 break;
@@ -118,12 +133,22 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                 break;
             case ApplicationCommandId.ViewSort:
                 break;
+            case ApplicationCommandId.ViewRefresh:
+                await RefreshActivePaneAsync();
+                StatusMessage = ActivePane.CurrentPath;
+                OnPropertyChanged(nameof(StatusSummary));
+                break;
         }
     }
 
     public FilePaneViewModel ActivePane => LeftPane.IsActive ? LeftPane : RightPane;
 
     private FilePaneViewModel InactivePane => LeftPane.IsActive ? RightPane : LeftPane;
+
+    public void MoveActivePanePage(int pageSize, int direction)
+    {
+        ActivePane.MoveCursorPage(pageSize, direction);
+    }
 
     public void ActivateLeftPane(FileItemViewModel? selectedItem = null)
     {
@@ -455,6 +480,18 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     public Task NavigateActivePaneAsync(string path) => LoadPaneAsync(ActivePane, path);
 
+    public async Task NavigateActivePaneToItemAsync(string fullPath)
+    {
+        var parent = Path.GetDirectoryName(fullPath);
+        if (string.IsNullOrWhiteSpace(parent))
+        {
+            return;
+        }
+
+        await LoadPaneAsync(ActivePane, parent);
+        ActivePane.MoveCursorToPath(fullPath);
+    }
+
     public async Task ApplySortAsync(PaneSortField field, bool ascending)
     {
         ActivePane.SetSort(field, ascending);
@@ -486,6 +523,37 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         {
             var items = await fileSystemProvider.ListDirectoryAsync(defaultHome);
             pane.Load(defaultHome, items);
+        }
+    }
+
+    public IReadOnlyList<string> DirectoryHistory => directoryHistory;
+
+    public void RecordActiveDirectoryInHistory()
+    {
+        RememberDirectory(ActivePane.CurrentPath);
+    }
+
+    public bool SearchActivePaneByName(string query)
+    {
+        var found = ActivePane.MoveCursorToFirstNameMatch(query);
+        StatusMessage = found ? query : string.Format(Strings.Status_SearchNotFound, query);
+        return found;
+    }
+
+    private void RememberDirectory(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        directoryHistory.RemoveAll(item => string.Equals(item, path, StringComparison.OrdinalIgnoreCase));
+        directoryHistory.Insert(0, path);
+        if (directoryHistory.Count > MaxDirectoryHistoryCount)
+        {
+            directoryHistory.RemoveRange(
+                MaxDirectoryHistoryCount,
+                directoryHistory.Count - MaxDirectoryHistoryCount);
         }
     }
 

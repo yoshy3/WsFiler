@@ -1,0 +1,51 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WsFiler.App.Views.DirectoryBookmarkDialog"
+        Width="560"
+        Height="360"
+        MinWidth="460"
+        MinHeight="280"
+        WindowStartupLocation="CenterOwner"
+        Title="Directory Bookmarks">
+    <Grid RowDefinitions="Auto,*"
+          ColumnDefinitions="*,130"
+          Margin="12"
+          RowSpacing="8"
+          ColumnSpacing="12">
+        <Grid Grid.Row="0"
+              Grid.Column="0"
+              RowDefinitions="Auto,Auto"
+              RowSpacing="4">
+            <TextBlock x:Name="CurrentPathLabel"/>
+            <TextBlock x:Name="CurrentPathTextBlock"
+                       Grid.Row="1"
+                       FontFamily="Consolas"
+                       TextTrimming="CharacterEllipsis"/>
+        </Grid>
+
+        <StackPanel Grid.Row="0"
+                    Grid.Column="1"
+                    Grid.RowSpan="2"
+                    Spacing="6">
+            <Button x:Name="AddButton"
+                    Height="32"
+                    Click="OnAddClick"/>
+            <Button x:Name="DeleteButton"
+                    Height="32"
+                    Click="OnDeleteClick"/>
+            <Button x:Name="JumpButton"
+                    Height="32"
+                    Click="OnJumpClick"/>
+            <Button x:Name="CloseButton"
+                    Height="32"
+                    IsCancel="True"
+                    Click="OnCloseClick"/>
+        </StackPanel>
+
+        <ListBox x:Name="BookmarkListBox"
+                 Grid.Row="1"
+                 Grid.Column="0"
+                 FontFamily="Consolas"
+                 DoubleTapped="OnDoubleTapped"/>
+    </Grid>
+</Window>

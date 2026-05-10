@@ -15,6 +15,7 @@ using WsFiler.App.Views;
 using WsFiler.Infra.Files;
 using WsFiler.Infra.Settings;
 using WsFiler.Presentation.Resources;
+using WsFiler.Presentation.Theming;
 using WsFiler.Presentation.ViewModels;
 
 namespace WsFiler.App;
@@ -119,17 +120,47 @@ public partial class App : Application
         await dialog.ShowDialog(owner);
     }
 
-    private void ApplyTheme(string? theme)
+    public void ApplyTheme(string? theme)
     {
-        RequestedThemeVariant = NormalizeTheme(theme) switch
+        var normalized = NormalizeTheme(theme);
+        RequestedThemeVariant = normalized switch
         {
             "light" => ThemeVariant.Light,
             "dark" => ThemeVariant.Dark,
             _ => ThemeVariant.Default,
         };
+
+        UiTheme.IsLight = ResolveIsLight(normalized);
     }
 
-    private static void ApplyLanguage(string? language)
+    private bool ResolveIsLight(string normalizedTheme)
+    {
+        if (normalizedTheme == "light")
+        {
+            return true;
+        }
+
+        if (normalizedTheme == "dark")
+        {
+            return false;
+        }
+
+        var platformSettings = PlatformSettings;
+        if (platformSettings is not null)
+        {
+            try
+            {
+                return platformSettings.GetColorValues().ThemeVariant == Avalonia.Platform.PlatformThemeVariant.Light;
+            }
+            catch
+            {
+            }
+        }
+
+        return false;
+    }
+
+    public static void ApplyLanguage(string? language)
     {
         var normalized = NormalizeLanguage(language);
         var culture = normalized == "system" ? CultureInfo.InstalledUICulture : CultureInfo.GetCultureInfo(normalized);

@@ -1,4 +1,5 @@
 using WsFiler.Core.Files;
+using WsFiler.Presentation.Theming;
 
 namespace WsFiler.Presentation.ViewModels;
 
@@ -32,6 +33,15 @@ public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBa
     {
         get
         {
+            if (UiTheme.IsLight)
+            {
+                if (IsParent) return "#202020";
+                if (IsHidden) return "#909090";
+                if (IsReadOnly) return "#a05a00";
+                if (IsDirectory) return "#0a4ea8";
+                return "#202020";
+            }
+
             if (IsParent) return "#f4f4f4";
             if (IsHidden) return "#808080";
             if (IsReadOnly) return "#ffd070";
@@ -40,7 +50,15 @@ public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBa
         }
     }
 
-    public string RowBackground => IsMarked ? "#804C709F" : "Transparent";
+    public string RowBackground => IsMarked
+        ? (UiTheme.IsLight ? "#80AFC8E8" : "#804C709F")
+        : "Transparent";
+
+    public void RaiseColorsChanged()
+    {
+        OnPropertyChanged(nameof(ForegroundColor));
+        OnPropertyChanged(nameof(RowBackground));
+    }
 
     public bool IsDirectory { get; } = item.IsDirectory;
 

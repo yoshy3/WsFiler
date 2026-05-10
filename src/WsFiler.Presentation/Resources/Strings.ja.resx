@@ -382,7 +382,7 @@
     <value>日本語</value>
   </data>
   <data name="Dialog.Settings.RestartHint" xml:space="preserve">
-    <value>テーマと言語の変更は次回起動時に反映されます。</value>
+    <value>言語の変更は再起動後に完全に反映されます。</value>
   </data>
   <data name="Dialog.Settings.ExternalEditor" xml:space="preserve">
     <value>外部エディターのパス</value>

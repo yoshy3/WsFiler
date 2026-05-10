@@ -382,7 +382,7 @@
     <value>Japanese</value>
   </data>
   <data name="Dialog.Settings.RestartHint" xml:space="preserve">
-    <value>Theme and language changes apply on next launch.</value>
+    <value>Language changes apply fully after restart.</value>
   </data>
   <data name="Dialog.Settings.ExternalEditor" xml:space="preserve">
     <value>External editor path</value>

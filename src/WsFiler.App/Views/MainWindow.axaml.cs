@@ -32,7 +32,7 @@ public partial class MainWindow : Window
 {
     private const int PreviewByteLimit = 100 * 1024;
 
-    private readonly Dictionary<string, string> keyToCommandMap;
+    private Dictionary<string, string> keyToCommandMap;
     private readonly Dictionary<FileItemViewModel, List<DataGridRow>> itemRows = [];
     private bool isClearingGridSelection;
 
@@ -213,7 +213,20 @@ public partial class MainWindow : Window
     private async Task ShowSettingsDialogAsync()
     {
         var dialog = new SettingsDialog();
-        await dialog.ShowDialog<bool>(this);
+        var saved = await dialog.ShowDialog<bool>(this);
+        if (!saved)
+        {
+            return;
+        }
+
+        var updated = SettingsManager.Load();
+        keyToCommandMap = BuildKeyMap(updated.KeyMap);
+        if (Application.Current is App app)
+        {
+            app.ApplyTheme(updated.Theme);
+        }
+        App.ApplyLanguage(updated.Language);
+        RefreshCursorUnderlines();
     }
 
     private async void OnSettingsButtonClick(object? sender, RoutedEventArgs e)
@@ -744,8 +757,9 @@ public partial class MainWindow : Window
         row.Height = 20;
         row.MinHeight = 20;
         row.MaxHeight = 20;
+        var cursorColor = WsFiler.Presentation.Theming.UiTheme.IsLight ? Colors.Black : Colors.White;
         row.BorderBrush = item.IsCursor
-            ? new SolidColorBrush(Colors.White)
+            ? new SolidColorBrush(cursorColor)
             : Brushes.Transparent;
         row.BorderThickness = item.IsCursor
             ? new Thickness(0, 0, 0, 1)

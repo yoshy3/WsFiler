@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WsFiler.Core.Files;
 using WsFiler.Presentation.Resources;
+using WsFiler.Presentation.Theming;
 
 namespace WsFiler.Presentation.ViewModels;
 
@@ -17,6 +18,19 @@ public sealed partial class FilePaneViewModel : ViewModelBase
     public bool ShowHiddenFiles { get; private set; }
 
     private readonly Dictionary<string, string> cursorMemory = new(StringComparer.OrdinalIgnoreCase);
+
+    public FilePaneViewModel()
+    {
+        UiTheme.Changed += OnUiThemeChanged;
+    }
+
+    private void OnUiThemeChanged()
+    {
+        foreach (var item in Items)
+        {
+            item.RaiseColorsChanged();
+        }
+    }
 
     [ObservableProperty]
     private string currentPath = "";

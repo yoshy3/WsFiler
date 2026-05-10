@@ -175,7 +175,6 @@ public partial class SettingsDialog : Window
                 new ComboValue("light", Strings.Dialog_Settings_Theme_Light),
                 new ComboValue("dark", Strings.Dialog_Settings_Theme_Dark),
             },
-            DisplayMemberBinding = new Avalonia.Data.Binding(nameof(ComboValue.Display)),
             SelectedIndex = ThemeIndex(settings.Theme),
         };
         ContentPanel.Children.Add(themeCombo);
@@ -192,7 +191,6 @@ public partial class SettingsDialog : Window
                 new ComboValue("en", Strings.Dialog_Settings_Language_English),
                 new ComboValue("ja", Strings.Dialog_Settings_Language_Japanese),
             },
-            DisplayMemberBinding = new Avalonia.Data.Binding(nameof(ComboValue.Display)),
             SelectedIndex = LanguageIndex(settings.Language),
         };
         ContentPanel.Children.Add(languageCombo);
@@ -332,7 +330,10 @@ public partial class SettingsDialog : Window
         _ => 0,
     };
 
-    private sealed record ComboValue(string Key, string Display);
+    private sealed record ComboValue(string Key, string Display)
+    {
+        public override string ToString() => Display;
+    }
 
     private sealed class SettingsEntry
     {

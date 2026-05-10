@@ -355,10 +355,24 @@
         </Border>
 
         <Border Grid.Row="2"
-                Padding="8,6"
+                Padding="8,2,4,2"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                 BorderThickness="0,1,0,0">
-            <TextBlock Text="{Binding StatusMessage}"/>
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage}"
+                           VerticalAlignment="Center"/>
+                <Button Grid.Column="1"
+                        x:Name="SettingsButton"
+                        Content="&#x2699;"
+                        FontSize="16"
+                        Padding="8,2"
+                        MinWidth="32"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ToolTip.Tip="Settings (Ctrl+,)"
+                        Click="OnSettingsButtonClick"/>
+            </Grid>
         </Border>
     </Grid>
 

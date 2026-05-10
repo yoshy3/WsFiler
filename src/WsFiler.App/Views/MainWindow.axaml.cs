@@ -203,9 +203,22 @@ public partial class MainWindow : Window
             items.Add(new Separator());
             items.Add(MakeMenuItem(Strings.ContextMenu_Properties,
                 () => ShowPropertiesForPathAsync(viewModel.ActivePane.CurrentPath, viewModel)));
+            items.Add(new Separator());
+            items.Add(MakeMenuItem(Strings.ContextMenu_Settings, () => ShowSettingsDialogAsync()));
         }
 
         return new ContextMenu { ItemsSource = items };
+    }
+
+    private async Task ShowSettingsDialogAsync()
+    {
+        var dialog = new SettingsDialog();
+        await dialog.ShowDialog<bool>(this);
+    }
+
+    private async void OnSettingsButtonClick(object? sender, RoutedEventArgs e)
+    {
+        await ShowSettingsDialogAsync();
     }
 
     private static MenuItem MakeMenuItem(string header, Func<Task> action)
@@ -557,6 +570,10 @@ public partial class MainWindow : Window
         else if (commandId == ApplicationCommandId.FileCompare)
         {
             await CompareCurrentItemsAsync(viewModel);
+        }
+        else if (commandId == ApplicationCommandId.AppSettings)
+        {
+            await ShowSettingsDialogAsync();
         }
         else if (commandId == ApplicationCommandId.CursorPageUp)
         {

@@ -1,0 +1,59 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WsFiler.App.Views.KeyMapDialog"
+        Width="640"
+        Height="520"
+        MinWidth="480"
+        MinHeight="360"
+        WindowStartupLocation="CenterOwner"
+        Title="Keymap">
+    <Grid RowDefinitions="Auto,*,Auto"
+          Margin="12"
+          RowSpacing="10">
+
+        <TextBox x:Name="FilterBox"
+                 Grid.Row="0"
+                 TextChanged="OnFilterChanged"/>
+
+        <DataGrid x:Name="BindingsGrid"
+                  Grid.Row="1"
+                  AutoGenerateColumns="False"
+                  HeadersVisibility="Column"
+                  IsReadOnly="True"
+                  GridLinesVisibility="Horizontal"
+                  SelectionMode="Single"
+                  DoubleTapped="OnGridDoubleTapped">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Command"
+                                    Binding="{ReflectionBinding CommandId}"
+                                    Width="*"/>
+                <DataGridTextColumn Header="Key"
+                                    Binding="{ReflectionBinding Gesture}"
+                                    Width="200"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="8">
+            <Button x:Name="EditButton"
+                    Grid.Column="0"
+                    MinWidth="92"
+                    Click="OnEditClick"/>
+            <Button x:Name="ResetButton"
+                    Grid.Column="1"
+                    MinWidth="120"
+                    Click="OnResetClick"/>
+            <Button x:Name="OkButton"
+                    Grid.Column="3"
+                    Content="OK"
+                    IsDefault="True"
+                    MinWidth="92"
+                    Click="OnOkClick"/>
+            <Button x:Name="CancelButton"
+                    Grid.Column="4"
+                    Content="Cancel"
+                    IsCancel="True"
+                    MinWidth="92"
+                    Click="OnCancelClick"/>
+        </Grid>
+    </Grid>
+</Window>

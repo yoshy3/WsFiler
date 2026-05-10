@@ -336,4 +336,82 @@
   <data name="ContextMenu.Refresh" xml:space="preserve">
     <value>更新</value>
   </data>
+  <data name="ContextMenu.Settings" xml:space="preserve">
+    <value>設定...</value>
+  </data>
+  <data name="Dialog.Settings.Title" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Dialog.Settings.SearchPlaceholder" xml:space="preserve">
+    <value>設定を検索...</value>
+  </data>
+  <data name="Dialog.Settings.Section.General" xml:space="preserve">
+    <value>一般</value>
+  </data>
+  <data name="Dialog.Settings.Section.External" xml:space="preserve">
+    <value>外部ツール</value>
+  </data>
+  <data name="Dialog.Settings.Section.Bookmarks" xml:space="preserve">
+    <value>ブックマーク</value>
+  </data>
+  <data name="Dialog.Settings.Section.Keymap" xml:space="preserve">
+    <value>キーマップ</value>
+  </data>
+  <data name="Dialog.Settings.Theme" xml:space="preserve">
+    <value>テーマ</value>
+  </data>
+  <data name="Dialog.Settings.Theme.System" xml:space="preserve">
+    <value>システム</value>
+  </data>
+  <data name="Dialog.Settings.Theme.Light" xml:space="preserve">
+    <value>ライト</value>
+  </data>
+  <data name="Dialog.Settings.Theme.Dark" xml:space="preserve">
+    <value>ダーク</value>
+  </data>
+  <data name="Dialog.Settings.Language" xml:space="preserve">
+    <value>言語</value>
+  </data>
+  <data name="Dialog.Settings.Language.System" xml:space="preserve">
+    <value>システム</value>
+  </data>
+  <data name="Dialog.Settings.Language.English" xml:space="preserve">
+    <value>英語</value>
+  </data>
+  <data name="Dialog.Settings.Language.Japanese" xml:space="preserve">
+    <value>日本語</value>
+  </data>
+  <data name="Dialog.Settings.RestartHint" xml:space="preserve">
+    <value>テーマと言語の変更は次回起動時に反映されます。</value>
+  </data>
+  <data name="Dialog.Settings.ExternalEditor" xml:space="preserve">
+    <value>外部エディターのパス</value>
+  </data>
+  <data name="Dialog.Settings.OpenKeymap" xml:space="preserve">
+    <value>キーマップエディタを開く</value>
+  </data>
+  <data name="Dialog.Settings.NoMatches" xml:space="preserve">
+    <value>該当する設定はありません。</value>
+  </data>
+  <data name="Dialog.Keymap.Title" xml:space="preserve">
+    <value>キーマップ</value>
+  </data>
+  <data name="Dialog.Keymap.Column.Command" xml:space="preserve">
+    <value>コマンド</value>
+  </data>
+  <data name="Dialog.Keymap.Column.Key" xml:space="preserve">
+    <value>キー</value>
+  </data>
+  <data name="Dialog.Keymap.Edit" xml:space="preserve">
+    <value>変更</value>
+  </data>
+  <data name="Dialog.Keymap.Reset" xml:space="preserve">
+    <value>デフォルトに戻す</value>
+  </data>
+  <data name="Dialog.Keymap.Capture.Title" xml:space="preserve">
+    <value>キーを押してください</value>
+  </data>
+  <data name="Dialog.Keymap.Capture.Prompt" xml:space="preserve">
+    <value>割り当てたいキーを押してください。Esc でキャンセル。</value>
+  </data>
 </root>

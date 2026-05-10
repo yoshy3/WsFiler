@@ -260,4 +260,56 @@ public class Strings
     public static string ContextMenu_OpenInTerminal => ResourceManager.GetString("ContextMenu.OpenInTerminal", resourceCulture)!;
 
     public static string ContextMenu_Refresh => ResourceManager.GetString("ContextMenu.Refresh", resourceCulture)!;
+
+    public static string ContextMenu_Settings => ResourceManager.GetString("ContextMenu.Settings", resourceCulture)!;
+
+    public static string Dialog_Settings_Title => ResourceManager.GetString("Dialog.Settings.Title", resourceCulture)!;
+
+    public static string Dialog_Settings_SearchPlaceholder => ResourceManager.GetString("Dialog.Settings.SearchPlaceholder", resourceCulture)!;
+
+    public static string Dialog_Settings_Section_General => ResourceManager.GetString("Dialog.Settings.Section.General", resourceCulture)!;
+
+    public static string Dialog_Settings_Section_External => ResourceManager.GetString("Dialog.Settings.Section.External", resourceCulture)!;
+
+    public static string Dialog_Settings_Section_Bookmarks => ResourceManager.GetString("Dialog.Settings.Section.Bookmarks", resourceCulture)!;
+
+    public static string Dialog_Settings_Section_Keymap => ResourceManager.GetString("Dialog.Settings.Section.Keymap", resourceCulture)!;
+
+    public static string Dialog_Settings_Theme => ResourceManager.GetString("Dialog.Settings.Theme", resourceCulture)!;
+
+    public static string Dialog_Settings_Theme_System => ResourceManager.GetString("Dialog.Settings.Theme.System", resourceCulture)!;
+
+    public static string Dialog_Settings_Theme_Light => ResourceManager.GetString("Dialog.Settings.Theme.Light", resourceCulture)!;
+
+    public static string Dialog_Settings_Theme_Dark => ResourceManager.GetString("Dialog.Settings.Theme.Dark", resourceCulture)!;
+
+    public static string Dialog_Settings_Language => ResourceManager.GetString("Dialog.Settings.Language", resourceCulture)!;
+
+    public static string Dialog_Settings_Language_System => ResourceManager.GetString("Dialog.Settings.Language.System", resourceCulture)!;
+
+    public static string Dialog_Settings_Language_English => ResourceManager.GetString("Dialog.Settings.Language.English", resourceCulture)!;
+
+    public static string Dialog_Settings_Language_Japanese => ResourceManager.GetString("Dialog.Settings.Language.Japanese", resourceCulture)!;
+
+    public static string Dialog_Settings_RestartHint => ResourceManager.GetString("Dialog.Settings.RestartHint", resourceCulture)!;
+
+    public static string Dialog_Settings_ExternalEditor => ResourceManager.GetString("Dialog.Settings.ExternalEditor", resourceCulture)!;
+
+    public static string Dialog_Settings_OpenKeymap => ResourceManager.GetString("Dialog.Settings.OpenKeymap", resourceCulture)!;
+
+    public static string Dialog_Settings_NoMatches => ResourceManager.GetString("Dialog.Settings.NoMatches", resourceCulture)!;
+
+    public static string Dialog_Keymap_Title => ResourceManager.GetString("Dialog.Keymap.Title", resourceCulture)!;
+
+    public static string Dialog_Keymap_Column_Command => ResourceManager.GetString("Dialog.Keymap.Column.Command", resourceCulture)!;
+
+    public static string Dialog_Keymap_Column_Key => ResourceManager.GetString("Dialog.Keymap.Column.Key", resourceCulture)!;
+
+    public static string Dialog_Keymap_Edit => ResourceManager.GetString("Dialog.Keymap.Edit", resourceCulture)!;
+
+    public static string Dialog_Keymap_Reset => ResourceManager.GetString("Dialog.Keymap.Reset", resourceCulture)!;
+
+    public static string Dialog_Keymap_Capture_Title => ResourceManager.GetString("Dialog.Keymap.Capture.Title", resourceCulture)!;
+
+    public static string Dialog_Keymap_Capture_Prompt => ResourceManager.GetString("Dialog.Keymap.Capture.Prompt", resourceCulture)!;
 }

@@ -1,0 +1,53 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WsFiler.App.Views.SettingsDialog"
+        Width="780"
+        Height="520"
+        MinWidth="600"
+        MinHeight="400"
+        WindowStartupLocation="CenterOwner"
+        Title="Settings">
+    <Grid RowDefinitions="Auto,*,Auto"
+          Margin="12"
+          RowSpacing="10">
+
+        <TextBox x:Name="SearchBox"
+                 Grid.Row="0"
+                 TextChanged="OnSearchTextChanged"/>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="180,*"
+              ColumnSpacing="12">
+            <ListBox x:Name="SectionList"
+                     Grid.Column="0"
+                     SelectionChanged="OnSectionSelected"/>
+
+            <Border Grid.Column="1"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="1"
+                    CornerRadius="2"
+                    Padding="14">
+                <ScrollViewer x:Name="ContentScroll"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="ContentPanel" Spacing="10"/>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button x:Name="OkButton"
+                    Content="OK"
+                    IsDefault="True"
+                    MinWidth="92"
+                    Click="OnOkClick"/>
+            <Button x:Name="CancelButton"
+                    Content="Cancel"
+                    IsCancel="True"
+                    MinWidth="92"
+                    Click="OnCancelClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

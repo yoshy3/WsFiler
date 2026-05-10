@@ -49,5 +49,6 @@ public static class DefaultKeyMap
         new(ApplicationCommandId.DirectoryHistory, new("H")),
         new(ApplicationCommandId.FileProperties, new("O")),
         new(ApplicationCommandId.FileCompare, new("J")),
+        new(ApplicationCommandId.AppSettings, new("OemComma", KeyModifiers.Control)),
     ];
 }

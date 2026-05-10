@@ -1,0 +1,42 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WsFiler.App.Views.KeyCaptureDialog"
+        Width="380"
+        Height="200"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Title="Press a key">
+    <Grid RowDefinitions="Auto,*,Auto"
+          Margin="16"
+          RowSpacing="10">
+        <TextBlock x:Name="PromptLabel"
+                   Grid.Row="0"
+                   TextWrapping="Wrap"/>
+        <Border Grid.Row="1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="1"
+                CornerRadius="2"
+                MinHeight="44">
+            <TextBlock x:Name="CapturedLabel"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       FontFamily="Consolas"
+                       FontSize="16"/>
+        </Border>
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button x:Name="OkButton"
+                    Content="OK"
+                    IsDefault="True"
+                    MinWidth="92"
+                    Click="OnOkClick"/>
+            <Button x:Name="CancelButton"
+                    Content="Cancel"
+                    IsCancel="True"
+                    MinWidth="92"
+                    Click="OnCancelClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -45,4 +45,5 @@ public static class ApplicationCommandId
     public const string DirectoryHistory = "directory.history";
     public const string FileProperties = "file.properties";
     public const string FileCompare = "file.compare";
+    public const string AppSettings = "app.settings";
 }

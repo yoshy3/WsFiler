@@ -336,4 +336,82 @@
   <data name="ContextMenu.Refresh" xml:space="preserve">
     <value>Refresh</value>
   </data>
+  <data name="ContextMenu.Settings" xml:space="preserve">
+    <value>Settings...</value>
+  </data>
+  <data name="Dialog.Settings.Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Dialog.Settings.SearchPlaceholder" xml:space="preserve">
+    <value>Search settings...</value>
+  </data>
+  <data name="Dialog.Settings.Section.General" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Dialog.Settings.Section.External" xml:space="preserve">
+    <value>External Tools</value>
+  </data>
+  <data name="Dialog.Settings.Section.Bookmarks" xml:space="preserve">
+    <value>Bookmarks</value>
+  </data>
+  <data name="Dialog.Settings.Section.Keymap" xml:space="preserve">
+    <value>Keymap</value>
+  </data>
+  <data name="Dialog.Settings.Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Dialog.Settings.Theme.System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Dialog.Settings.Theme.Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Dialog.Settings.Theme.Dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Dialog.Settings.Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Dialog.Settings.Language.System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Dialog.Settings.Language.English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Dialog.Settings.Language.Japanese" xml:space="preserve">
+    <value>Japanese</value>
+  </data>
+  <data name="Dialog.Settings.RestartHint" xml:space="preserve">
+    <value>Theme and language changes apply on next launch.</value>
+  </data>
+  <data name="Dialog.Settings.ExternalEditor" xml:space="preserve">
+    <value>External editor path</value>
+  </data>
+  <data name="Dialog.Settings.OpenKeymap" xml:space="preserve">
+    <value>Open Keymap Editor</value>
+  </data>
+  <data name="Dialog.Settings.NoMatches" xml:space="preserve">
+    <value>No matching settings.</value>
+  </data>
+  <data name="Dialog.Keymap.Title" xml:space="preserve">
+    <value>Keymap</value>
+  </data>
+  <data name="Dialog.Keymap.Column.Command" xml:space="preserve">
+    <value>Command</value>
+  </data>
+  <data name="Dialog.Keymap.Column.Key" xml:space="preserve">
+    <value>Key</value>
+  </data>
+  <data name="Dialog.Keymap.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Dialog.Keymap.Reset" xml:space="preserve">
+    <value>Reset to Default</value>
+  </data>
+  <data name="Dialog.Keymap.Capture.Title" xml:space="preserve">
+    <value>Press a key</value>
+  </data>
+  <data name="Dialog.Keymap.Capture.Prompt" xml:space="preserve">
+    <value>Press the key combination to bind. Press Esc to cancel.</value>
+  </data>
 </root>

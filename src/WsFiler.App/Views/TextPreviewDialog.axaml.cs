@@ -2,9 +2,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.VisualTree;
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using WsFiler.Presentation.Resources;
 
 namespace WsFiler.App.Views;
@@ -22,7 +24,23 @@ public partial class TextPreviewDialog : Window
     public TextPreviewDialog()
     {
         InitializeComponent();
+        var monospace = GetMonospaceFontFamily();
+        PreviewTextBox.FontFamily = monospace;
+        PathTextBlock.FontFamily = monospace;
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+    }
+
+    private static FontFamily GetMonospaceFontFamily()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return new FontFamily("Consolas, Cascadia Mono, Courier New");
+        }
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return new FontFamily("Menlo, Monaco, Courier New");
+        }
+        return new FontFamily("DejaVu Sans Mono, Liberation Mono, Ubuntu Mono, Noto Sans Mono, monospace");
     }
 
     public TextPreviewDialog(

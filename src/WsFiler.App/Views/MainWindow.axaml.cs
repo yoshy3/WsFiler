@@ -1126,11 +1126,7 @@ public partial class MainWindow : Window
                 return;
             }
 
-            Process.Start(new ProcessStartInfo("x-terminal-emulator")
-            {
-                WorkingDirectory = workingDirectory,
-                UseShellExecute = true,
-            });
+            LaunchLinuxTerminal(workingDirectory);
         }
         catch (Exception ex)
         {
@@ -1156,6 +1152,96 @@ public partial class MainWindow : Window
         {
             UseShellExecute = true,
         });
+    }
+
+    private static void LaunchLinuxTerminal(string workingDirectory)
+    {
+        var terminalCandidates = new (string FileName, string[] Arguments)[]
+        {
+            ("gnome-terminal", ["--working-directory", workingDirectory]),
+            ("kgx", ["--working-directory", workingDirectory]),
+            ("konsole", ["--workdir", workingDirectory]),
+            ("xfce4-terminal", ["--working-directory", workingDirectory]),
+            ("mate-terminal", ["--working-directory", workingDirectory]),
+            ("lxterminal", ["--working-directory", workingDirectory]),
+            ("tilix", ["--working-directory", workingDirectory]),
+            ("terminator", ["--working-directory", workingDirectory]),
+            ("alacritty", ["--working-directory", workingDirectory]),
+            ("kitty", ["--directory", workingDirectory]),
+            ("xterm", CreateShellCdArguments(workingDirectory)),
+        };
+
+        foreach (var (fileName, arguments) in terminalCandidates)
+        {
+            if (!CommandExists(fileName))
+            {
+                continue;
+            }
+
+            StartProcess(fileName, arguments, workingDirectory);
+            return;
+        }
+
+        if (CommandExists("x-terminal-emulator"))
+        {
+            StartProcess("x-terminal-emulator", CreateShellCdArguments(workingDirectory), workingDirectory);
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo("x-terminal-emulator")
+        {
+            WorkingDirectory = workingDirectory,
+            UseShellExecute = true,
+        });
+    }
+
+    private static string[] CreateShellCdArguments(string workingDirectory)
+    {
+        return
+        [
+            "-e",
+            "/bin/sh",
+            "-lc",
+            "cd \"$1\" && exec \"${SHELL:-/bin/sh}\" -l",
+            "wsfiler-terminal",
+            workingDirectory,
+        ];
+    }
+
+    private static void StartProcess(string fileName, IEnumerable<string> arguments, string workingDirectory)
+    {
+        var startInfo = new ProcessStartInfo(fileName)
+        {
+            WorkingDirectory = workingDirectory,
+            UseShellExecute = false,
+        };
+
+        foreach (var argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        Process.Start(startInfo);
+    }
+
+    private static bool CommandExists(string fileName)
+    {
+        var path = Environment.GetEnvironmentVariable("PATH");
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        foreach (var directory in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var candidate = Path.Combine(directory, fileName);
+            if (File.Exists(candidate))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private async Task ShowSearchDialogAsync(MainWindowViewModel viewModel)

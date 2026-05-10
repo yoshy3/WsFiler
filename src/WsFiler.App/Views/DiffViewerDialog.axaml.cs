@@ -64,14 +64,34 @@ public partial class DiffViewerDialog : Window
     {
         var grid = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions("48,*,48,*"),
-            MinWidth = 1200,
+            ColumnDefinitions = new ColumnDefinitions("*,*"),
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+            ClipToBounds = true,
         };
 
-        grid.Children.Add(CreateLineNumber(row.LeftLineNumber, 0));
-        grid.Children.Add(CreateTextCell(row.LeftText, row.RightText, row.Kind, isLeft: true, 1));
-        grid.Children.Add(CreateLineNumber(row.RightLineNumber, 2));
-        grid.Children.Add(CreateTextCell(row.RightText, row.LeftText, row.Kind, isLeft: false, 3));
+        grid.Children.Add(CreateSide(row.LeftLineNumber, row.LeftText, row.RightText, row.Kind, isLeft: true, 0));
+        grid.Children.Add(CreateSide(row.RightLineNumber, row.RightText, row.LeftText, row.Kind, isLeft: false, 1));
+        return grid;
+    }
+
+    private static Grid CreateSide(
+        int? lineNumber,
+        string? text,
+        string? oppositeText,
+        DiffKind kind,
+        bool isLeft,
+        int column)
+    {
+        var grid = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("48,*"),
+            ClipToBounds = true,
+        };
+
+        grid.Children.Add(CreateLineNumber(lineNumber, 0));
+        grid.Children.Add(CreateTextCell(text, oppositeText, kind, isLeft, 1));
+
+        Grid.SetColumn(grid, column);
         return grid;
     }
 
@@ -113,6 +133,7 @@ public partial class DiffViewerDialog : Window
             Padding = new Thickness(4, 1),
             Child = textBlock,
             MinHeight = 20,
+            ClipToBounds = true,
         };
         Grid.SetColumn(border, column);
         return border;

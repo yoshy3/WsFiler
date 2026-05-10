@@ -21,9 +21,10 @@
         </Grid>
 
         <ScrollViewer Grid.Row="1"
-                      HorizontalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="RowsPanel"
+                        HorizontalAlignment="Stretch"
                         Margin="8,0,8,8"/>
         </ScrollViewer>
     </Grid>

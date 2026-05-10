@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 using System.Runtime.Versioning;
 
 namespace WsFiler.App.Shell;
 
 [SupportedOSPlatform("windows")]
-internal static class ShellContextMenu
+internal static partial class ShellContextMenu
 {
     private const uint CMF_NORMAL = 0x00000000;
     private const uint CMF_EXPLORE = 0x00000020;
@@ -20,6 +21,8 @@ internal static class ShellContextMenu
 
     private static readonly Guid IID_IShellFolder = new("000214E6-0000-0000-C000-000000000046");
     private static readonly Guid IID_IContextMenu = new("000214E4-0000-0000-C000-000000000046");
+
+    private static readonly StrategyBasedComWrappers ComWrappers = new();
 
     public static void ShowForFiles(IntPtr ownerHwnd, IReadOnlyList<string> fullPaths, int screenX, int screenY)
     {
@@ -48,20 +51,23 @@ internal static class ShellContextMenu
         ShowMenu(ownerHwnd, folderPath, [], screenX, screenY);
     }
 
-    private static void ShowMenu(IntPtr ownerHwnd, string folderPath, IReadOnlyList<string> childNames, int screenX, int screenY)
+    private static unsafe void ShowMenu(IntPtr ownerHwnd, string folderPath, IReadOnlyList<string> childNames, int screenX, int screenY)
     {
-        if (SHGetDesktopFolder(out var desktopFolder) != 0 || desktopFolder is null)
+        if (SHGetDesktopFolder(out var desktopPtr) != 0 || desktopPtr == IntPtr.Zero)
         {
             return;
         }
 
-        var allocatedPidls = new List<IntPtr>();
+        IShellFolder? desktopFolder = null;
         IShellFolder? targetFolder = null;
         IContextMenu? contextMenu = null;
+        var allocatedPidls = new List<IntPtr>();
         var hMenu = IntPtr.Zero;
 
         try
         {
+            desktopFolder = (IShellFolder)ComWrappers.GetOrCreateObjectForComInstance(desktopPtr, CreateObjectFlags.UniqueInstance);
+
             uint eaten = 0;
             uint attrs = 0;
             if (desktopFolder.ParseDisplayName(IntPtr.Zero, IntPtr.Zero, folderPath, ref eaten, out var folderPidl, ref attrs) != 0)
@@ -71,14 +77,14 @@ internal static class ShellContextMenu
             allocatedPidls.Add(folderPidl);
 
             var shellFolderIid = IID_IShellFolder;
-            if (desktopFolder.BindToObject(folderPidl, IntPtr.Zero, ref shellFolderIid, out var folderPtr) != 0)
+            if (desktopFolder.BindToObject(folderPidl, IntPtr.Zero, ref shellFolderIid, out var folderPtr) != 0 || folderPtr == IntPtr.Zero)
             {
                 return;
             }
 
             try
             {
-                targetFolder = (IShellFolder)Marshal.GetObjectForIUnknown(folderPtr);
+                targetFolder = (IShellFolder)ComWrappers.GetOrCreateObjectForComInstance(folderPtr, CreateObjectFlags.UniqueInstance);
             }
             finally
             {
@@ -101,14 +107,17 @@ internal static class ShellContextMenu
                     allocatedPidls.Add(childPidls[i]);
                 }
 
-                if (targetFolder.GetUIObjectOf(ownerHwnd, (uint)childPidls.Length, childPidls, ref contextIid, IntPtr.Zero, out menuPtr) != 0)
+                fixed (IntPtr* pidlsPtr = childPidls)
                 {
-                    return;
+                    if (targetFolder.GetUIObjectOf(ownerHwnd, (uint)childPidls.Length, pidlsPtr, ref contextIid, IntPtr.Zero, out menuPtr) != 0 || menuPtr == IntPtr.Zero)
+                    {
+                        return;
+                    }
                 }
             }
             else
             {
-                if (targetFolder.CreateViewObject(ownerHwnd, ref contextIid, out menuPtr) != 0)
+                if (targetFolder.CreateViewObject(ownerHwnd, ref contextIid, out menuPtr) != 0 || menuPtr == IntPtr.Zero)
                 {
                     return;
                 }
@@ -116,7 +125,7 @@ internal static class ShellContextMenu
 
             try
             {
-                contextMenu = (IContextMenu)Marshal.GetObjectForIUnknown(menuPtr);
+                contextMenu = (IContextMenu)ComWrappers.GetOrCreateObjectForComInstance(menuPtr, CreateObjectFlags.UniqueInstance);
             }
             finally
             {
@@ -142,7 +151,7 @@ internal static class ShellContextMenu
 
             var info = new CMINVOKECOMMANDINFO
             {
-                cbSize = Marshal.SizeOf<CMINVOKECOMMANDINFO>(),
+                cbSize = sizeof(CMINVOKECOMMANDINFO),
                 fMask = 0,
                 hwnd = ownerHwnd,
                 lpVerb = (IntPtr)(selected - MIN_CMD_ID),
@@ -160,15 +169,10 @@ internal static class ShellContextMenu
             {
                 DestroyMenu(hMenu);
             }
-            if (contextMenu is not null)
-            {
-                Marshal.ReleaseComObject(contextMenu);
-            }
-            if (targetFolder is not null)
-            {
-                Marshal.ReleaseComObject(targetFolder);
-            }
-            Marshal.ReleaseComObject(desktopFolder);
+            (contextMenu as IDisposable)?.Dispose();
+            (targetFolder as IDisposable)?.Dispose();
+            (desktopFolder as IDisposable)?.Dispose();
+            Marshal.Release(desktopPtr);
             foreach (var pidl in allocatedPidls)
             {
                 if (pidl != IntPtr.Zero)
@@ -179,26 +183,25 @@ internal static class ShellContextMenu
         }
     }
 
-    [DllImport("shell32.dll")]
-    private static extern int SHGetDesktopFolder(out IShellFolder ppshf);
+    [LibraryImport("shell32.dll")]
+    private static partial int SHGetDesktopFolder(out IntPtr ppshf);
 
-    [DllImport("shell32.dll")]
-    private static extern void ILFree(IntPtr pidl);
+    [LibraryImport("shell32.dll")]
+    private static partial void ILFree(IntPtr pidl);
 
-    [DllImport("user32.dll")]
-    private static extern IntPtr CreatePopupMenu();
+    [LibraryImport("user32.dll")]
+    private static partial IntPtr CreatePopupMenu();
 
-    [DllImport("user32.dll")]
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool DestroyMenu(IntPtr hMenu);
+    private static partial bool DestroyMenu(IntPtr hMenu);
 
-    [DllImport("user32.dll")]
-    private static extern uint TrackPopupMenuEx(IntPtr hmenu, uint flags, int x, int y, IntPtr hwnd, IntPtr lptpm);
+    [LibraryImport("user32.dll")]
+    private static partial uint TrackPopupMenuEx(IntPtr hmenu, uint flags, int x, int y, IntPtr hwnd, IntPtr lptpm);
 
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [GeneratedComInterface]
     [Guid("000214E6-0000-0000-C000-000000000046")]
-    private interface IShellFolder
+    internal partial interface IShellFolder
     {
         [PreserveSig] int ParseDisplayName(IntPtr hwnd, IntPtr pbc, [MarshalAs(UnmanagedType.LPWStr)] string pszDisplayName, ref uint pchEaten, out IntPtr ppidl, ref uint pdwAttributes);
         [PreserveSig] int EnumObjects(IntPtr hwnd, int grfFlags, out IntPtr ppenumIDList);
@@ -206,33 +209,23 @@ internal static class ShellContextMenu
         [PreserveSig] int BindToStorage(IntPtr pidl, IntPtr pbc, ref Guid riid, out IntPtr ppv);
         [PreserveSig] int CompareIDs(IntPtr lParam, IntPtr pidl1, IntPtr pidl2);
         [PreserveSig] int CreateViewObject(IntPtr hwndOwner, ref Guid riid, out IntPtr ppv);
-        [PreserveSig] int GetAttributesOf(
-            uint cidl,
-            [In, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0)] IntPtr[] apidl,
-            ref uint rgfInOut);
-        [PreserveSig] int GetUIObjectOf(
-            IntPtr hwndOwner,
-            uint cidl,
-            [In, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] IntPtr[] apidl,
-            ref Guid riid,
-            IntPtr rgfReserved,
-            out IntPtr ppv);
+        [PreserveSig] unsafe int GetAttributesOf(uint cidl, IntPtr* apidl, ref uint rgfInOut);
+        [PreserveSig] unsafe int GetUIObjectOf(IntPtr hwndOwner, uint cidl, IntPtr* apidl, ref Guid riid, IntPtr rgfReserved, out IntPtr ppv);
         [PreserveSig] int GetDisplayNameOf(IntPtr pidl, uint uFlags, IntPtr lpName);
         [PreserveSig] int SetNameOf(IntPtr hwnd, IntPtr pidl, [MarshalAs(UnmanagedType.LPWStr)] string pszName, uint uFlags, out IntPtr ppidlOut);
     }
 
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [GeneratedComInterface]
     [Guid("000214E4-0000-0000-C000-000000000046")]
-    private interface IContextMenu
+    internal partial interface IContextMenu
     {
         [PreserveSig] int QueryContextMenu(IntPtr hMenu, uint indexMenu, uint idCmdFirst, uint idCmdLast, uint uFlags);
         [PreserveSig] int InvokeCommand(ref CMINVOKECOMMANDINFO pici);
         [PreserveSig] int GetCommandString(IntPtr idcmd, uint uflags, IntPtr pwReserved, IntPtr commandstring, int cch);
     }
 
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-    private struct CMINVOKECOMMANDINFO
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct CMINVOKECOMMANDINFO
     {
         public int cbSize;
         public uint fMask;

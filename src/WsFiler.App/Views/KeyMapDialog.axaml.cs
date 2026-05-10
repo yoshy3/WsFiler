@@ -156,5 +156,6 @@ public partial class KeyMapDialog : Window
         Close(null);
     }
 
-    public sealed record KeyBindingRow(string CommandId, string Gesture);
 }
+
+public sealed record KeyBindingRow(string CommandId, string Gesture);

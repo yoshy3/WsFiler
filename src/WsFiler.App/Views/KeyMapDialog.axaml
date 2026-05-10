@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:WsFiler.App.Views"
         x:Class="WsFiler.App.Views.KeyMapDialog"
         Width="640"
         Height="520"
@@ -17,6 +18,7 @@
 
         <DataGrid x:Name="BindingsGrid"
                   Grid.Row="1"
+                  x:DataType="views:KeyBindingRow"
                   AutoGenerateColumns="False"
                   HeadersVisibility="Column"
                   IsReadOnly="True"
@@ -25,10 +27,10 @@
                   DoubleTapped="OnGridDoubleTapped">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Command"
-                                    Binding="{ReflectionBinding CommandId}"
+                                    Binding="{Binding CommandId}"
                                     Width="*"/>
                 <DataGridTextColumn Header="Key"
-                                    Binding="{ReflectionBinding Gesture}"
+                                    Binding="{Binding Gesture}"
                                     Width="200"/>
             </DataGrid.Columns>
         </DataGrid>

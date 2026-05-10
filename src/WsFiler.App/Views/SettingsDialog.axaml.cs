@@ -14,8 +14,9 @@ namespace WsFiler.App.Views;
 public partial class SettingsDialog : Window
 {
     private readonly AppSettings settings;
-    private readonly List<SettingsSection> sections;
-    private SettingsSection? activeSection;
+    private readonly List<SettingsEntry> entries;
+    private readonly List<string> sectionOrder;
+    private string activeSection = "";
 
     private ComboBox? themeCombo;
     private ComboBox? languageCombo;
@@ -38,19 +39,23 @@ public partial class SettingsDialog : Window
         OkButton.Content = Strings.Dialog_Common_Ok;
         CancelButton.Content = Strings.Dialog_Common_Cancel;
 
-        sections =
+        entries =
         [
-            new(Strings.Dialog_Settings_Section_General, BuildGeneralPanel,
-                [Strings.Dialog_Settings_Theme, Strings.Dialog_Settings_Language]),
-            new(Strings.Dialog_Settings_Section_External, BuildExternalPanel,
-                [Strings.Dialog_Settings_ExternalEditor]),
-            new(Strings.Dialog_Settings_Section_Bookmarks, BuildBookmarksPanel,
-                [Strings.Dialog_Bookmark_Title]),
-            new(Strings.Dialog_Settings_Section_Keymap, BuildKeymapPanel,
-                [Strings.Dialog_Keymap_Title, Strings.Dialog_Settings_OpenKeymap]),
+            new(Strings.Dialog_Settings_Section_General, Strings.Dialog_Settings_Theme,
+                BuildThemeEntry, [Strings.Dialog_Settings_Theme_System, Strings.Dialog_Settings_Theme_Light, Strings.Dialog_Settings_Theme_Dark]),
+            new(Strings.Dialog_Settings_Section_General, Strings.Dialog_Settings_Language,
+                BuildLanguageEntry, [Strings.Dialog_Settings_Language_System, Strings.Dialog_Settings_Language_English, Strings.Dialog_Settings_Language_Japanese]),
+            new(Strings.Dialog_Settings_Section_External, Strings.Dialog_Settings_ExternalEditor,
+                BuildEditorEntry, ["editor", "exe", "path"]),
+            new(Strings.Dialog_Settings_Section_Bookmarks, Strings.Dialog_Bookmark_Title,
+                BuildBookmarksEntry, ["bookmark"]),
+            new(Strings.Dialog_Settings_Section_Keymap, Strings.Dialog_Settings_OpenKeymap,
+                BuildKeymapEntry, ["keymap", "shortcut", "binding", "key"]),
         ];
 
-        SectionList.ItemsSource = sections.Select(section => section.Title).ToList();
+        sectionOrder = entries.Select(entry => entry.Section).Distinct().ToList();
+
+        RebuildSectionList(query: "");
         SectionList.SelectedIndex = 0;
 
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
@@ -67,75 +72,100 @@ public partial class SettingsDialog : Window
 
     private void OnSectionSelected(object? sender, SelectionChangedEventArgs e)
     {
-        if (SectionList.SelectedIndex < 0)
+        if (SectionList.SelectedIndex < 0 ||
+            SectionList.SelectedItem is not string title)
         {
             return;
         }
 
-        if (SectionList.ItemsSource is IEnumerable<string> source)
-        {
-            var titles = source.ToList();
-            if (SectionList.SelectedIndex >= titles.Count)
-            {
-                return;
-            }
-
-            var title = titles[SectionList.SelectedIndex];
-            activeSection = sections.FirstOrDefault(section => section.Title == title);
-            RenderActiveSection();
-        }
+        activeSection = title;
+        RenderContent(SearchBox.Text?.Trim() ?? "");
     }
 
     private void OnSearchTextChanged(object? sender, TextChangedEventArgs e)
     {
         var query = SearchBox.Text?.Trim() ?? "";
-        if (string.IsNullOrEmpty(query))
+        RebuildSectionList(query);
+
+        if (SectionList.ItemsSource is IEnumerable<string> source && source.Any())
         {
-            SectionList.ItemsSource = sections.Select(section => section.Title).ToList();
-            if (SectionList.SelectedIndex < 0 && sections.Count > 0)
+            if (!source.Contains(activeSection))
             {
                 SectionList.SelectedIndex = 0;
             }
-            return;
         }
 
-        var filtered = sections
-            .Where(section => section.Matches(query))
-            .ToList();
-
-        SectionList.ItemsSource = filtered.Select(section => section.Title).ToList();
-
-        if (filtered.Count > 0)
-        {
-            activeSection = filtered[0];
-            SectionList.SelectedIndex = 0;
-            RenderActiveSection();
-        }
-        else
-        {
-            ContentPanel.Children.Clear();
-            ContentPanel.Children.Add(new TextBlock
-            {
-                Text = Strings.Dialog_Settings_NoMatches,
-                Opacity = 0.7,
-            });
-        }
+        RenderContent(query);
     }
 
-    private void RenderActiveSection()
+    private void RebuildSectionList(string query)
+    {
+        var matchingSections = sectionOrder
+            .Where(section =>
+                string.IsNullOrEmpty(query) ||
+                entries.Any(entry => entry.Section == section && entry.Matches(query)))
+            .ToList();
+
+        SectionList.ItemsSource = matchingSections;
+    }
+
+    private void RenderContent(string query)
     {
         ContentPanel.Children.Clear();
         themeCombo = null;
         languageCombo = null;
         editorTextBox = null;
-        activeSection?.Build();
+
+        IEnumerable<SettingsEntry> visible;
+        if (string.IsNullOrEmpty(query))
+        {
+            visible = entries.Where(entry => entry.Section == activeSection);
+        }
+        else
+        {
+            visible = entries.Where(entry => entry.Matches(query));
+        }
+
+        var byList = visible.ToList();
+        if (byList.Count == 0)
+        {
+            ContentPanel.Children.Add(new TextBlock
+            {
+                Text = Strings.Dialog_Settings_NoMatches,
+                Opacity = 0.7,
+            });
+            return;
+        }
+
+        string? lastSection = null;
+        foreach (var entry in byList)
+        {
+            if (entry.Section != lastSection)
+            {
+                ContentPanel.Children.Add(new TextBlock
+                {
+                    Text = entry.Section,
+                    FontSize = 11,
+                    FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                    Opacity = 0.7,
+                    Margin = new Avalonia.Thickness(0, lastSection is null ? 0 : 12, 0, 4),
+                });
+                lastSection = entry.Section;
+            }
+
+            ContentPanel.Children.Add(new TextBlock
+            {
+                Text = entry.Title,
+                FontSize = 14,
+                FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                Margin = new Avalonia.Thickness(0, 4, 0, 4),
+            });
+            entry.Build();
+        }
     }
 
-    private void BuildGeneralPanel()
+    private void BuildThemeEntry()
     {
-        AddHeader(Strings.Dialog_Settings_Section_General);
-
-        ContentPanel.Children.Add(new TextBlock { Text = Strings.Dialog_Settings_Theme });
         themeCombo = new ComboBox
         {
             HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -149,12 +179,10 @@ public partial class SettingsDialog : Window
             SelectedIndex = ThemeIndex(settings.Theme),
         };
         ContentPanel.Children.Add(themeCombo);
+    }
 
-        ContentPanel.Children.Add(new TextBlock
-        {
-            Text = Strings.Dialog_Settings_Language,
-            Margin = new Avalonia.Thickness(0, 8, 0, 0),
-        });
+    private void BuildLanguageEntry()
+    {
         languageCombo = new ComboBox
         {
             HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -174,16 +202,13 @@ public partial class SettingsDialog : Window
             Text = Strings.Dialog_Settings_RestartHint,
             FontSize = 11,
             Opacity = 0.7,
-            Margin = new Avalonia.Thickness(0, 12, 0, 0),
+            Margin = new Avalonia.Thickness(0, 4, 0, 0),
             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
         });
     }
 
-    private void BuildExternalPanel()
+    private void BuildEditorEntry()
     {
-        AddHeader(Strings.Dialog_Settings_Section_External);
-
-        ContentPanel.Children.Add(new TextBlock { Text = Strings.Dialog_Settings_ExternalEditor });
         editorTextBox = new TextBox
         {
             Text = settings.ExternalEditor ?? "",
@@ -191,29 +216,58 @@ public partial class SettingsDialog : Window
         ContentPanel.Children.Add(editorTextBox);
     }
 
-    private void BuildBookmarksPanel()
+    private void BuildBookmarksEntry()
     {
-        AddHeader(Strings.Dialog_Bookmark_Title);
+        settings.DirectoryBookmarks ??= new List<string>();
+        var bookmarks = new System.Collections.ObjectModel.ObservableCollection<string>(settings.DirectoryBookmarks);
 
-        var bookmarks = settings.DirectoryBookmarks ?? new List<string>();
+        var listBox = new ListBox
+        {
+            ItemsSource = bookmarks,
+            FontFamily = new Avalonia.Media.FontFamily("Consolas"),
+            Height = 240,
+        };
+
+        var deleteButton = new Button
+        {
+            Content = Strings.Dialog_Bookmark_Delete,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            MinWidth = 120,
+            Margin = new Avalonia.Thickness(0, 6, 0, 0),
+        };
+        deleteButton.Click += (_, _) =>
+        {
+            if (listBox.SelectedItem is not string selected)
+            {
+                return;
+            }
+
+            var index = listBox.SelectedIndex;
+            bookmarks.Remove(selected);
+            settings.DirectoryBookmarks = bookmarks.ToList();
+
+            if (bookmarks.Count > 0)
+            {
+                listBox.SelectedIndex = Math.Clamp(index, 0, bookmarks.Count - 1);
+            }
+        };
+
+        ContentPanel.Children.Add(listBox);
+        ContentPanel.Children.Add(deleteButton);
+
         if (bookmarks.Count == 0)
         {
-            ContentPanel.Children.Add(new TextBlock { Text = "—", Opacity = 0.6 });
-            return;
+            ContentPanel.Children.Add(new TextBlock
+            {
+                Text = "—",
+                Opacity = 0.6,
+                Margin = new Avalonia.Thickness(0, 4, 0, 0),
+            });
         }
-
-        ContentPanel.Children.Add(new ListBox
-        {
-            ItemsSource = bookmarks.ToList(),
-            FontFamily = new Avalonia.Media.FontFamily("Consolas"),
-            Height = 280,
-        });
     }
 
-    private void BuildKeymapPanel()
+    private void BuildKeymapEntry()
     {
-        AddHeader(Strings.Dialog_Settings_Section_Keymap);
-
         var openButton = new Button
         {
             Content = Strings.Dialog_Settings_OpenKeymap,
@@ -222,17 +276,6 @@ public partial class SettingsDialog : Window
         };
         openButton.Click += async (_, _) => await OpenKeymapDialogAsync();
         ContentPanel.Children.Add(openButton);
-    }
-
-    private void AddHeader(string text)
-    {
-        ContentPanel.Children.Add(new TextBlock
-        {
-            Text = text,
-            FontSize = 16,
-            FontWeight = Avalonia.Media.FontWeight.SemiBold,
-            Margin = new Avalonia.Thickness(0, 0, 0, 8),
-        });
     }
 
     private async Task OpenKeymapDialogAsync()
@@ -291,14 +334,16 @@ public partial class SettingsDialog : Window
 
     private sealed record ComboValue(string Key, string Display);
 
-    private sealed class SettingsSection
+    private sealed class SettingsEntry
     {
+        public string Section { get; }
         public string Title { get; }
         private readonly Action build;
         private readonly string[] keywords;
 
-        public SettingsSection(string title, Action build, string[] keywords)
+        public SettingsEntry(string section, string title, Action build, string[] keywords)
         {
+            Section = section;
             Title = title;
             this.build = build;
             this.keywords = keywords;
@@ -307,6 +352,7 @@ public partial class SettingsDialog : Window
         public void Build() => build();
 
         public bool Matches(string query) =>
+            Section.Contains(query, StringComparison.OrdinalIgnoreCase) ||
             Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
             keywords.Any(keyword => keyword.Contains(query, StringComparison.OrdinalIgnoreCase));
     }

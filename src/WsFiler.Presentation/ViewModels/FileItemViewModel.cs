@@ -9,7 +9,7 @@ public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBa
 
     public string Name { get; } = item.Name;
 
-    public string DisplayName => IsMarked ? $"> {Name}" : $"  {Name}";
+    public string DisplayName => IsMarked ? $"* {Name}" : $"  {Name}";
 
     public string Extension { get; } = item.Extension;
 
@@ -88,7 +88,7 @@ public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBa
     {
         if (IsParent) return;
         IsMarked = !IsMarked;
-        Mark = IsMarked ? ">" : "";
+        Mark = IsMarked ? "*" : "";
         OnPropertyChanged(nameof(DisplayName));
         OnPropertyChanged(nameof(RowBackground));
     }
@@ -105,7 +105,7 @@ public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBa
     {
         if (IsParent) return;
         IsMarked = true;
-        Mark = ">";
+        Mark = "*";
         OnPropertyChanged(nameof(DisplayName));
         OnPropertyChanged(nameof(RowBackground));
     }

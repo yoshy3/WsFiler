@@ -12,6 +12,7 @@
 
     <Window.Resources>
         <converters:ShellIconConverter x:Key="ShellIconConverter"/>
+        <converters:StringToBrushConverter x:Key="StringToBrushConverter"/>
     </Window.Resources>
 
     <Window.Styles>
@@ -124,7 +125,7 @@
                             <DataGridTemplateColumn Header="" Width="32" CanUserResize="False">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:FileItemViewModel">
-                                        <Border Background="{Binding RowBackground}"
+                                        <Border Background="{Binding RowBackground, Converter={StaticResource StringToBrushConverter}}"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="20">
                                             <Image Source="{Binding FullPath, Converter={StaticResource ShellIconConverter}}"
@@ -139,11 +140,11 @@
                             <DataGridTemplateColumn Header="Name" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:FileItemViewModel">
-                                        <Border Background="{Binding RowBackground}"
+                                        <Border Background="{Binding RowBackground, Converter={StaticResource StringToBrushConverter}}"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="20">
                                             <TextBlock Text="{Binding DisplayName}"
-                                                       Foreground="{Binding ForegroundColor}"
+                                                       Foreground="{Binding ForegroundColor, Converter={StaticResource StringToBrushConverter}}"
                                                        Margin="4,0"
                                                        TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Center"/>
@@ -154,11 +155,11 @@
                             <DataGridTemplateColumn Header="Ext" Width="78">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:FileItemViewModel">
-                                        <Border Background="{Binding RowBackground}"
+                                        <Border Background="{Binding RowBackground, Converter={StaticResource StringToBrushConverter}}"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="20">
                                             <TextBlock Text="{Binding Extension}"
-                                                       Foreground="{Binding ForegroundColor}"
+                                                       Foreground="{Binding ForegroundColor, Converter={StaticResource StringToBrushConverter}}"
                                                        Margin="4,0"
                                                        TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Center"/>
@@ -169,11 +170,11 @@
                             <DataGridTemplateColumn Header="Size" Width="112">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:FileItemViewModel">
-                                        <Border Background="{Binding RowBackground}"
+                                        <Border Background="{Binding RowBackground, Converter={StaticResource StringToBrushConverter}}"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="20">
                                             <TextBlock Text="{Binding Size}"
-                                                       Foreground="{Binding ForegroundColor}"
+                                                       Foreground="{Binding ForegroundColor, Converter={StaticResource StringToBrushConverter}}"
                                                        Margin="4,0"
                                                        TextAlignment="Right"
                                                        TextTrimming="CharacterEllipsis"
@@ -185,11 +186,11 @@
                             <DataGridTemplateColumn Header="Modified" Width="154">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:FileItemViewModel">
-                                        <Border Background="{Binding RowBackground}"
+                                        <Border Background="{Binding RowBackground, Converter={StaticResource StringToBrushConverter}}"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="20">
                                             <TextBlock Text="{Binding Modified}"
-                                                       Foreground="{Binding ForegroundColor}"
+                                                       Foreground="{Binding ForegroundColor, Converter={StaticResource StringToBrushConverter}}"
                                                        Margin="4,0"
                                                        TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Center"/>
@@ -241,7 +242,7 @@
                             <DataGridTemplateColumn Header="" Width="32" CanUserResize="False">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:FileItemViewModel">
-                                        <Border Background="{Binding RowBackground}"
+                                        <Border Background="{Binding RowBackground, Converter={StaticResource StringToBrushConverter}}"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="20">
                                             <Image Source="{Binding FullPath, Converter={StaticResource ShellIconConverter}}"
@@ -256,11 +257,11 @@
                             <DataGridTemplateColumn Header="Name" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:FileItemViewModel">
-                                        <Border Background="{Binding RowBackground}"
+                                        <Border Background="{Binding RowBackground, Converter={StaticResource StringToBrushConverter}}"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="20">
                                             <TextBlock Text="{Binding DisplayName}"
-                                                       Foreground="{Binding ForegroundColor}"
+                                                       Foreground="{Binding ForegroundColor, Converter={StaticResource StringToBrushConverter}}"
                                                        Margin="4,0"
                                                        TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Center"/>
@@ -271,11 +272,11 @@
                             <DataGridTemplateColumn Header="Ext" Width="78">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:FileItemViewModel">
-                                        <Border Background="{Binding RowBackground}"
+                                        <Border Background="{Binding RowBackground, Converter={StaticResource StringToBrushConverter}}"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="20">
                                             <TextBlock Text="{Binding Extension}"
-                                                       Foreground="{Binding ForegroundColor}"
+                                                       Foreground="{Binding ForegroundColor, Converter={StaticResource StringToBrushConverter}}"
                                                        Margin="4,0"
                                                        TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Center"/>
@@ -286,11 +287,11 @@
                             <DataGridTemplateColumn Header="Size" Width="112">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:FileItemViewModel">
-                                        <Border Background="{Binding RowBackground}"
+                                        <Border Background="{Binding RowBackground, Converter={StaticResource StringToBrushConverter}}"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="20">
                                             <TextBlock Text="{Binding Size}"
-                                                       Foreground="{Binding ForegroundColor}"
+                                                       Foreground="{Binding ForegroundColor, Converter={StaticResource StringToBrushConverter}}"
                                                        Margin="4,0"
                                                        TextAlignment="Right"
                                                        TextTrimming="CharacterEllipsis"
@@ -302,11 +303,11 @@
                             <DataGridTemplateColumn Header="Modified" Width="154">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:FileItemViewModel">
-                                        <Border Background="{Binding RowBackground}"
+                                        <Border Background="{Binding RowBackground, Converter={StaticResource StringToBrushConverter}}"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="20">
                                             <TextBlock Text="{Binding Modified}"
-                                                       Foreground="{Binding ForegroundColor}"
+                                                       Foreground="{Binding ForegroundColor, Converter={StaticResource StringToBrushConverter}}"
                                                        Margin="4,0"
                                                        TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Center"/>

@@ -48,6 +48,7 @@ public partial class MainWindow : Window
         Loaded += (_, _) => UpdatePaneVisualState();
         Focusable = true;
         RegisterFileGridDragDrop();
+        WsFiler.Presentation.Theming.UiTheme.Changed += RefreshCursorUnderlines;
     }
 
     public MainWindow()
@@ -62,6 +63,7 @@ public partial class MainWindow : Window
         Loaded += (_, _) => UpdatePaneVisualState();
         Focusable = true;
         RegisterFileGridDragDrop();
+        WsFiler.Presentation.Theming.UiTheme.Changed += RefreshCursorUnderlines;
     }
 
     private Point? dragStartPoint;

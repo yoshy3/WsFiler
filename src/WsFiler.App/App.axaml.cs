@@ -27,6 +27,7 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        ActualThemeVariantChanged += (_, _) => SyncUiTheme();
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -136,34 +137,20 @@ public partial class App : Application
             _ => ThemeVariant.Default,
         };
 
-        UiTheme.IsLight = ResolveIsLight(normalized);
+        SyncUiTheme();
     }
 
-    private bool ResolveIsLight(string normalizedTheme)
+    private void SyncUiTheme()
     {
-        if (normalizedTheme == "light")
-        {
-            return true;
-        }
-
-        if (normalizedTheme == "dark")
-        {
-            return false;
-        }
-
-        var platformSettings = PlatformSettings;
-        if (platformSettings is not null)
-        {
-            try
-            {
-                return platformSettings.GetColorValues().ThemeVariant == Avalonia.Platform.PlatformThemeVariant.Light;
-            }
-            catch
-            {
-            }
-        }
-
-        return false;
+        // Derive from ActualThemeVariant — the same value FluentTheme renders with —
+        // so the file-list foreground colors and cursor underline always match the
+        // actual window background. A separate PlatformSettings.GetColorValues()
+        // probe can disagree with ActualThemeVariant (e.g. when the app is launched
+        // from a desktop .desktop entry, where platform theme detection differs),
+        // which left dark text on a dark background under the NativeAOT .deb build.
+        // When RequestedThemeVariant is Default, ActualThemeVariant may resolve
+        // asynchronously; the ActualThemeVariantChanged handler re-syncs it then.
+        UiTheme.IsLight = ActualThemeVariant == ThemeVariant.Light;
     }
 
     public static void ApplyLanguage(string? language)

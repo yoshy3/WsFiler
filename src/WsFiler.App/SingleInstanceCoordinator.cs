@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using System;
 using System.IO;
 using System.IO.Pipes;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -113,14 +114,99 @@ internal static class SingleInstanceCoordinator
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (window.WindowState == WindowState.Minimized)
+                if (OperatingSystem.IsWindows() && TryActivateWindowsWindow(window))
                 {
-                    window.WindowState = WindowState.Normal;
+                    return;
                 }
 
-                window.Show();
-                window.Activate();
+                ActivateAvaloniaWindow(window);
             });
         }
+
+        private static void ActivateAvaloniaWindow(Window window)
+        {
+            if (window.WindowState == WindowState.Minimized)
+            {
+                window.WindowState = WindowState.Normal;
+            }
+
+            window.Show();
+            window.Activate();
+        }
+
+        private static bool TryActivateWindowsWindow(Window window)
+        {
+            var handle = window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
+            if (handle == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            if (NativeMethods.IsIconic(handle))
+            {
+                NativeMethods.ShowWindow(handle, NativeMethods.SwRestore);
+            }
+            else
+            {
+                window.Show();
+                NativeMethods.ShowWindow(handle, NativeMethods.SwShow);
+            }
+
+            // Avalonia's Activate() can be ignored by Windows foreground-lock rules when
+            // the existing instance is behind another app. A short topmost pulse reliably
+            // raises the already-running main window without leaving it pinned on top.
+            NativeMethods.SetWindowPos(
+                handle,
+                NativeMethods.HwndTopmost,
+                0,
+                0,
+                0,
+                0,
+                NativeMethods.SwpNoMove | NativeMethods.SwpNoSize | NativeMethods.SwpShowWindow);
+            NativeMethods.SetWindowPos(
+                handle,
+                NativeMethods.HwndNotopmost,
+                0,
+                0,
+                0,
+                0,
+                NativeMethods.SwpNoMove | NativeMethods.SwpNoSize | NativeMethods.SwpShowWindow);
+
+            return NativeMethods.SetForegroundWindow(handle);
+        }
+    }
+
+    private static class NativeMethods
+    {
+        public const int SwShow = 5;
+        public const int SwRestore = 9;
+        public static readonly IntPtr HwndTopmost = new(-1);
+        public static readonly IntPtr HwndNotopmost = new(-2);
+        public const uint SwpNoSize = 0x0001;
+        public const uint SwpNoMove = 0x0002;
+        public const uint SwpShowWindow = 0x0040;
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsIconic(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetWindowPos(
+            IntPtr hWnd,
+            IntPtr hWndInsertAfter,
+            int x,
+            int y,
+            int cx,
+            int cy,
+            uint uFlags);
     }
 }

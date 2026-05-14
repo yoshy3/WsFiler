@@ -233,6 +233,8 @@ public class Strings
 
     public static string Dialog_Diff_Title => ResourceManager.GetString("Dialog.Diff.Title", resourceCulture)!;
 
+    public static string Dialog_Diff_DifferencesOnly => ResourceManager.GetString("Dialog.Diff.DifferencesOnly", resourceCulture)!;
+
     public static string ContextMenu_Open => ResourceManager.GetString("ContextMenu.Open", resourceCulture)!;
 
     public static string ContextMenu_Edit => ResourceManager.GetString("ContextMenu.Edit", resourceCulture)!;

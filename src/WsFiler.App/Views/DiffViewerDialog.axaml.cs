@@ -25,10 +25,13 @@ public partial class DiffViewerDialog : Window
     private static readonly IBrush TextBrush = new SolidColorBrush(Color.FromRgb(235, 235, 235));
     private static readonly IBrush MutedTextBrush = new SolidColorBrush(Color.FromRgb(150, 150, 150));
 
+    private IReadOnlyList<DiffRow> rows = [];
+
     public DiffViewerDialog()
     {
         InitializeComponent();
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+        DifferencesOnlyCheckBox.Content = Strings.Dialog_Diff_DifferencesOnly;
     }
 
     public static async Task<DiffViewerDialog> CreateAsync(string leftPath, string rightPath)
@@ -52,12 +55,29 @@ public partial class DiffViewerDialog : Window
 
         var leftLines = await File.ReadAllLinesAsync(leftPath);
         var rightLines = await File.ReadAllLinesAsync(rightPath);
-        var rows = BuildLineDiff(leftLines, rightLines);
+        rows = BuildLineDiff(leftLines, rightLines);
+        RenderRows();
+    }
 
-        foreach (var row in rows)
+    private void RenderRows()
+    {
+        RowsPanel.Children.Clear();
+
+        var visibleRows = DifferencesOnlyCheckBox.IsChecked == true
+            ? rows.Where(row => row.Kind != DiffKind.Equal)
+            : rows;
+
+        foreach (var row in visibleRows)
         {
             RowsPanel.Children.Add(CreateRow(row));
         }
+
+        RowsScrollViewer.Offset = new Vector(0, 0);
+    }
+
+    private void OnDifferencesOnlyChanged(object? sender, RoutedEventArgs e)
+    {
+        RenderRows();
     }
 
     private Control CreateRow(DiffRow row)

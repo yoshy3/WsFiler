@@ -7,7 +7,7 @@
         Title="Compare">
     <Grid RowDefinitions="Auto,*">
         <Grid Grid.Row="0"
-              ColumnDefinitions="*,*"
+              ColumnDefinitions="*,*,Auto"
               ColumnSpacing="8"
               Margin="8,6">
             <TextBlock x:Name="LeftPathTextBlock"
@@ -18,9 +18,14 @@
                        Grid.Column="1"
                        FontFamily="Consolas"
                        TextTrimming="CharacterEllipsis"/>
+            <CheckBox x:Name="DifferencesOnlyCheckBox"
+                      Grid.Column="2"
+                      VerticalAlignment="Center"
+                      Click="OnDifferencesOnlyChanged"/>
         </Grid>
 
-        <ScrollViewer Grid.Row="1"
+        <ScrollViewer x:Name="RowsScrollViewer"
+                      Grid.Row="1"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="RowsPanel"

@@ -294,6 +294,9 @@
   <data name="Dialog.Diff.Title" xml:space="preserve">
     <value>比較</value>
   </data>
+  <data name="Dialog.Diff.DifferencesOnly" xml:space="preserve">
+    <value>差分のみ表示</value>
+  </data>
   <data name="ContextMenu.Open" xml:space="preserve">
     <value>開く</value>
   </data>

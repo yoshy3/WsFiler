@@ -491,7 +491,7 @@ public partial class MainWindow : Window
         e.Handled = true;
         if (ShouldRecordWorkingDirectory(commandId))
         {
-            viewModel.RecordActiveDirectoryInHistory();
+            SaveDirectoryHistoryIfChanged(viewModel);
         }
 
         if (commandId == ApplicationCommandId.FileCopy)
@@ -1076,7 +1076,7 @@ public partial class MainWindow : Window
         }
 
         e.Handled = true;
-        viewModel.RecordActiveDirectoryInHistory();
+        SaveDirectoryHistoryIfChanged(viewModel);
 
         var current = viewModel.ActivePane.CurrentItem;
         if (current is { IsDirectory: false })
@@ -1315,6 +1315,14 @@ public partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(path))
         {
             await viewModel.NavigateActivePaneAsync(path);
+        }
+    }
+
+    private static void SaveDirectoryHistoryIfChanged(MainWindowViewModel viewModel)
+    {
+        if (viewModel.RecordActiveDirectoryInHistory())
+        {
+            DirectoryHistoryManager.Save(viewModel.DirectoryHistory);
         }
     }
 

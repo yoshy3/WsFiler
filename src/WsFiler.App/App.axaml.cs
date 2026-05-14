@@ -35,6 +35,7 @@ public partial class App : Application
             ApplyLanguage(settings.Language);
             ApplyTheme(settings.Theme);
             var viewModel = new MainWindowViewModel(new LocalFileSystemProvider());
+            viewModel.SetDirectoryHistory(DirectoryHistoryManager.Load());
             _ = viewModel.InitializeAsync(settings.LastSession?.LeftPath, settings.LastSession?.RightPath);
 
             var mainWindow = new MainWindow(settings.KeyMap)
@@ -65,6 +66,7 @@ public partial class App : Application
                     };
                     currentSettings.Window = lastWindowSettings ?? CaptureWindowBounds(desktop.MainWindow);
                     SettingsManager.Save(currentSettings);
+                    DirectoryHistoryManager.Save(vm.DirectoryHistory);
                 }
             };
         }

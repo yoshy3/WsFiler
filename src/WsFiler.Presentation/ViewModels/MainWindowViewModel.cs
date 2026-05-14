@@ -592,9 +592,23 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     public IReadOnlyList<string> DirectoryHistory => directoryHistory;
 
-    public void RecordActiveDirectoryInHistory()
+    public void SetDirectoryHistory(IEnumerable<string>? paths)
     {
-        RememberDirectory(ActivePane.CurrentPath);
+        directoryHistory.Clear();
+        if (paths is null)
+        {
+            return;
+        }
+
+        foreach (var path in paths.Reverse())
+        {
+            RememberDirectory(path);
+        }
+    }
+
+    public bool RecordActiveDirectoryInHistory()
+    {
+        return RememberDirectory(ActivePane.CurrentPath);
     }
 
     public bool SearchActivePaneByName(string query)
@@ -604,11 +618,17 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         return found;
     }
 
-    private void RememberDirectory(string path)
+    private bool RememberDirectory(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            return;
+            return false;
+        }
+
+        var oldIndex = directoryHistory.FindIndex(item => string.Equals(item, path, StringComparison.OrdinalIgnoreCase));
+        if (oldIndex == 0)
+        {
+            return false;
         }
 
         directoryHistory.RemoveAll(item => string.Equals(item, path, StringComparison.OrdinalIgnoreCase));
@@ -619,6 +639,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                 MaxDirectoryHistoryCount,
                 directoryHistory.Count - MaxDirectoryHistoryCount);
         }
+
+        return true;
     }
 
     public void LogInfo(string message)

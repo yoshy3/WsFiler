@@ -8,6 +8,7 @@ namespace WsFiler.Infra.Settings;
     WriteIndented = true)]
 [JsonSerializable(typeof(AppSettings))]
 [JsonSerializable(typeof(WindowSettings))]
+[JsonSerializable(typeof(DirectoryHistorySettings))]
 internal partial class SettingsJsonContext : JsonSerializerContext
 {
 }

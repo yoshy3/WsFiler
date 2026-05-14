@@ -8,11 +8,15 @@ namespace WsFiler.App.Views;
 
 public partial class SortDialog : Window
 {
-    public SortDialog(PaneSortField currentField, bool currentAscending)
+    public SortDialog()
     {
         InitializeComponent();
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+    }
 
+    public SortDialog(PaneSortField currentField, bool currentAscending)
+        : this()
+    {
         switch (currentField)
         {
             case PaneSortField.Extension:  SortExtension.IsChecked  = true; break;

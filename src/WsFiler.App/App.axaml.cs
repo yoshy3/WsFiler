@@ -22,6 +22,8 @@ namespace WsFiler.App;
 
 public partial class App : Application
 {
+    private IDisposable? singleInstanceActivationServer;
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -45,6 +47,7 @@ public partial class App : Application
 
             RestoreWindowBounds(mainWindow, settings.Window);
             desktop.MainWindow = mainWindow;
+            singleInstanceActivationServer = SingleInstanceCoordinator.StartActivationServer(mainWindow);
 
             WindowSettings? lastWindowSettings = null;
             mainWindow.PositionChanged += (_, _) => lastWindowSettings = CaptureWindowBounds(mainWindow);
@@ -52,6 +55,7 @@ public partial class App : Application
 
             desktop.ShutdownRequested += (_, _) =>
             {
+                singleInstanceActivationServer?.Dispose();
                 if (desktop.MainWindow?.DataContext is MainWindowViewModel vm)
                 {
                     var currentSettings = SettingsManager.Load();

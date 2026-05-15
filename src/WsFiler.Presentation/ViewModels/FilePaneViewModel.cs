@@ -51,6 +51,8 @@ public sealed partial class FilePaneViewModel : ViewModelBase
 
     public int MarkedCount => Items.Count(item => item.IsMarked);
 
+    public string DisplayPath => FilterPattern is null ? CurrentPath : Path.Combine(CurrentPath, FilterPattern);
+
     public string PaneInfo => $"Marked {MarkedCount:N0}/{Items.Count:N0} {FormatByteSize(MarkedSize)}";
 
     public string FreeSpaceInfo => FormatFreeSpace(CurrentPath);
@@ -158,7 +160,7 @@ public sealed partial class FilePaneViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(pattern))
         {
-            FilterPattern = null;
+            ClearFilter();
             return;
         }
 
@@ -169,6 +171,18 @@ public sealed partial class FilePaneViewModel : ViewModelBase
         }
 
         FilterPattern = trimmed;
+        OnPropertyChanged(nameof(DisplayPath));
+    }
+
+    public void ClearFilter()
+    {
+        if (FilterPattern is null)
+        {
+            return;
+        }
+
+        FilterPattern = null;
+        OnPropertyChanged(nameof(DisplayPath));
     }
 
     public void SetShowHiddenFiles(bool value)
@@ -363,6 +377,7 @@ public sealed partial class FilePaneViewModel : ViewModelBase
 
     partial void OnCurrentPathChanged(string value)
     {
+        OnPropertyChanged(nameof(DisplayPath));
         OnPropertyChanged(nameof(FreeSpaceInfo));
     }
 

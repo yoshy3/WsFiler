@@ -92,7 +92,7 @@
                     CornerRadius="4">
                 <Grid RowDefinitions="Auto,Auto,*">
                     <TextBlock Grid.Row="0"
-                               Text="{Binding LeftPane.CurrentPath}"
+                               Text="{Binding LeftPane.DisplayPath}"
                                Margin="8,4,8,0"
                                FontFamily="Consolas"
                                TextTrimming="CharacterEllipsis"/>
@@ -209,7 +209,7 @@
                     CornerRadius="4">
                 <Grid RowDefinitions="Auto,Auto,*">
                     <TextBlock Grid.Row="0"
-                               Text="{Binding RightPane.CurrentPath}"
+                               Text="{Binding RightPane.DisplayPath}"
                                Margin="8,4,8,0"
                                FontFamily="Consolas"
                                TextTrimming="CharacterEllipsis"/>

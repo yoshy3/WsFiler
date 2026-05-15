@@ -9,7 +9,9 @@ public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBa
 
     public string Name { get; } = item.Name;
 
-    public string DisplayName => IsMarked ? $"* {Name}" : $"  {Name}";
+    public string DisplayName => IsMarked ? $"* {BaseName}" : $"  {BaseName}";
+
+    public string BaseName { get; } = GetBaseName(item);
 
     public string Extension { get; } = item.Extension;
 
@@ -113,5 +115,22 @@ public sealed partial class FileItemViewModel(FileSystemItem item) : ViewModelBa
     private static string FormatSize(long? size)
     {
         return size is null ? "" : size.Value.ToString("N0");
+    }
+
+    private static string GetBaseName(FileSystemItem item)
+    {
+        if (item.IsDirectory || string.IsNullOrEmpty(item.Extension))
+        {
+            return item.Name;
+        }
+
+        var extensionWithDot = "." + item.Extension;
+        if (item.Name.Length <= extensionWithDot.Length ||
+            !item.Name.EndsWith(extensionWithDot, StringComparison.OrdinalIgnoreCase))
+        {
+            return item.Name;
+        }
+
+        return item.Name[..^extensionWithDot.Length];
     }
 }

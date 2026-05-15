@@ -99,6 +99,9 @@
   <data name="Dialog.Common.Cancel" xml:space="preserve">
     <value>キャンセル</value>
   </data>
+  <data name="Dialog.Common.Close" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
   <data name="Dialog.Preview.Title" xml:space="preserve">
     <value>プレビュー</value>
   </data>
@@ -281,6 +284,12 @@
   </data>
   <data name="Dialog.Bookmark.Add" xml:space="preserve">
     <value>追加(A)</value>
+  </data>
+  <data name="Dialog.Bookmark.Edit" xml:space="preserve">
+    <value>編集(E)</value>
+  </data>
+  <data name="Dialog.Bookmark.Path" xml:space="preserve">
+    <value>ディレクトリパス(P)</value>
   </data>
   <data name="Dialog.Bookmark.Delete" xml:space="preserve">
     <value>削除(D)</value>

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using WsFiler.Presentation.Resources;
 
 namespace WsFiler.App.Views;
@@ -18,6 +19,7 @@ public partial class DirectoryBookmarkDialog : Window
 {
     private readonly string currentPath;
     private readonly ObservableCollection<string> bookmarks;
+    private bool isClosingWithResult;
 
     public DirectoryBookmarkDialog()
         : this("", [])
@@ -39,9 +41,10 @@ public partial class DirectoryBookmarkDialog : Window
         CurrentPathLabel.Text = Strings.Dialog_Bookmark_CurrentPath;
         CurrentPathTextBlock.Text = currentPath;
         AddButton.Content = Strings.Dialog_Bookmark_Add;
+        EditButton.Content = Strings.Dialog_Bookmark_Edit;
         DeleteButton.Content = Strings.Dialog_Bookmark_Delete;
         JumpButton.Content = Strings.Dialog_Bookmark_Jump;
-        CloseButton.Content = Strings.Dialog_Common_Cancel;
+        CloseButton.Content = Strings.Dialog_Common_Close;
         BookmarkListBox.ItemsSource = bookmarks;
 
         if (bookmarks.Count > 0)
@@ -55,6 +58,11 @@ public partial class DirectoryBookmarkDialog : Window
     private void OnAddClick(object? sender, RoutedEventArgs e)
     {
         AddCurrentPath();
+    }
+
+    private async void OnEditClick(object? sender, RoutedEventArgs e)
+    {
+        await EditSelectedBookmarkAsync();
     }
 
     private void OnDeleteClick(object? sender, RoutedEventArgs e)
@@ -94,6 +102,11 @@ public partial class DirectoryBookmarkDialog : Window
             e.Handled = true;
             DeleteSelectedBookmark();
         }
+        else if (e.Key == Key.E)
+        {
+            e.Handled = true;
+            _ = EditSelectedBookmarkAsync();
+        }
         else if (e.Key is Key.Up or Key.Down)
         {
             e.Handled = true;
@@ -130,6 +143,10 @@ public partial class DirectoryBookmarkDialog : Window
         {
             DeleteSelectedBookmark();
         }
+        else if (EditButton.IsFocused)
+        {
+            _ = EditSelectedBookmarkAsync();
+        }
         else if (JumpButton.IsFocused || BookmarkListBox.IsFocused)
         {
             CloseWithSelectedBookmark();
@@ -161,6 +178,34 @@ public partial class DirectoryBookmarkDialog : Window
         BookmarkListBox.Focus();
     }
 
+    private async Task EditSelectedBookmarkAsync()
+    {
+        if (BookmarkListBox.SelectedItem is not string selected)
+        {
+            return;
+        }
+
+        var dialog = new InputDialog(
+            Strings.Dialog_Bookmark_Title,
+            Strings.Dialog_Bookmark_Path,
+            selected);
+        var edited = await dialog.ShowDialog<string?>(this);
+        var path = edited?.Trim();
+        if (string.IsNullOrWhiteSpace(path) ||
+            string.Equals(path, selected, StringComparison.OrdinalIgnoreCase) ||
+            bookmarks.Contains(path, StringComparer.OrdinalIgnoreCase))
+        {
+            BookmarkListBox.Focus();
+            return;
+        }
+
+        var index = BookmarkListBox.SelectedIndex;
+        bookmarks[index] = path;
+        BookmarkListBox.SelectedIndex = index;
+        BookmarkListBox.ScrollIntoView(path);
+        BookmarkListBox.Focus();
+    }
+
     private void MoveSelection(int offset)
     {
         if (bookmarks.Count == 0)
@@ -183,12 +228,30 @@ public partial class DirectoryBookmarkDialog : Window
     {
         if (BookmarkListBox.SelectedItem is string selected)
         {
-            Close(new DirectoryBookmarkDialogResult(bookmarks.ToList(), selected));
+            CloseWithResult(selected);
         }
     }
 
     private void CloseWithoutJump()
     {
-        Close(new DirectoryBookmarkDialogResult(bookmarks.ToList(), null));
+        CloseWithResult(null);
+    }
+
+    private void CloseWithResult(string? jumpPath)
+    {
+        isClosingWithResult = true;
+        Close(new DirectoryBookmarkDialogResult(bookmarks.ToList(), jumpPath));
+    }
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        if (!isClosingWithResult)
+        {
+            e.Cancel = true;
+            CloseWithoutJump();
+            return;
+        }
+
+        base.OnClosing(e);
     }
 }

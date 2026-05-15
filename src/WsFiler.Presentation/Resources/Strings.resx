@@ -99,6 +99,9 @@
   <data name="Dialog.Common.Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="Dialog.Common.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
   <data name="Dialog.Preview.Title" xml:space="preserve">
     <value>Preview</value>
   </data>
@@ -281,6 +284,12 @@
   </data>
   <data name="Dialog.Bookmark.Add" xml:space="preserve">
     <value>Add(A)</value>
+  </data>
+  <data name="Dialog.Bookmark.Edit" xml:space="preserve">
+    <value>Edit(E)</value>
+  </data>
+  <data name="Dialog.Bookmark.Path" xml:space="preserve">
+    <value>Directory path(P)</value>
   </data>
   <data name="Dialog.Bookmark.Delete" xml:space="preserve">
     <value>Delete(D)</value>

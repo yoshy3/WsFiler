@@ -103,6 +103,8 @@ public class Strings
 
     public static string Dialog_Common_Cancel => ResourceManager.GetString("Dialog.Common.Cancel", resourceCulture)!;
 
+    public static string Dialog_Common_Close => ResourceManager.GetString("Dialog.Common.Close", resourceCulture)!;
+
     public static string Dialog_Preview_Title => ResourceManager.GetString("Dialog.Preview.Title", resourceCulture)!;
 
     public static string Dialog_Preview_Truncated => ResourceManager.GetString("Dialog.Preview.Truncated", resourceCulture)!;
@@ -224,6 +226,10 @@ public class Strings
     public static string Dialog_Bookmark_CurrentPath => ResourceManager.GetString("Dialog.Bookmark.CurrentPath", resourceCulture)!;
 
     public static string Dialog_Bookmark_Add => ResourceManager.GetString("Dialog.Bookmark.Add", resourceCulture)!;
+
+    public static string Dialog_Bookmark_Edit => ResourceManager.GetString("Dialog.Bookmark.Edit", resourceCulture)!;
+
+    public static string Dialog_Bookmark_Path => ResourceManager.GetString("Dialog.Bookmark.Path", resourceCulture)!;
 
     public static string Dialog_Bookmark_Delete => ResourceManager.GetString("Dialog.Bookmark.Delete", resourceCulture)!;
 

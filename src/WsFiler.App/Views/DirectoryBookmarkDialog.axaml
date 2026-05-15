@@ -30,6 +30,9 @@
             <Button x:Name="AddButton"
                     Height="32"
                     Click="OnAddClick"/>
+            <Button x:Name="EditButton"
+                    Height="32"
+                    Click="OnEditClick"/>
             <Button x:Name="DeleteButton"
                     Height="32"
                     Click="OnDeleteClick"/>

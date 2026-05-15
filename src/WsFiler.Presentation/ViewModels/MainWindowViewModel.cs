@@ -530,6 +530,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         try
         {
             var items = await fileSystemProvider.ListDirectoryAsync(path);
+            pane.ClearFilter();
             pane.Load(path, items);
             StatusMessage = path;
             OnPropertyChanged(nameof(StatusSummary));

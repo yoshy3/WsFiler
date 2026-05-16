@@ -394,9 +394,19 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
             type,
             size,
             info.LastWriteTime,
-            isDirectory ? "" : info.Extension.TrimStart('.'),
+            isDirectory ? "" : GetExtensionWithoutDot(info.Name),
             attributes.HasFlag(FileAttributes.Hidden),
             attributes.HasFlag(FileAttributes.ReadOnly),
             attributes.HasFlag(FileAttributes.System));
+    }
+
+    private static string GetExtensionWithoutDot(string name)
+    {
+        var lastDot = name.LastIndexOf('.');
+        if (lastDot <= 0)
+        {
+            return string.Empty;
+        }
+        return name[(lastDot + 1)..];
     }
 }

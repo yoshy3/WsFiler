@@ -110,6 +110,7 @@
                     </Grid>
                     <DataGrid x:Name="LeftFileGrid"
                               Grid.Row="2"
+                              Background="Transparent"
                               DragDrop.AllowDrop="True"
                               ItemsSource="{Binding LeftPane.Items}"
                               AutoGenerateColumns="False"
@@ -227,6 +228,7 @@
                     </Grid>
                     <DataGrid x:Name="RightFileGrid"
                               Grid.Row="2"
+                              Background="Transparent"
                               DragDrop.AllowDrop="True"
                               ItemsSource="{Binding RightPane.Items}"
                               AutoGenerateColumns="False"

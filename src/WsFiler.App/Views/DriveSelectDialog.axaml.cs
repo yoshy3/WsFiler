@@ -44,7 +44,11 @@ public partial class DriveSelectDialog : Window
 
         PathInput.Text = currentPath ?? string.Empty;
 
-        Opened += (_, _) => DriveListBox.Focus();
+        Opened += (_, _) =>
+        {
+            PathInput.Focus();
+            PathInput.SelectAll();
+        };
     }
 
     private void OnOkClick(object? sender, RoutedEventArgs e) => CloseWithSelection();
@@ -96,15 +100,48 @@ public partial class DriveSelectDialog : Window
         {
             e.Handled = true;
             var path = PathInput.Text?.Trim();
-            if (!string.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(path))
             {
-                Close(path);
+                return;
             }
+
+            if (TryResolveDriveLetterShortcut(path, out var driveTarget))
+            {
+                Close(driveTarget);
+                return;
+            }
+
+            Close(path);
         }
         else if (e.Key == Key.Escape)
         {
             e.Handled = true;
             Close(null);
+        }
+    }
+
+    private static bool TryResolveDriveLetterShortcut(string input, out string resolved)
+    {
+        resolved = string.Empty;
+        if (!OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        var trimmed = input.TrimEnd(':');
+        if (trimmed.Length != 1 || !char.IsLetter(trimmed[0]))
+        {
+            return false;
+        }
+
+        try
+        {
+            resolved = Path.GetFullPath(trimmed + ":");
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 

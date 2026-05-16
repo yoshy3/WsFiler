@@ -985,10 +985,19 @@ public partial class MainWindow : Window
     private async Task ShowDriveSelectDialogAsync(MainWindowViewModel viewModel)
     {
         var dialog = new DriveSelectDialog(viewModel.ActivePane.CurrentPath);
-        var root = await dialog.ShowDialog<string?>(this);
-        if (!string.IsNullOrEmpty(root))
+        var result = await dialog.ShowDialog<string?>(this);
+        if (string.IsNullOrEmpty(result))
         {
-            await viewModel.NavigateActivePaneAsync(root);
+            return;
+        }
+
+        if (File.Exists(result))
+        {
+            await viewModel.NavigateActivePaneToItemAsync(result);
+        }
+        else
+        {
+            await viewModel.NavigateActivePaneAsync(result);
         }
     }
 

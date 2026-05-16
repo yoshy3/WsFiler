@@ -10,6 +10,13 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         string path,
         CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (ArchivePath.TryParse(path, out var archivePath))
+        {
+            return Task.FromResult(ZipArchiveDirectoryReader.ListDirectory(archivePath));
+        }
+
         var directory = new DirectoryInfo(path);
 
         if (!directory.Exists)
@@ -27,12 +34,50 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         return Task.FromResult<IReadOnlyList<FileSystemItem>>(items);
     }
 
+    public Task<bool> CanListDirectoryAsync(string path, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (ArchivePath.TryParse(path, out var archivePath))
+        {
+            return Task.FromResult(ZipArchiveDirectoryReader.CanListDirectory(archivePath));
+        }
+
+        return Task.FromResult(Directory.Exists(path));
+    }
+
+    public string? GetParentPath(string path)
+    {
+        return ArchivePath.TryParse(path, out var archivePath)
+            ? archivePath.GetParentPath()
+            : Directory.GetParent(path)?.FullName;
+    }
+
+    public string GetFileName(string path)
+    {
+        return ArchivePath.TryParse(path, out var archivePath)
+            ? archivePath.GetFileName()
+            : Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+    }
+
+    public Task<Stream> OpenReadAsync(string path, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (ArchivePath.TryParse(path, out var archivePath) && !archivePath.IsRoot)
+        {
+            return Task.FromResult(ZipArchiveDirectoryReader.OpenRead(archivePath));
+        }
+
+        return Task.FromResult<Stream>(File.OpenRead(path));
+    }
+
     public async Task CopyAsync(
         IReadOnlyList<string> sourcePaths,
         string destinationDirectory,
         Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
         CancellationToken cancellationToken = default)
     {
+        ThrowIfArchiveDestination(destinationDirectory);
         Directory.CreateDirectory(destinationDirectory);
         var conflictScope = new ConflictDecisionScope(resolveConflictAsync);
 
@@ -41,7 +86,21 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
             cancellationToken.ThrowIfCancellationRequested();
             var destinationPath = Path.Combine(destinationDirectory, Path.GetFileName(sourcePath));
 
-            if (Directory.Exists(sourcePath))
+            if (ArchivePath.TryParse(sourcePath, out var archivePath) && !archivePath.IsRoot)
+            {
+                await ZipArchiveDirectoryReader.ExtractToDirectoryAsync(
+                    archivePath,
+                    destinationDirectory,
+                    async (archiveEntryPath, resolvedDestinationPath, isDirectory) =>
+                        await ResolveDestinationConflictAsync(
+                            archiveEntryPath,
+                            resolvedDestinationPath,
+                            isDirectory,
+                            conflictScope,
+                            cancellationToken),
+                    cancellationToken);
+            }
+            else if (Directory.Exists(sourcePath))
             {
                 await CopyDirectoryAsync(sourcePath, destinationPath, conflictScope, cancellationToken);
             }
@@ -61,6 +120,7 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
         CancellationToken cancellationToken = default)
     {
+        ThrowIfArchiveMutation(sourcePaths, destinationDirectory);
         Directory.CreateDirectory(destinationDirectory);
         var conflictScope = new ConflictDecisionScope(resolveConflictAsync);
 
@@ -116,6 +176,8 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         IReadOnlyList<string> targetPaths,
         CancellationToken cancellationToken = default)
     {
+        ThrowIfArchiveMutation(targetPaths);
+
         foreach (var targetPath in targetPaths)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -139,6 +201,7 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        ThrowIfArchiveMutation([sourcePath]);
 
         if (string.IsNullOrWhiteSpace(newName))
         {
@@ -262,6 +325,7 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
     public Task CreateDirectoryAsync(string path, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        ThrowIfArchiveMutation([path]);
         Directory.CreateDirectory(path);
         return Task.CompletedTask;
     }
@@ -269,6 +333,7 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
     public Task CreateFileAsync(string path, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        ThrowIfArchiveMutation([path]);
         using var _ = File.Create(path);
         return Task.CompletedTask;
     }
@@ -282,6 +347,7 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
     public Task SetAttributesAsync(string path, FileAttributes attributes, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        ThrowIfArchiveMutation([path]);
         File.SetAttributes(path, attributes);
         return Task.CompletedTask;
     }
@@ -300,6 +366,7 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
     public Task SetUnixFileModeAsync(string path, UnixFileMode mode, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        ThrowIfArchiveMutation([path]);
         if (OperatingSystem.IsWindows())
         {
             throw new PlatformNotSupportedException("Unix file mode is not supported on Windows.");
@@ -408,5 +475,24 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
             return string.Empty;
         }
         return name[(lastDot + 1)..];
+    }
+
+    private static void ThrowIfArchiveMutation(
+        IReadOnlyList<string> paths,
+        string? destinationDirectory = null)
+    {
+        if ((destinationDirectory is not null && ArchivePath.TryParse(destinationDirectory, out _)) ||
+            paths.Any(path => ArchivePath.TryParse(path, out var archivePath) && !archivePath.IsRoot))
+        {
+            throw new IOException("Archive contents are read-only.");
+        }
+    }
+
+    private static void ThrowIfArchiveDestination(string destinationDirectory)
+    {
+        if (ArchivePath.TryParse(destinationDirectory, out _))
+        {
+            throw new IOException("Archive contents are read-only.");
+        }
     }
 }

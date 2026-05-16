@@ -38,6 +38,11 @@ public partial class ImagePreviewDialog : Window
     public static Bitmap LoadBitmap(string path)
     {
         using var stream = File.OpenRead(path);
+        return LoadBitmap(stream);
+    }
+
+    public static Bitmap LoadBitmap(Stream stream)
+    {
         return new Bitmap(stream);
     }
 

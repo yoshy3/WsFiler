@@ -215,7 +215,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        if (!current.IsDirectory)
+        if (!current.IsDirectory && !await fileSystemProvider.CanListDirectoryAsync(current.FullPath))
         {
             StatusMessage = Strings.Status_PreviewUnavailable;
             return;
@@ -270,6 +270,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         }
 
         return new RenameRequest(current);
+    }
+
+    public async Task<bool> CanListCurrentItemAsync()
+    {
+        var current = ActivePane.CurrentItem;
+        return current is not null &&
+            (current.IsDirectory || await fileSystemProvider.CanListDirectoryAsync(current.FullPath));
     }
 
     public async Task CopyAsync(
@@ -507,22 +514,27 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         return fileSystemProvider.CanSetUnixFileModeAsync(path);
     }
 
+    public Task<Stream> OpenReadAsync(string path)
+    {
+        return fileSystemProvider.OpenReadAsync(path);
+    }
+
     private async Task NavigateParentAsync()
     {
-        var parent = Directory.GetParent(ActivePane.CurrentPath);
-        if (parent is null)
+        var parent = fileSystemProvider.GetParentPath(ActivePane.CurrentPath);
+        if (string.IsNullOrEmpty(parent))
         {
             StatusMessage = Strings.Status_AlreadyAtRoot;
             return;
         }
 
-        var leaf = Path.GetFileName(ActivePane.CurrentPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        var leaf = fileSystemProvider.GetFileName(ActivePane.CurrentPath);
         if (!string.IsNullOrEmpty(leaf))
         {
-            ActivePane.RememberCursorForPath(parent.FullName, leaf);
+            ActivePane.RememberCursorForPath(parent, leaf);
         }
 
-        await LoadPaneAsync(ActivePane, parent.FullName);
+        await LoadPaneAsync(ActivePane, parent);
     }
 
     private async Task LoadPaneAsync(FilePaneViewModel pane, string path)
@@ -673,6 +685,26 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult<IReadOnlyList<FileSystemItem>>([]);
+        }
+
+        public Task<bool> CanListDirectoryAsync(string path, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(false);
+        }
+
+        public string? GetParentPath(string path)
+        {
+            return Directory.GetParent(path)?.FullName;
+        }
+
+        public string GetFileName(string path)
+        {
+            return Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        }
+
+        public Task<Stream> OpenReadAsync(string path, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<Stream>(Stream.Null);
         }
 
         public Task CopyAsync(

@@ -513,7 +513,8 @@ public partial class MainWindow : Window
             await ConfirmAndRenameAsync(viewModel);
         }
         else if (commandId == ApplicationCommandId.DirectoryOpen &&
-                 viewModel.ActivePane.CurrentItem is { IsDirectory: false } currentItem)
+                 viewModel.ActivePane.CurrentItem is { IsDirectory: false } currentItem &&
+                 !await viewModel.CanListCurrentItemAsync())
         {
             await PreviewTextFileAsync(currentItem);
         }
@@ -892,7 +893,7 @@ public partial class MainWindow : Window
             var ext = Path.GetExtension(item.FullPath);
             if (ImagePreviewExtensions.Contains(ext))
             {
-                var bitmap = await Task.Run(() => ImagePreviewDialog.LoadBitmap(item.FullPath));
+                var bitmap = await LoadBitmapAsync(item.FullPath);
                 var imageDialog = new ImagePreviewDialog(item.FullPath, bitmap, NavigateImagePreviewAsync);
                 imageDialog.FitToOwner(this);
                 await imageDialog.ShowDialog(this);
@@ -975,7 +976,7 @@ public partial class MainWindow : Window
             RefreshCursorUnderlines();
             UpdatePaneVisualState(viewModel);
 
-            var bitmap = await Task.Run(() => ImagePreviewDialog.LoadBitmap(candidate.FullPath));
+            var bitmap = await LoadBitmapAsync(candidate.FullPath);
             return (candidate.FullPath, bitmap);
         }
 
@@ -1090,7 +1091,7 @@ public partial class MainWindow : Window
         SaveDirectoryHistoryIfChanged(viewModel);
 
         var current = viewModel.ActivePane.CurrentItem;
-        if (current is { IsDirectory: false })
+        if (current is { IsDirectory: false } && !await viewModel.CanListCurrentItemAsync())
         {
             await PreviewTextFileAsync(current);
         }
@@ -1639,9 +1640,31 @@ public partial class MainWindow : Window
         }
     }
 
-    private static async Task<(byte[] Bytes, bool IsTruncated)> ReadPreviewBytesAsync(string path)
+    private async Task<Avalonia.Media.Imaging.Bitmap> LoadBitmapAsync(string path)
     {
-        await using var stream = File.OpenRead(path);
+        if (DataContext is not MainWindowViewModel viewModel)
+        {
+            return await Task.Run(() => ImagePreviewDialog.LoadBitmap(path));
+        }
+
+        await using var stream = await viewModel.OpenReadAsync(path);
+        return ImagePreviewDialog.LoadBitmap(stream);
+    }
+
+    private async Task<(byte[] Bytes, bool IsTruncated)> ReadPreviewBytesAsync(string path)
+    {
+        if (DataContext is not MainWindowViewModel viewModel)
+        {
+            await using var fallbackStream = File.OpenRead(path);
+            return await ReadPreviewBytesAsync(fallbackStream);
+        }
+
+        await using var stream = await viewModel.OpenReadAsync(path);
+        return await ReadPreviewBytesAsync(stream);
+    }
+
+    private static async Task<(byte[] Bytes, bool IsTruncated)> ReadPreviewBytesAsync(Stream stream)
+    {
         var bufferSize = (int)System.Math.Min(stream.Length, PreviewByteLimit);
         var buffer = new byte[bufferSize];
         var totalRead = 0;

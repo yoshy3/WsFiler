@@ -4,6 +4,14 @@ public interface IFileSystemProvider
 {
     Task<IReadOnlyList<FileSystemItem>> ListDirectoryAsync(string path, CancellationToken cancellationToken = default);
 
+    Task<bool> CanListDirectoryAsync(string path, CancellationToken cancellationToken = default);
+
+    string? GetParentPath(string path);
+
+    string GetFileName(string path);
+
+    Task<Stream> OpenReadAsync(string path, CancellationToken cancellationToken = default);
+
     Task CopyAsync(
         IReadOnlyList<string> sourcePaths,
         string destinationDirectory,

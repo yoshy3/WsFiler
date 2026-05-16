@@ -426,4 +426,61 @@
   <data name="Dialog.Keymap.Capture.Prompt" xml:space="preserve">
     <value>割り当てたいキーを押してください。Esc でキャンセル。</value>
   </data>
+  <data name="Dialog.Sort.Title" xml:space="preserve">
+    <value>ソート</value>
+  </data>
+  <data name="Dialog.Sort.Method" xml:space="preserve">
+    <value>ソート方法</value>
+  </data>
+  <data name="Dialog.Sort.Order" xml:space="preserve">
+    <value>順序</value>
+  </data>
+  <data name="Dialog.Sort.Name" xml:space="preserve">
+    <value>名前順(_N)</value>
+  </data>
+  <data name="Dialog.Sort.Extension" xml:space="preserve">
+    <value>拡張子順(_E)</value>
+  </data>
+  <data name="Dialog.Sort.Date" xml:space="preserve">
+    <value>日付順(_D)</value>
+  </data>
+  <data name="Dialog.Sort.Size" xml:space="preserve">
+    <value>サイズ順(_S)</value>
+  </data>
+  <data name="Dialog.Sort.Attributes" xml:space="preserve">
+    <value>属性順(_I)</value>
+  </data>
+  <data name="Dialog.Sort.None" xml:space="preserve">
+    <value>ソートしない(_O)</value>
+  </data>
+  <data name="Dialog.Sort.Ascending" xml:space="preserve">
+    <value>昇順(_A)</value>
+  </data>
+  <data name="Dialog.Sort.Descending" xml:space="preserve">
+    <value>降順(_R)</value>
+  </data>
+  <data name="Dialog.Delete.Title" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Dialog.Delete.MessageSingle" xml:space="preserve">
+    <value>{0} を完全に削除します。</value>
+  </data>
+  <data name="Dialog.Delete.MessageMultiple" xml:space="preserve">
+    <value>{0} ほか {1:N0} 件を完全に削除します。</value>
+  </data>
+  <data name="Dialog.Conflict.Title" xml:space="preserve">
+    <value>同名ファイル</value>
+  </data>
+  <data name="Dialog.Conflict.Message" xml:space="preserve">
+    <value>{0} はすでに存在します。処理を選択してください。</value>
+  </data>
+  <data name="Dialog.Conflict.ApplyToAll" xml:space="preserve">
+    <value>以降すべてに適用</value>
+  </data>
+  <data name="Dialog.Conflict.Overwrite" xml:space="preserve">
+    <value>上書き(Y)</value>
+  </data>
+  <data name="Dialog.Conflict.Skip" xml:space="preserve">
+    <value>スキップ(N)</value>
+  </data>
 </root>

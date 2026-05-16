@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using WsFiler.Core.Files;
+using WsFiler.Presentation.Resources;
 
 namespace WsFiler.App.Views;
 
@@ -11,12 +12,17 @@ public partial class ConflictConfirmDialog : Window
     {
         InitializeComponent();
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+        Title = Strings.Dialog_Conflict_Title;
+        ApplyToAllCheckBox.Content = Strings.Dialog_Conflict_ApplyToAll;
+        OverwriteButton.Content = Strings.Dialog_Conflict_Overwrite;
+        SkipButton.Content = Strings.Dialog_Conflict_Skip;
+        CancelButton.Content = Strings.Dialog_Common_Cancel;
     }
 
     public ConflictConfirmDialog(FileConflictInfo conflict)
         : this()
     {
-        MessageText.Text = $"{conflict.ItemName} はすでに存在します。処理を選択してください。";
+        MessageText.Text = string.Format(Strings.Dialog_Conflict_Message, conflict.ItemName);
         Opened += (_, _) => OverwriteButton.Focus();
     }
 

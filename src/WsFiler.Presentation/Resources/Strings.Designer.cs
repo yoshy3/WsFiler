@@ -320,4 +320,42 @@ public class Strings
     public static string Dialog_Keymap_Capture_Title => ResourceManager.GetString("Dialog.Keymap.Capture.Title", resourceCulture)!;
 
     public static string Dialog_Keymap_Capture_Prompt => ResourceManager.GetString("Dialog.Keymap.Capture.Prompt", resourceCulture)!;
+
+    public static string Dialog_Sort_Title => ResourceManager.GetString("Dialog.Sort.Title", resourceCulture)!;
+
+    public static string Dialog_Sort_Method => ResourceManager.GetString("Dialog.Sort.Method", resourceCulture)!;
+
+    public static string Dialog_Sort_Order => ResourceManager.GetString("Dialog.Sort.Order", resourceCulture)!;
+
+    public static string Dialog_Sort_Name => ResourceManager.GetString("Dialog.Sort.Name", resourceCulture)!;
+
+    public static string Dialog_Sort_Extension => ResourceManager.GetString("Dialog.Sort.Extension", resourceCulture)!;
+
+    public static string Dialog_Sort_Date => ResourceManager.GetString("Dialog.Sort.Date", resourceCulture)!;
+
+    public static string Dialog_Sort_Size => ResourceManager.GetString("Dialog.Sort.Size", resourceCulture)!;
+
+    public static string Dialog_Sort_Attributes => ResourceManager.GetString("Dialog.Sort.Attributes", resourceCulture)!;
+
+    public static string Dialog_Sort_None => ResourceManager.GetString("Dialog.Sort.None", resourceCulture)!;
+
+    public static string Dialog_Sort_Ascending => ResourceManager.GetString("Dialog.Sort.Ascending", resourceCulture)!;
+
+    public static string Dialog_Sort_Descending => ResourceManager.GetString("Dialog.Sort.Descending", resourceCulture)!;
+
+    public static string Dialog_Delete_Title => ResourceManager.GetString("Dialog.Delete.Title", resourceCulture)!;
+
+    public static string Dialog_Delete_MessageSingle => ResourceManager.GetString("Dialog.Delete.MessageSingle", resourceCulture)!;
+
+    public static string Dialog_Delete_MessageMultiple => ResourceManager.GetString("Dialog.Delete.MessageMultiple", resourceCulture)!;
+
+    public static string Dialog_Conflict_Title => ResourceManager.GetString("Dialog.Conflict.Title", resourceCulture)!;
+
+    public static string Dialog_Conflict_Message => ResourceManager.GetString("Dialog.Conflict.Message", resourceCulture)!;
+
+    public static string Dialog_Conflict_ApplyToAll => ResourceManager.GetString("Dialog.Conflict.ApplyToAll", resourceCulture)!;
+
+    public static string Dialog_Conflict_Overwrite => ResourceManager.GetString("Dialog.Conflict.Overwrite", resourceCulture)!;
+
+    public static string Dialog_Conflict_Skip => ResourceManager.GetString("Dialog.Conflict.Skip", resourceCulture)!;
 }

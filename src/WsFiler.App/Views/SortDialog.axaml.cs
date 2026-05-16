@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using System;
+using WsFiler.Presentation.Resources;
 using WsFiler.Presentation.ViewModels;
 
 namespace WsFiler.App.Views;
@@ -12,6 +13,24 @@ public partial class SortDialog : Window
     {
         InitializeComponent();
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+        ApplyLocalizedStrings();
+    }
+
+    private void ApplyLocalizedStrings()
+    {
+        Title = Strings.Dialog_Sort_Title;
+        MethodGroup.Header = Strings.Dialog_Sort_Method;
+        OrderGroup.Header = Strings.Dialog_Sort_Order;
+        SortName.Content = Strings.Dialog_Sort_Name;
+        SortExtension.Content = Strings.Dialog_Sort_Extension;
+        SortDate.Content = Strings.Dialog_Sort_Date;
+        SortSize.Content = Strings.Dialog_Sort_Size;
+        SortAttributes.Content = Strings.Dialog_Sort_Attributes;
+        SortNone.Content = Strings.Dialog_Sort_None;
+        OrderAscending.Content = Strings.Dialog_Sort_Ascending;
+        OrderDescending.Content = Strings.Dialog_Sort_Descending;
+        OkButton.Content = Strings.Dialog_Common_Ok;
+        CancelButton.Content = Strings.Dialog_Common_Cancel;
     }
 
     public SortDialog(PaneSortField currentField, bool currentAscending)

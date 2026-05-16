@@ -4,8 +4,7 @@
         Width="480"
         Height="160"
         CanResize="False"
-        WindowStartupLocation="CenterOwner"
-        Title="削除">
+        WindowStartupLocation="CenterOwner">
     <Grid RowDefinitions="Auto,Auto"
           Margin="16"
           RowSpacing="14">
@@ -19,11 +18,10 @@
                     Spacing="12"
                     Margin="0,6,0,0">
             <Button x:Name="YesButton"
-                    Content="はい(Y)"
                     Width="120"
                     IsDefault="True"
                     Click="OnYesClick"/>
-            <Button Content="いいえ(N)"
+            <Button x:Name="NoButton"
                     Width="120"
                     IsCancel="True"
                     Click="OnNoClick"/>

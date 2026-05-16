@@ -4,8 +4,7 @@
         Width="560"
         Height="220"
         CanResize="False"
-        WindowStartupLocation="CenterOwner"
-        Title="同名ファイル">
+        WindowStartupLocation="CenterOwner">
     <Grid RowDefinitions="Auto,Auto,Auto"
           Margin="16"
           RowSpacing="10">
@@ -14,8 +13,7 @@
                    TextWrapping="Wrap"/>
 
         <CheckBox x:Name="ApplyToAllCheckBox"
-                  Grid.Row="1"
-                  Content="以降すべてに適用"/>
+                  Grid.Row="1"/>
 
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
@@ -23,14 +21,13 @@
                     Spacing="10"
                     Margin="0,8,0,0">
             <Button x:Name="OverwriteButton"
-                    Content="上書き(Y)"
                     Width="120"
                     IsDefault="True"
                     Click="OnOverwriteClick"/>
-            <Button Content="スキップ(N)"
+            <Button x:Name="SkipButton"
                     Width="120"
                     Click="OnSkipClick"/>
-            <Button Content="キャンセル"
+            <Button x:Name="CancelButton"
                     Width="120"
                     IsCancel="True"
                     Click="OnCancelClick"/>

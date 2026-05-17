@@ -1,8 +1,10 @@
+using WsFiler.Infra.Files.Archive;
+
 namespace WsFiler.Infra.Files;
 
 internal sealed record ArchivePath(string ArchiveFilePath, string EntryPath)
 {
-    private static readonly string[] SupportedExtensions = [".zip"];
+    private static IReadOnlyList<string> SupportedExtensions => ArchiveReaderFactory.SupportedExtensions;
 
     public bool IsRoot => string.IsNullOrEmpty(EntryPath);
 

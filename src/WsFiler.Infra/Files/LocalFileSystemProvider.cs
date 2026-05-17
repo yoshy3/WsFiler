@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using WsFiler.Core.Files;
+using WsFiler.Infra.Files.Archive;
 
 namespace WsFiler.Infra.Files;
 
@@ -14,7 +15,7 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
 
         if (ArchivePath.TryParse(path, out var archivePath))
         {
-            return Task.FromResult(ZipArchiveDirectoryReader.ListDirectory(archivePath));
+            return Task.FromResult(ArchiveReaderFactory.GetReader(archivePath.ArchiveFilePath).ListDirectory(archivePath));
         }
 
         var directory = new DirectoryInfo(path);
@@ -39,7 +40,7 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         cancellationToken.ThrowIfCancellationRequested();
         if (ArchivePath.TryParse(path, out var archivePath))
         {
-            return Task.FromResult(ZipArchiveDirectoryReader.CanListDirectory(archivePath));
+            return Task.FromResult(ArchiveReaderFactory.GetReader(archivePath.ArchiveFilePath).CanListDirectory(archivePath));
         }
 
         return Task.FromResult(Directory.Exists(path));
@@ -65,7 +66,7 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
 
         if (ArchivePath.TryParse(path, out var archivePath) && !archivePath.IsRoot)
         {
-            return Task.FromResult(ZipArchiveDirectoryReader.OpenRead(archivePath));
+            return Task.FromResult(ArchiveReaderFactory.GetReader(archivePath.ArchiveFilePath).OpenRead(archivePath));
         }
 
         return Task.FromResult<Stream>(File.OpenRead(path));
@@ -88,7 +89,7 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
 
             if (ArchivePath.TryParse(sourcePath, out var archivePath) && !archivePath.IsRoot)
             {
-                await ZipArchiveDirectoryReader.ExtractToDirectoryAsync(
+                await ArchiveReaderFactory.GetReader(archivePath.ArchiveFilePath).ExtractToDirectoryAsync(
                     archivePath,
                     destinationDirectory,
                     async (archiveEntryPath, resolvedDestinationPath, isDirectory) =>

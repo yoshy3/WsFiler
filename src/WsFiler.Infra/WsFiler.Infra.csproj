@@ -4,6 +4,12 @@
     <ProjectReference Include="..\WsFiler.Core\WsFiler.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- NU1902 (GHSA-6c8g-7p36-r338) は WriteToDirectory の脆弱性。
+         WsFiler は独自の ExtractToDirectoryAsync を使い当該 API を呼ばないため抑制する。 -->
+    <PackageReference Include="SharpCompress" Version="0.41.0" NoWarn="NU1902" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

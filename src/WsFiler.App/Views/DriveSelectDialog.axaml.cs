@@ -12,6 +12,7 @@ namespace WsFiler.App.Views;
 public partial class DriveSelectDialog : Window
 {
     private readonly List<DriveInfo> drives;
+    private bool pathInputChanged;
 
     public DriveSelectDialog()
         : this(null)
@@ -43,6 +44,7 @@ public partial class DriveSelectDialog : Window
         }
 
         PathInput.Text = currentPath ?? string.Empty;
+        PathInput.TextChanged += (_, _) => pathInputChanged = true;
 
         Opened += (_, _) =>
         {
@@ -51,7 +53,7 @@ public partial class DriveSelectDialog : Window
         };
     }
 
-    private void OnOkClick(object? sender, RoutedEventArgs e) => CloseWithSelection();
+    private void OnOkClick(object? sender, RoutedEventArgs e) => CloseWithTypedPathOrSelection();
 
     private void OnCancelClick(object? sender, RoutedEventArgs e) => Close(null);
 
@@ -99,19 +101,7 @@ public partial class DriveSelectDialog : Window
         if (e.Key == Key.Enter)
         {
             e.Handled = true;
-            var path = PathInput.Text?.Trim();
-            if (string.IsNullOrEmpty(path))
-            {
-                return;
-            }
-
-            if (TryResolveDriveLetterShortcut(path, out var driveTarget))
-            {
-                Close(driveTarget);
-                return;
-            }
-
-            Close(path);
+            CloseWithTypedPathOrSelection();
         }
         else if (e.Key == Key.Escape)
         {
@@ -143,6 +133,24 @@ public partial class DriveSelectDialog : Window
         {
             return false;
         }
+    }
+
+    private void CloseWithTypedPathOrSelection()
+    {
+        var path = PathInput.Text?.Trim();
+        if (pathInputChanged && !string.IsNullOrEmpty(path))
+        {
+            if (TryResolveDriveLetterShortcut(path, out var driveTarget))
+            {
+                Close(driveTarget);
+                return;
+            }
+
+            Close(path);
+            return;
+        }
+
+        CloseWithSelection();
     }
 
     private void MoveSelection(int offset)

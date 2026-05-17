@@ -992,13 +992,24 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (File.Exists(result))
+        string path;
+        try
         {
-            await viewModel.NavigateActivePaneToItemAsync(result);
+            path = await MacSmbPathResolver.ResolveAsync(result);
+        }
+        catch (Exception ex)
+        {
+            viewModel.LogError(ex.Message);
+            return;
+        }
+
+        if (File.Exists(path))
+        {
+            await viewModel.NavigateActivePaneToItemAsync(path);
         }
         else
         {
-            await viewModel.NavigateActivePaneAsync(result);
+            await viewModel.NavigateActivePaneAsync(path);
         }
     }
 

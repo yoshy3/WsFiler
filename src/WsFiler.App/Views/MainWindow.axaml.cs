@@ -355,6 +355,12 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            ActivatePaneForGrid(viewModel, grid, selectedItem: null);
+            UpdatePaneVisualState(viewModel);
+        }
+
         var point = e.GetCurrentPoint(grid);
         if (!point.Properties.IsLeftButtonPressed)
         {
@@ -367,6 +373,21 @@ public partial class MainWindow : Window
         dragSourceGrid = grid;
         dragPressArgs = e;
         dragInProgress = false;
+    }
+
+    private void ActivatePaneForGrid(
+        MainWindowViewModel viewModel,
+        DataGrid grid,
+        FileItemViewModel? selectedItem)
+    {
+        if (grid == LeftFileGrid)
+        {
+            viewModel.ActivateLeftPane(selectedItem);
+        }
+        else if (grid == RightFileGrid)
+        {
+            viewModel.ActivateRightPane(selectedItem);
+        }
     }
 
     private void OnFileGridPointerReleased(object? sender, PointerReleasedEventArgs e)

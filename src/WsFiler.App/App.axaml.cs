@@ -164,6 +164,7 @@ public partial class App : Application
         });
     }
 
+
     private async Task DownloadAndStartUpdateAsync(GitHubReleaseInfo release)
     {
         var installerPath = await DownloadUpdateInstallerAsync(release);
@@ -174,6 +175,12 @@ public partial class App : Application
         }
 
         StartUpdateInstaller(installerPath);
+
+        // アプリを終了してインストーラを継続させる
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            desktop.Shutdown();
+        }
     }
 
     private async Task DownloadUpdateForExitAsync(GitHubReleaseInfo release)

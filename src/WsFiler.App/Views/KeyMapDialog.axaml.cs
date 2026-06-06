@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using WsFiler.Infra.Settings;
 using WsFiler.Core.KeyMap;
 using WsFiler.Presentation.Resources;
 
@@ -24,6 +25,15 @@ public partial class KeyMapDialog : Window
     }
 
     public KeyMapDialog(IReadOnlyDictionary<string, string> initialOverrides)
+        : this(initialOverrides, UserCommandSettingsManager.Load()
+            .Where(command => !string.IsNullOrWhiteSpace(command.Name))
+            .Select(command => WsFiler.Core.Commands.UserCommandDefinition.ToCommandId(command.Name!.Trim())))
+    {
+    }
+
+    public KeyMapDialog(
+        IReadOnlyDictionary<string, string> initialOverrides,
+        IEnumerable<string> userCommandIds)
     {
         InitializeComponent();
 
@@ -42,6 +52,11 @@ public partial class KeyMapDialog : Window
             binding => binding.CommandId,
             binding => binding.Gesture.ToString(),
             StringComparer.OrdinalIgnoreCase);
+
+        foreach (var commandId in userCommandIds)
+        {
+            defaults.TryAdd(commandId, "");
+        }
 
         overrides = new Dictionary<string, string>(initialOverrides, StringComparer.OrdinalIgnoreCase);
 

@@ -4,8 +4,10 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using WsFiler.Core.Commands;
 using WsFiler.Infra.Settings;
 using WsFiler.Presentation.Resources;
 
@@ -14,6 +16,7 @@ namespace WsFiler.App.Views;
 public partial class SettingsDialog : Window
 {
     private readonly AppSettings settings;
+    private readonly ObservableCollection<UserCommandEntry> userCommands;
     private readonly List<SettingsEntry> entries;
     private readonly List<string> sectionOrder;
     private string activeSection = "";
@@ -21,6 +24,7 @@ public partial class SettingsDialog : Window
     private ComboBox? themeCombo;
     private ComboBox? languageCombo;
     private TextBox? editorTextBox;
+    private ListBox? userCommandListBox;
 
     public SettingsDialog()
         : this(SettingsManager.Load())
@@ -31,6 +35,7 @@ public partial class SettingsDialog : Window
     {
         InitializeComponent();
         this.settings = settings;
+        userCommands = new ObservableCollection<UserCommandEntry>(UserCommandSettingsManager.Load());
 
         Title = Strings.Dialog_Settings_Title;
 #pragma warning disable CS0618
@@ -51,6 +56,8 @@ public partial class SettingsDialog : Window
                 BuildBookmarksEntry, ["bookmark"]),
             new(Strings.Dialog_Settings_Section_Keymap, Strings.Dialog_Settings_OpenKeymap,
                 BuildKeymapEntry, ["keymap", "shortcut", "binding", "key"]),
+            new(Strings.Dialog_Settings_Section_UserCommands, Strings.Dialog_UserCommand_Title,
+                BuildUserCommandsEntry, ["command", "user", "macro", "exe", "argument"]),
         ];
 
         sectionOrder = entries.Select(entry => entry.Section).Distinct().ToList();
@@ -115,6 +122,7 @@ public partial class SettingsDialog : Window
         themeCombo = null;
         languageCombo = null;
         editorTextBox = null;
+        userCommandListBox = null;
 
         IEnumerable<SettingsEntry> visible;
         if (string.IsNullOrEmpty(query))
@@ -278,7 +286,10 @@ public partial class SettingsDialog : Window
 
     private async Task OpenKeymapDialogAsync()
     {
-        var dialog = new KeyMapDialog(settings.KeyMap ?? new Dictionary<string, string>());
+        var userCommandIds = userCommands
+            .Where(command => !string.IsNullOrWhiteSpace(command.Name))
+            .Select(command => UserCommandDefinition.ToCommandId(command.Name!.Trim()));
+        var dialog = new KeyMapDialog(settings.KeyMap ?? new Dictionary<string, string>(), userCommandIds);
         var result = await dialog.ShowDialog<Dictionary<string, string>?>(this);
         if (result is not null)
         {
@@ -286,10 +297,172 @@ public partial class SettingsDialog : Window
         }
     }
 
+    private void BuildUserCommandsEntry()
+    {
+        userCommandListBox = new ListBox
+        {
+            ItemsSource = BuildUserCommandRows(),
+            Height = 220,
+        };
+
+        var buttons = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 8,
+            Margin = new Avalonia.Thickness(0, 6, 0, 0),
+            Children =
+            {
+                MakeButton(Strings.Dialog_UserCommand_Add, async () => await AddUserCommandAsync()),
+                MakeButton(Strings.Dialog_UserCommand_Edit, async () => await EditUserCommandAsync()),
+                MakeButton(Strings.Dialog_UserCommand_Delete, DeleteSelectedUserCommand),
+            },
+        };
+
+        ContentPanel.Children.Add(userCommandListBox);
+        ContentPanel.Children.Add(buttons);
+    }
+
+    private Button MakeButton(string content, Action action)
+    {
+        var button = new Button
+        {
+            Content = content,
+            MinWidth = 92,
+        };
+        button.Click += (_, _) => action();
+        return button;
+    }
+
+    private IReadOnlyList<UserCommandRow> BuildUserCommandRows()
+    {
+        return userCommands
+            .Select(command => new UserCommandRow(command))
+            .OrderBy(row => row.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private void RefreshUserCommandRows(string? selectName = null)
+    {
+        if (userCommandListBox is null)
+        {
+            return;
+        }
+
+        var rows = BuildUserCommandRows();
+        userCommandListBox.ItemsSource = rows;
+        if (!string.IsNullOrWhiteSpace(selectName))
+        {
+            userCommandListBox.SelectedItem = rows.FirstOrDefault(row =>
+                string.Equals(row.Name, selectName, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    private async Task AddUserCommandAsync()
+    {
+        var dialog = new UserCommandDialog(null, userCommands.Select(command => command.Name ?? ""));
+        var result = await dialog.ShowDialog<UserCommandEntry?>(this);
+        if (result is null)
+        {
+            return;
+        }
+
+        userCommands.Add(result);
+        RefreshUserCommandRows(result.Name);
+    }
+
+    private async Task EditUserCommandAsync()
+    {
+        if (userCommandListBox?.SelectedItem is not UserCommandRow row)
+        {
+            return;
+        }
+
+        var command = row.Command;
+        var oldName = command.Name?.Trim() ?? "";
+        var dialog = new UserCommandDialog(command, userCommands.Select(item => item.Name ?? ""));
+        var result = await dialog.ShowDialog<UserCommandEntry?>(this);
+        if (result is null)
+        {
+            return;
+        }
+
+        command.Name = result.Name;
+        command.ExecutablePath = result.ExecutablePath;
+        command.Arguments = result.Arguments;
+        command.WorkingDirectoryMode = result.WorkingDirectoryMode;
+
+        var newName = result.Name?.Trim() ?? "";
+        if (!string.Equals(oldName, newName, StringComparison.OrdinalIgnoreCase))
+        {
+            MoveUserCommandKeyBinding(oldName, newName);
+        }
+
+        RefreshUserCommandRows(newName);
+    }
+
+    private void DeleteSelectedUserCommand()
+    {
+        if (userCommandListBox?.SelectedItem is not UserCommandRow row)
+        {
+            return;
+        }
+
+        userCommands.Remove(row.Command);
+        RemoveUserCommandKeyBinding(row.Name);
+        RefreshUserCommandRows();
+    }
+
+    private void MoveUserCommandKeyBinding(string oldName, string newName)
+    {
+        if (string.IsNullOrWhiteSpace(oldName) || string.IsNullOrWhiteSpace(newName))
+        {
+            return;
+        }
+
+        settings.KeyMap ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var oldCommandId = UserCommandDefinition.ToCommandId(oldName);
+        var newCommandId = UserCommandDefinition.ToCommandId(newName);
+        if (RemoveKeyMapEntry(oldCommandId, out var gesture))
+        {
+            settings.KeyMap[newCommandId] = gesture;
+        }
+    }
+
+    private void RemoveUserCommandKeyBinding(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        RemoveKeyMapEntry(UserCommandDefinition.ToCommandId(name), out _);
+    }
+
+    private bool RemoveKeyMapEntry(string commandId, out string gesture)
+    {
+        gesture = "";
+        if (settings.KeyMap is null)
+        {
+            return false;
+        }
+
+        var key = settings.KeyMap.Keys.FirstOrDefault(existing =>
+            string.Equals(existing, commandId, StringComparison.OrdinalIgnoreCase));
+        if (key is null)
+        {
+            return false;
+        }
+
+        gesture = settings.KeyMap[key];
+        settings.KeyMap.Remove(key);
+        return true;
+    }
+
     private void OnOkClick(object? sender, RoutedEventArgs e)
     {
         ApplyEdits();
         SettingsManager.Save(settings);
+        UserCommandSettingsManager.Save(userCommands);
         Close(true);
     }
 
@@ -333,6 +506,27 @@ public partial class SettingsDialog : Window
     private sealed record ComboValue(string Key, string Display)
     {
         public override string ToString() => Display;
+    }
+
+    private sealed record UserCommandRow(UserCommandEntry Command)
+    {
+        public string Name => Command.Name?.Trim() ?? "";
+
+        public override string ToString()
+        {
+            var executable = Command.ExecutablePath?.Trim() ?? "";
+            var arguments = Command.Arguments ?? "";
+            var workingDirectory = string.Equals(
+                Command.WorkingDirectoryMode,
+                UserCommandEntry.WorkingDirectoryExecutable,
+                StringComparison.OrdinalIgnoreCase)
+                ? Strings.Dialog_UserCommand_WorkingDirectoryExecutable
+                : Strings.Dialog_UserCommand_WorkingDirectoryCurrent;
+            var commandLine = string.IsNullOrWhiteSpace(arguments)
+                ? executable
+                : $"{executable} {arguments}";
+            return $"{Name}  |  {commandLine}  |  {workingDirectory}";
+        }
     }
 
     private sealed class SettingsEntry

@@ -614,6 +614,10 @@ public partial class MainWindow : Window
         {
             await ShowSettingsDialogAsync();
         }
+        else if (UserCommandDefinition.IsUserCommandId(commandId))
+        {
+            ExecuteUserCommand(commandId, viewModel);
+        }
         else if (commandId == ApplicationCommandId.CursorPageUp)
         {
             viewModel.MoveActivePanePage(GetVisibleFileRowCount(viewModel), -1);
@@ -1262,6 +1266,78 @@ public partial class MainWindow : Window
         }
 
         return Task.CompletedTask;
+    }
+
+    private void ExecuteUserCommand(string commandId, MainWindowViewModel viewModel)
+    {
+        var commandName = UserCommandDefinition.GetNameFromCommandId(commandId);
+        var command = UserCommandSettingsManager.Load()
+            .FirstOrDefault(item => string.Equals(item.Name, commandName, StringComparison.OrdinalIgnoreCase));
+
+        if (command is null ||
+            string.IsNullOrWhiteSpace(command.Name) ||
+            string.IsNullOrWhiteSpace(command.ExecutablePath))
+        {
+            viewModel.StatusMessage = string.Format(Strings.Status_UserCommandNotFound, commandName);
+            return;
+        }
+
+        try
+        {
+            var context = CreateUserCommandContext(viewModel);
+            var startInfo = new ProcessStartInfo(command.ExecutablePath!)
+            {
+                WorkingDirectory = ResolveUserCommandWorkingDirectory(command, context),
+                UseShellExecute = false,
+            };
+
+            foreach (var argument in UserCommandArgumentExpander.Expand(command.Arguments, context))
+            {
+                startInfo.ArgumentList.Add(argument);
+            }
+
+            Process.Start(startInfo);
+            viewModel.StatusMessage = string.Format(Strings.Status_UserCommandStarted, command.Name);
+        }
+        catch (Exception ex)
+        {
+            viewModel.StatusMessage = string.Format(Strings.Status_UserCommandFailed, command.Name);
+            viewModel.LogError(ex.Message);
+        }
+    }
+
+    private static UserCommandContext CreateUserCommandContext(MainWindowViewModel viewModel)
+    {
+        var pane = viewModel.ActivePane;
+        var current = pane.CurrentItem is null || pane.CurrentItem.IsParent
+            ? null
+            : new UserCommandItem(pane.CurrentItem.Name, pane.CurrentItem.FullPath);
+
+        var targets = pane.Items
+            .Where(item => item.IsMarked && !item.IsParent)
+            .Select(item => new UserCommandItem(item.Name, item.FullPath))
+            .ToList();
+
+        return new UserCommandContext(pane.CurrentPath, current, targets);
+    }
+
+    private static string ResolveUserCommandWorkingDirectory(
+        UserCommandEntry command,
+        UserCommandContext context)
+    {
+        if (string.Equals(
+            command.WorkingDirectoryMode,
+            UserCommandEntry.WorkingDirectoryExecutable,
+            StringComparison.OrdinalIgnoreCase))
+        {
+            var executableDirectory = Path.GetDirectoryName(command.ExecutablePath);
+            if (!string.IsNullOrWhiteSpace(executableDirectory))
+            {
+                return executableDirectory;
+            }
+        }
+
+        return context.CurrentDirectory;
     }
 
     private async Task CopyCurrentPathAsync(MainWindowViewModel viewModel)
@@ -2078,10 +2154,14 @@ public partial class MainWindow : Window
     private static Dictionary<string, string> BuildKeyMap(IReadOnlyDictionary<string, string>? customKeyMap)
     {
         var map = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+        var userCommandIds = UserCommandSettingsManager.Load()
+            .Where(command => !string.IsNullOrWhiteSpace(command.Name))
+            .Select(command => UserCommandDefinition.ToCommandId(command.Name!.Trim()))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (var binding in DefaultKeyMap.Bindings)
         {
-            if (!IsMainWindowCommand(binding.CommandId))
+            if (!IsMainWindowCommand(binding.CommandId, userCommandIds))
             {
                 continue;
             }
@@ -2096,7 +2176,7 @@ public partial class MainWindow : Window
 
         foreach (var pair in customKeyMap)
         {
-            if (!IsMainWindowCommand(pair.Key))
+            if (!IsMainWindowCommand(pair.Key, userCommandIds))
             {
                 continue;
             }
@@ -2107,8 +2187,13 @@ public partial class MainWindow : Window
         return map;
     }
 
-    private static bool IsMainWindowCommand(string commandId)
+    private static bool IsMainWindowCommand(string commandId, IReadOnlySet<string>? userCommandIds = null)
     {
+        if (UserCommandDefinition.IsUserCommandId(commandId))
+        {
+            return userCommandIds?.Contains(commandId) == true;
+        }
+
         return commandId is not (
             ApplicationCommandId.DialogConfirm or
             ApplicationCommandId.DialogCancel or

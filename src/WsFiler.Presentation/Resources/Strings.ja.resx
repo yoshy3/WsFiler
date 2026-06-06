@@ -237,6 +237,15 @@
   <data name="Status.PathCopied" xml:space="preserve">
     <value>パスをコピーしました: {0}</value>
   </data>
+  <data name="Status.UserCommandStarted" xml:space="preserve">
+    <value>ユーザ定義コマンドを起動しました: {0}</value>
+  </data>
+  <data name="Status.UserCommandFailed" xml:space="preserve">
+    <value>ユーザ定義コマンドを起動できませんでした: {0}</value>
+  </data>
+  <data name="Status.UserCommandNotFound" xml:space="preserve">
+    <value>ユーザ定義コマンドが見つかりません: {0}</value>
+  </data>
   <data name="Status.BookmarkAdded" xml:space="preserve">
     <value>ブックマークしました: {0}</value>
   </data>
@@ -414,6 +423,9 @@
   <data name="Dialog.Settings.Section.Keymap" xml:space="preserve">
     <value>キーマップ</value>
   </data>
+  <data name="Dialog.Settings.Section.UserCommands" xml:space="preserve">
+    <value>ユーザ定義コマンド</value>
+  </data>
   <data name="Dialog.Settings.Theme" xml:space="preserve">
     <value>テーマ</value>
   </data>
@@ -449,6 +461,57 @@
   </data>
   <data name="Dialog.Settings.NoMatches" xml:space="preserve">
     <value>該当する設定はありません。</value>
+  </data>
+  <data name="Dialog.UserCommand.Title" xml:space="preserve">
+    <value>ユーザ定義コマンド</value>
+  </data>
+  <data name="Dialog.UserCommand.Add" xml:space="preserve">
+    <value>追加</value>
+  </data>
+  <data name="Dialog.UserCommand.Edit" xml:space="preserve">
+    <value>編集</value>
+  </data>
+  <data name="Dialog.UserCommand.Delete" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Dialog.UserCommand.AddTitle" xml:space="preserve">
+    <value>ユーザ定義コマンドの追加</value>
+  </data>
+  <data name="Dialog.UserCommand.EditTitle" xml:space="preserve">
+    <value>ユーザ定義コマンドの編集</value>
+  </data>
+  <data name="Dialog.UserCommand.Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="Dialog.UserCommand.ExecutablePath" xml:space="preserve">
+    <value>実行ファイルのパス</value>
+  </data>
+  <data name="Dialog.UserCommand.Arguments" xml:space="preserve">
+    <value>引数</value>
+  </data>
+  <data name="Dialog.UserCommand.WorkingDirectory" xml:space="preserve">
+    <value>実行するディレクトリ</value>
+  </data>
+  <data name="Dialog.UserCommand.WorkingDirectoryCurrent" xml:space="preserve">
+    <value>カレントディレクトリ</value>
+  </data>
+  <data name="Dialog.UserCommand.WorkingDirectoryExecutable" xml:space="preserve">
+    <value>実行ファイルのあるディレクトリ</value>
+  </data>
+  <data name="Dialog.UserCommand.MacroHelp" xml:space="preserve">
+    <value>マクロ: {currentDir}, {currentFileName}, {currentFullPath}, {markedFileNames}, {markedFullPaths}</value>
+  </data>
+  <data name="Dialog.UserCommand.ErrorNameRequired" xml:space="preserve">
+    <value>名前を入力してください。</value>
+  </data>
+  <data name="Dialog.UserCommand.ErrorNameDuplicate" xml:space="preserve">
+    <value>同じ名前のコマンドが既に存在します。</value>
+  </data>
+  <data name="Dialog.UserCommand.ErrorExecutableRequired" xml:space="preserve">
+    <value>実行ファイルのパスを入力してください。</value>
+  </data>
+  <data name="Dialog.UserCommand.ErrorExecutableNotFound" xml:space="preserve">
+    <value>実行ファイルが見つかりません。</value>
   </data>
   <data name="Dialog.Keymap.Title" xml:space="preserve">
     <value>キーマップ</value>

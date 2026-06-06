@@ -237,6 +237,15 @@
   <data name="Status.PathCopied" xml:space="preserve">
     <value>Copied path: {0}</value>
   </data>
+  <data name="Status.UserCommandStarted" xml:space="preserve">
+    <value>Started user command: {0}</value>
+  </data>
+  <data name="Status.UserCommandFailed" xml:space="preserve">
+    <value>Failed to start user command: {0}</value>
+  </data>
+  <data name="Status.UserCommandNotFound" xml:space="preserve">
+    <value>User command was not found: {0}</value>
+  </data>
   <data name="Status.BookmarkAdded" xml:space="preserve">
     <value>Bookmarked: {0}</value>
   </data>
@@ -414,6 +423,9 @@
   <data name="Dialog.Settings.Section.Keymap" xml:space="preserve">
     <value>Keymap</value>
   </data>
+  <data name="Dialog.Settings.Section.UserCommands" xml:space="preserve">
+    <value>User Commands</value>
+  </data>
   <data name="Dialog.Settings.Theme" xml:space="preserve">
     <value>Theme</value>
   </data>
@@ -449,6 +461,57 @@
   </data>
   <data name="Dialog.Settings.NoMatches" xml:space="preserve">
     <value>No matching settings.</value>
+  </data>
+  <data name="Dialog.UserCommand.Title" xml:space="preserve">
+    <value>User commands</value>
+  </data>
+  <data name="Dialog.UserCommand.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Dialog.UserCommand.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Dialog.UserCommand.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Dialog.UserCommand.AddTitle" xml:space="preserve">
+    <value>Add user command</value>
+  </data>
+  <data name="Dialog.UserCommand.EditTitle" xml:space="preserve">
+    <value>Edit user command</value>
+  </data>
+  <data name="Dialog.UserCommand.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Dialog.UserCommand.ExecutablePath" xml:space="preserve">
+    <value>Executable path</value>
+  </data>
+  <data name="Dialog.UserCommand.Arguments" xml:space="preserve">
+    <value>Arguments</value>
+  </data>
+  <data name="Dialog.UserCommand.WorkingDirectory" xml:space="preserve">
+    <value>Run in</value>
+  </data>
+  <data name="Dialog.UserCommand.WorkingDirectoryCurrent" xml:space="preserve">
+    <value>Current directory</value>
+  </data>
+  <data name="Dialog.UserCommand.WorkingDirectoryExecutable" xml:space="preserve">
+    <value>Executable directory</value>
+  </data>
+  <data name="Dialog.UserCommand.MacroHelp" xml:space="preserve">
+    <value>Macros: {currentDir}, {currentFileName}, {currentFullPath}, {markedFileNames}, {markedFullPaths}</value>
+  </data>
+  <data name="Dialog.UserCommand.ErrorNameRequired" xml:space="preserve">
+    <value>Name is required.</value>
+  </data>
+  <data name="Dialog.UserCommand.ErrorNameDuplicate" xml:space="preserve">
+    <value>A command with this name already exists.</value>
+  </data>
+  <data name="Dialog.UserCommand.ErrorExecutableRequired" xml:space="preserve">
+    <value>Executable path is required.</value>
+  </data>
+  <data name="Dialog.UserCommand.ErrorExecutableNotFound" xml:space="preserve">
+    <value>Executable file was not found.</value>
   </data>
   <data name="Dialog.Keymap.Title" xml:space="preserve">
     <value>Keymap</value>

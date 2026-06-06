@@ -195,6 +195,12 @@ public class Strings
 
     public static string Status_PathCopied => ResourceManager.GetString("Status.PathCopied", resourceCulture)!;
 
+    public static string Status_UserCommandStarted => ResourceManager.GetString("Status.UserCommandStarted", resourceCulture)!;
+
+    public static string Status_UserCommandFailed => ResourceManager.GetString("Status.UserCommandFailed", resourceCulture)!;
+
+    public static string Status_UserCommandNotFound => ResourceManager.GetString("Status.UserCommandNotFound", resourceCulture)!;
+
     public static string Status_BookmarkAdded => ResourceManager.GetString("Status.BookmarkAdded", resourceCulture)!;
 
     public static string Status_CompareRequiresFiles => ResourceManager.GetString("Status.CompareRequiresFiles", resourceCulture)!;
@@ -313,6 +319,8 @@ public class Strings
 
     public static string Dialog_Settings_Section_Keymap => ResourceManager.GetString("Dialog.Settings.Section.Keymap", resourceCulture)!;
 
+    public static string Dialog_Settings_Section_UserCommands => ResourceManager.GetString("Dialog.Settings.Section.UserCommands", resourceCulture)!;
+
     public static string Dialog_Settings_Theme => ResourceManager.GetString("Dialog.Settings.Theme", resourceCulture)!;
 
     public static string Dialog_Settings_Theme_System => ResourceManager.GetString("Dialog.Settings.Theme.System", resourceCulture)!;
@@ -336,6 +344,40 @@ public class Strings
     public static string Dialog_Settings_OpenKeymap => ResourceManager.GetString("Dialog.Settings.OpenKeymap", resourceCulture)!;
 
     public static string Dialog_Settings_NoMatches => ResourceManager.GetString("Dialog.Settings.NoMatches", resourceCulture)!;
+
+    public static string Dialog_UserCommand_Title => ResourceManager.GetString("Dialog.UserCommand.Title", resourceCulture)!;
+
+    public static string Dialog_UserCommand_Add => ResourceManager.GetString("Dialog.UserCommand.Add", resourceCulture)!;
+
+    public static string Dialog_UserCommand_Edit => ResourceManager.GetString("Dialog.UserCommand.Edit", resourceCulture)!;
+
+    public static string Dialog_UserCommand_Delete => ResourceManager.GetString("Dialog.UserCommand.Delete", resourceCulture)!;
+
+    public static string Dialog_UserCommand_AddTitle => ResourceManager.GetString("Dialog.UserCommand.AddTitle", resourceCulture)!;
+
+    public static string Dialog_UserCommand_EditTitle => ResourceManager.GetString("Dialog.UserCommand.EditTitle", resourceCulture)!;
+
+    public static string Dialog_UserCommand_Name => ResourceManager.GetString("Dialog.UserCommand.Name", resourceCulture)!;
+
+    public static string Dialog_UserCommand_ExecutablePath => ResourceManager.GetString("Dialog.UserCommand.ExecutablePath", resourceCulture)!;
+
+    public static string Dialog_UserCommand_Arguments => ResourceManager.GetString("Dialog.UserCommand.Arguments", resourceCulture)!;
+
+    public static string Dialog_UserCommand_WorkingDirectory => ResourceManager.GetString("Dialog.UserCommand.WorkingDirectory", resourceCulture)!;
+
+    public static string Dialog_UserCommand_WorkingDirectoryCurrent => ResourceManager.GetString("Dialog.UserCommand.WorkingDirectoryCurrent", resourceCulture)!;
+
+    public static string Dialog_UserCommand_WorkingDirectoryExecutable => ResourceManager.GetString("Dialog.UserCommand.WorkingDirectoryExecutable", resourceCulture)!;
+
+    public static string Dialog_UserCommand_MacroHelp => ResourceManager.GetString("Dialog.UserCommand.MacroHelp", resourceCulture)!;
+
+    public static string Dialog_UserCommand_ErrorNameRequired => ResourceManager.GetString("Dialog.UserCommand.ErrorNameRequired", resourceCulture)!;
+
+    public static string Dialog_UserCommand_ErrorNameDuplicate => ResourceManager.GetString("Dialog.UserCommand.ErrorNameDuplicate", resourceCulture)!;
+
+    public static string Dialog_UserCommand_ErrorExecutableRequired => ResourceManager.GetString("Dialog.UserCommand.ErrorExecutableRequired", resourceCulture)!;
+
+    public static string Dialog_UserCommand_ErrorExecutableNotFound => ResourceManager.GetString("Dialog.UserCommand.ErrorExecutableNotFound", resourceCulture)!;
 
     public static string Dialog_Keymap_Title => ResourceManager.GetString("Dialog.Keymap.Title", resourceCulture)!;
 

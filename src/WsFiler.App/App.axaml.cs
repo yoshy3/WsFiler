@@ -5,15 +5,20 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Diagnostics;
 using Avalonia.Styling;
+using System.Reflection;
+using System.Threading.Tasks;
 using WsFiler.Core.Commands;
 using WsFiler.Core.KeyMap;
 using WsFiler.App.Views;
 using WsFiler.Infra.Files;
 using WsFiler.Infra.Settings;
+using WsFiler.Infra.Updates;
 using WsFiler.Presentation.Resources;
 using WsFiler.Presentation.Theming;
 using WsFiler.Presentation.ViewModels;
@@ -23,6 +28,7 @@ namespace WsFiler.App;
 public partial class App : Application
 {
     private IDisposable? singleInstanceActivationServer;
+    private string? pendingUpdateReleaseUrl;
 
     public override void Initialize()
     {
@@ -49,6 +55,7 @@ public partial class App : Application
             RestoreWindowBounds(mainWindow, settings.Window);
             desktop.MainWindow = mainWindow;
             singleInstanceActivationServer = SingleInstanceCoordinator.StartActivationServer(mainWindow);
+            _ = CheckForUpdatesOnStartupAsync(mainWindow, settings);
 
             WindowSettings? lastWindowSettings = null;
             mainWindow.PositionChanged += (_, _) => lastWindowSettings = CaptureWindowBounds(mainWindow);
@@ -56,6 +63,12 @@ public partial class App : Application
 
             desktop.ShutdownRequested += (_, _) =>
             {
+                if (!string.IsNullOrWhiteSpace(pendingUpdateReleaseUrl))
+                {
+                    OpenReleasePage(pendingUpdateReleaseUrl);
+                    pendingUpdateReleaseUrl = null;
+                }
+
                 singleInstanceActivationServer?.Dispose();
                 if (desktop.MainWindow?.DataContext is MainWindowViewModel vm)
                 {
@@ -77,6 +90,100 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private async Task CheckForUpdatesOnStartupAsync(Window owner, AppSettings startupSettings)
+    {
+        var updateSettings = startupSettings.UpdateCheck ?? new UpdateCheckSettings();
+        if (!updateSettings.IsEnabled)
+        {
+            return;
+        }
+
+        GitHubReleaseInfo? release;
+        try
+        {
+            release = await Task.Run(async () =>
+            {
+                var checker = new GitHubReleaseChecker();
+                return await checker.CheckLatestAsync(GetCurrentVersion());
+            });
+        }
+        catch
+        {
+            return;
+        }
+
+        if (release is null ||
+            string.Equals(updateSettings.IgnoredVersion, release.Version, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            if (owner.PlatformImpl is null)
+            {
+                return;
+            }
+
+            var dialog = new UpdateAvailableDialog(release);
+            var result = await dialog.ShowDialog<UpdateAvailableDialogResult?>(owner);
+            if (result is null)
+            {
+                return;
+            }
+
+            var latestSettings = SettingsManager.Load();
+            latestSettings.UpdateCheck ??= new UpdateCheckSettings();
+            latestSettings.UpdateCheck.IsEnabled = !result.DisableUpdateCheck;
+
+            switch (result.Action)
+            {
+                case UpdateAvailableAction.UpgradeNow:
+                    latestSettings.UpdateCheck.IgnoredVersion = null;
+                    OpenReleasePage(release.ReleaseUrl);
+                    break;
+                case UpdateAvailableAction.UpgradeOnExit:
+                    latestSettings.UpdateCheck.IgnoredVersion = null;
+                    pendingUpdateReleaseUrl = release.ReleaseUrl;
+                    break;
+                case UpdateAvailableAction.Skip:
+                    latestSettings.UpdateCheck.IgnoredVersion = release.Version;
+                    break;
+            }
+
+            SettingsManager.Save(latestSettings);
+        });
+    }
+
+    private static string GetCurrentVersion()
+    {
+        var assembly = typeof(App).Assembly;
+        var informationalVersion = assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion;
+        var version = string.IsNullOrWhiteSpace(informationalVersion)
+            ? assembly.GetName().Version?.ToString()
+            : informationalVersion;
+
+        return string.IsNullOrWhiteSpace(version)
+            ? "0.0.0"
+            : GitHubReleaseChecker.NormalizeVersionText(version);
+    }
+
+    private static void OpenReleasePage(string releaseUrl)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(releaseUrl)
+            {
+                UseShellExecute = true,
+            });
+        }
+        catch
+        {
+        }
     }
 
     private async void OnAboutWsFilerClick(object? sender, EventArgs e)

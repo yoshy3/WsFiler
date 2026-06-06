@@ -337,6 +337,10 @@ public class Strings
 
     public static string Dialog_Settings_Language_Japanese => ResourceManager.GetString("Dialog.Settings.Language.Japanese", resourceCulture)!;
 
+    public static string Dialog_Settings_UpdateCheck => ResourceManager.GetString("Dialog.Settings.UpdateCheck", resourceCulture)!;
+
+    public static string Dialog_Settings_UpdateCheckEnabled => ResourceManager.GetString("Dialog.Settings.UpdateCheckEnabled", resourceCulture)!;
+
     public static string Dialog_Settings_RestartHint => ResourceManager.GetString("Dialog.Settings.RestartHint", resourceCulture)!;
 
     public static string Dialog_Settings_ExternalEditor => ResourceManager.GetString("Dialog.Settings.ExternalEditor", resourceCulture)!;
@@ -436,4 +440,16 @@ public class Strings
     public static string Dialog_Conflict_Overwrite => ResourceManager.GetString("Dialog.Conflict.Overwrite", resourceCulture)!;
 
     public static string Dialog_Conflict_Skip => ResourceManager.GetString("Dialog.Conflict.Skip", resourceCulture)!;
+
+    public static string Dialog_Update_Title => ResourceManager.GetString("Dialog.Update.Title", resourceCulture)!;
+
+    public static string Dialog_Update_Message => ResourceManager.GetString("Dialog.Update.Message", resourceCulture)!;
+
+    public static string Dialog_Update_UpgradeNow => ResourceManager.GetString("Dialog.Update.UpgradeNow", resourceCulture)!;
+
+    public static string Dialog_Update_UpgradeOnExit => ResourceManager.GetString("Dialog.Update.UpgradeOnExit", resourceCulture)!;
+
+    public static string Dialog_Update_Skip => ResourceManager.GetString("Dialog.Update.Skip", resourceCulture)!;
+
+    public static string Dialog_Update_DisableCheck => ResourceManager.GetString("Dialog.Update.DisableCheck", resourceCulture)!;
 }

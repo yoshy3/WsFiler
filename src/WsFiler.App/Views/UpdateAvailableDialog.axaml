@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WsFiler.App.Views.UpdateAvailableDialog"
+        Width="580"
+        Height="250"
+        MinWidth="520"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+    <Grid RowDefinitions="Auto,Auto,Auto"
+          Margin="18"
+          RowSpacing="12">
+        <TextBlock x:Name="MessageText"
+                   Grid.Row="0"
+                   TextWrapping="Wrap"/>
+
+        <CheckBox x:Name="DisableUpdateCheckBox"
+                  Grid.Row="1"/>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Spacing="8"
+                    Margin="0,8,0,0">
+            <Button x:Name="UpgradeNowButton"
+                    MinWidth="150"
+                    IsDefault="True"
+                    Click="OnUpgradeNowClick"/>
+            <Button x:Name="UpgradeOnExitButton"
+                    MinWidth="190"
+                    Click="OnUpgradeOnExitClick"/>
+            <Button x:Name="SkipButton"
+                    MinWidth="150"
+                    IsCancel="True"
+                    Click="OnSkipClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

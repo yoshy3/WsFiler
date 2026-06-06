@@ -450,6 +450,12 @@
   <data name="Dialog.Settings.Language.Japanese" xml:space="preserve">
     <value>Japanese</value>
   </data>
+  <data name="Dialog.Settings.UpdateCheck" xml:space="preserve">
+    <value>Version updates</value>
+  </data>
+  <data name="Dialog.Settings.UpdateCheckEnabled" xml:space="preserve">
+    <value>Check GitHub Releases for updates at startup</value>
+  </data>
   <data name="Dialog.Settings.RestartHint" xml:space="preserve">
     <value>Language changes apply fully after restart.</value>
   </data>
@@ -599,5 +605,23 @@
   </data>
   <data name="Dialog.Conflict.Skip" xml:space="preserve">
     <value>Skip(N)</value>
+  </data>
+  <data name="Dialog.Update.Title" xml:space="preserve">
+    <value>Update Available</value>
+  </data>
+  <data name="Dialog.Update.Message" xml:space="preserve">
+    <value>WsFiler {0} is available on GitHub Releases.&#x0A;&#x0A;{1}</value>
+  </data>
+  <data name="Dialog.Update.UpgradeNow" xml:space="preserve">
+    <value>Upgrade now</value>
+  </data>
+  <data name="Dialog.Update.UpgradeOnExit" xml:space="preserve">
+    <value>Upgrade when exiting</value>
+  </data>
+  <data name="Dialog.Update.Skip" xml:space="preserve">
+    <value>Do not upgrade</value>
+  </data>
+  <data name="Dialog.Update.DisableCheck" xml:space="preserve">
+    <value>Do not check for version updates</value>
   </data>
 </root>

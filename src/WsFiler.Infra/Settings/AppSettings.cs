@@ -23,8 +23,20 @@ public sealed class AppSettings
     [JsonPropertyName("directoryBookmarks")]
     public List<string>? DirectoryBookmarks { get; set; }
 
+    [JsonPropertyName("updateCheck")]
+    public UpdateCheckSettings? UpdateCheck { get; set; } = new();
+
     [JsonPropertyName("window")]
     public WindowSettings? Window { get; set; }
+}
+
+public sealed class UpdateCheckSettings
+{
+    [JsonPropertyName("isEnabled")]
+    public bool IsEnabled { get; set; } = true;
+
+    [JsonPropertyName("ignoredVersion")]
+    public string? IgnoredVersion { get; set; }
 }
 
 public sealed class LastSessionSettings

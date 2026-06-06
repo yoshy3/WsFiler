@@ -23,6 +23,7 @@ public partial class SettingsDialog : Window
 
     private ComboBox? themeCombo;
     private ComboBox? languageCombo;
+    private CheckBox? updateCheckBox;
     private TextBox? editorTextBox;
     private ListBox? userCommandListBox;
 
@@ -50,6 +51,8 @@ public partial class SettingsDialog : Window
                 BuildThemeEntry, [Strings.Dialog_Settings_Theme_System, Strings.Dialog_Settings_Theme_Light, Strings.Dialog_Settings_Theme_Dark]),
             new(Strings.Dialog_Settings_Section_General, Strings.Dialog_Settings_Language,
                 BuildLanguageEntry, [Strings.Dialog_Settings_Language_System, Strings.Dialog_Settings_Language_English, Strings.Dialog_Settings_Language_Japanese]),
+            new(Strings.Dialog_Settings_Section_General, Strings.Dialog_Settings_UpdateCheck,
+                BuildUpdateCheckEntry, ["update", "release", "version", "github"]),
             new(Strings.Dialog_Settings_Section_External, Strings.Dialog_Settings_ExternalEditor,
                 BuildEditorEntry, ["editor", "exe", "path"]),
             new(Strings.Dialog_Settings_Section_Bookmarks, Strings.Dialog_Bookmark_Title,
@@ -121,6 +124,7 @@ public partial class SettingsDialog : Window
         ContentPanel.Children.Clear();
         themeCombo = null;
         languageCombo = null;
+        updateCheckBox = null;
         editorTextBox = null;
         userCommandListBox = null;
 
@@ -220,6 +224,17 @@ public partial class SettingsDialog : Window
             Text = settings.ExternalEditor ?? "",
         };
         ContentPanel.Children.Add(editorTextBox);
+    }
+
+    private void BuildUpdateCheckEntry()
+    {
+        settings.UpdateCheck ??= new UpdateCheckSettings();
+        updateCheckBox = new CheckBox
+        {
+            Content = Strings.Dialog_Settings_UpdateCheckEnabled,
+            IsChecked = settings.UpdateCheck.IsEnabled,
+        };
+        ContentPanel.Children.Add(updateCheckBox);
     }
 
     private void BuildBookmarksEntry()
@@ -486,6 +501,11 @@ public partial class SettingsDialog : Window
             settings.ExternalEditor = string.IsNullOrWhiteSpace(editorTextBox.Text)
                 ? null
                 : editorTextBox.Text;
+        }
+        if (updateCheckBox is not null)
+        {
+            settings.UpdateCheck ??= new UpdateCheckSettings();
+            settings.UpdateCheck.IsEnabled = updateCheckBox.IsChecked == true;
         }
     }
 

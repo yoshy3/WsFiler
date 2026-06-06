@@ -7,6 +7,7 @@ namespace WsFiler.Infra.Settings;
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     WriteIndented = true)]
 [JsonSerializable(typeof(AppSettings))]
+[JsonSerializable(typeof(UpdateCheckSettings))]
 [JsonSerializable(typeof(WindowSettings))]
 [JsonSerializable(typeof(DirectoryHistorySettings))]
 [JsonSerializable(typeof(UserCommandSettings))]

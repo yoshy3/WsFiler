@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Reflection;
 using System.Text.Json;
@@ -53,7 +54,8 @@ public sealed class GitHubReleaseChecker
         return new GitHubReleaseInfo(
             NormalizeVersionText(release.TagName),
             string.IsNullOrWhiteSpace(release.Name) ? release.TagName : release.Name,
-            release.HtmlUrl);
+            release.HtmlUrl,
+            BuildAssets(release.Assets));
     }
 
     public static bool IsNewerVersion(string candidateVersion, string currentVersion)
@@ -118,6 +120,28 @@ public sealed class GitHubReleaseChecker
         var version = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "1.0";
         return $"WsFiler/{version}";
     }
+
+    private static IReadOnlyList<GitHubReleaseAsset> BuildAssets(List<GitHubReleaseAssetApiResponse>? assets)
+    {
+        if (assets is null || assets.Count == 0)
+        {
+            return [];
+        }
+
+        var releaseAssets = new List<GitHubReleaseAsset>();
+        foreach (var asset in assets)
+        {
+            if (string.IsNullOrWhiteSpace(asset.Name) ||
+                string.IsNullOrWhiteSpace(asset.BrowserDownloadUrl))
+            {
+                continue;
+            }
+
+            releaseAssets.Add(new GitHubReleaseAsset(asset.Name, asset.BrowserDownloadUrl));
+        }
+
+        return releaseAssets;
+    }
 }
 
 internal sealed class GitHubReleaseApiResponse
@@ -130,10 +154,23 @@ internal sealed class GitHubReleaseApiResponse
 
     [JsonPropertyName("html_url")]
     public string? HtmlUrl { get; set; }
+
+    [JsonPropertyName("assets")]
+    public List<GitHubReleaseAssetApiResponse>? Assets { get; set; }
+}
+
+internal sealed class GitHubReleaseAssetApiResponse
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("browser_download_url")]
+    public string? BrowserDownloadUrl { get; set; }
 }
 
 [JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true)]
 [JsonSerializable(typeof(GitHubReleaseApiResponse))]
+[JsonSerializable(typeof(GitHubReleaseAssetApiResponse))]
 internal partial class UpdateJsonContext : JsonSerializerContext
 {
 }

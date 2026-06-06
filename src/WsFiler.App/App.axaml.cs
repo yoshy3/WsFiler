@@ -29,6 +29,7 @@ public partial class App : Application
 {
     private IDisposable? singleInstanceActivationServer;
     private string? pendingUpdateReleaseUrl;
+    private string? pendingUpdateInstallerPath;
 
     public override void Initialize()
     {
@@ -63,7 +64,13 @@ public partial class App : Application
 
             desktop.ShutdownRequested += (_, _) =>
             {
-                if (!string.IsNullOrWhiteSpace(pendingUpdateReleaseUrl))
+                if (!string.IsNullOrWhiteSpace(pendingUpdateInstallerPath))
+                {
+                    StartUpdateInstaller(pendingUpdateInstallerPath);
+                    pendingUpdateInstallerPath = null;
+                    pendingUpdateReleaseUrl = null;
+                }
+                else if (!string.IsNullOrWhiteSpace(pendingUpdateReleaseUrl))
                 {
                     OpenReleasePage(pendingUpdateReleaseUrl);
                     pendingUpdateReleaseUrl = null;
@@ -142,11 +149,11 @@ public partial class App : Application
             {
                 case UpdateAvailableAction.UpgradeNow:
                     latestSettings.UpdateCheck.IgnoredVersion = null;
-                    OpenReleasePage(release.ReleaseUrl);
+                    await DownloadAndStartUpdateAsync(release);
                     break;
                 case UpdateAvailableAction.UpgradeOnExit:
                     latestSettings.UpdateCheck.IgnoredVersion = null;
-                    pendingUpdateReleaseUrl = release.ReleaseUrl;
+                    await DownloadUpdateForExitAsync(release);
                     break;
                 case UpdateAvailableAction.Skip:
                     latestSettings.UpdateCheck.IgnoredVersion = release.Version;
@@ -155,6 +162,43 @@ public partial class App : Application
 
             SettingsManager.Save(latestSettings);
         });
+    }
+
+    private async Task DownloadAndStartUpdateAsync(GitHubReleaseInfo release)
+    {
+        var installerPath = await DownloadUpdateInstallerAsync(release);
+        if (string.IsNullOrWhiteSpace(installerPath))
+        {
+            OpenReleasePage(release.ReleaseUrl);
+            return;
+        }
+
+        StartUpdateInstaller(installerPath);
+    }
+
+    private async Task DownloadUpdateForExitAsync(GitHubReleaseInfo release)
+    {
+        pendingUpdateReleaseUrl = release.ReleaseUrl;
+        pendingUpdateInstallerPath = await DownloadUpdateInstallerAsync(release);
+    }
+
+    private static async Task<string?> DownloadUpdateInstallerAsync(GitHubReleaseInfo release)
+    {
+        var asset = UpdateAssetSelector.SelectForCurrentPlatform(release.Assets);
+        if (asset is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var downloader = new UpdateAssetDownloader();
+            return await Task.Run(async () => await downloader.DownloadAsync(asset));
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static string GetCurrentVersion()
@@ -177,6 +221,20 @@ public partial class App : Application
         try
         {
             Process.Start(new ProcessStartInfo(releaseUrl)
+            {
+                UseShellExecute = true,
+            });
+        }
+        catch
+        {
+        }
+    }
+
+    private static void StartUpdateInstaller(string installerPath)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(installerPath)
             {
                 UseShellExecute = true,
             });

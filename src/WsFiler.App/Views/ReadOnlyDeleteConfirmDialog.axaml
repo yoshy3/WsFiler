@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WsFiler.App.Views.ReadOnlyDeleteConfirmDialog"
+        Width="560"
+        Height="220"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+    <Grid RowDefinitions="Auto,Auto,Auto"
+          Margin="16"
+          RowSpacing="10">
+        <TextBlock x:Name="MessageText"
+                   Grid.Row="0"
+                   TextWrapping="Wrap"/>
+
+        <CheckBox x:Name="ApplyToAllCheckBox"
+                  Grid.Row="1"/>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Spacing="10"
+                    Margin="0,8,0,0">
+            <Button x:Name="DeleteButton"
+                    Width="120"
+                    IsDefault="True"
+                    Click="OnDeleteClick"/>
+            <Button x:Name="SkipButton"
+                    Width="120"
+                    Click="OnSkipClick"/>
+            <Button x:Name="CancelButton"
+                    Width="120"
+                    IsCancel="True"
+                    Click="OnCancelClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

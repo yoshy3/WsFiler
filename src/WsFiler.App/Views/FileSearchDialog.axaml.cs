@@ -6,7 +6,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
+using WsFiler.App;
 using WsFiler.Presentation.Resources;
 
 namespace WsFiler.App.Views;
@@ -14,6 +16,7 @@ namespace WsFiler.App.Views;
 public partial class FileSearchDialog : Window
 {
     private readonly List<SearchResult> results = [];
+    private CancellationTokenSource? searchCancellationTokenSource;
 
     public FileSearchDialog()
     {
@@ -29,6 +32,7 @@ public partial class FileSearchDialog : Window
         BaseDirectoryLabel.Text = Strings.Dialog_FileSearch_BaseDirectory;
         SearchDirectoriesCheckBox.Content = Strings.Dialog_FileSearch_SearchDirectories;
         SearchButton.Content = Strings.Dialog_FileSearch_Start;
+        CancelSearchButton.Content = Strings.Dialog_Common_Cancel;
         JumpButton.Content = Strings.Dialog_FileSearch_Jump;
         CloseButton.Content = Strings.Dialog_Common_Cancel;
         ResultLabel.Text = Strings.Dialog_FileSearch_Results;
@@ -55,7 +59,18 @@ public partial class FileSearchDialog : Window
 
     private void OnCloseClick(object? sender, RoutedEventArgs e)
     {
+        if (searchCancellationTokenSource is not null)
+        {
+            searchCancellationTokenSource.Cancel();
+            return;
+        }
+
         Close(null);
+    }
+
+    private void OnCancelSearchClick(object? sender, RoutedEventArgs e)
+    {
+        searchCancellationTokenSource?.Cancel();
     }
 
     private void OnResultDoubleTapped(object? sender, TappedEventArgs e)
@@ -68,6 +83,12 @@ public partial class FileSearchDialog : Window
         if (e.Key == Key.Escape)
         {
             e.Handled = true;
+            if (searchCancellationTokenSource is not null)
+            {
+                searchCancellationTokenSource.Cancel();
+                return;
+            }
+
             Close(null);
         }
         else if (e.Key == Key.Enter && ResultListBox.IsFocused)
@@ -108,15 +129,32 @@ public partial class FileSearchDialog : Window
         }
 
         SearchButton.IsEnabled = false;
+        CancelSearchButton.IsEnabled = true;
+        SearchProgressBar.IsVisible = true;
+        SearchProgressTextBlock.Text = Strings.Dialog_FileSearch_Searching;
         ResultListBox.ItemsSource = null;
         results.Clear();
         UpdateResultCount();
+
+        using var cancellationTokenSource = new CancellationTokenSource();
+        searchCancellationTokenSource = cancellationTokenSource;
 
         try
         {
             var includeDirectories = SearchDirectoriesCheckBox.IsChecked == true;
             var matcher = BuildMatcher(pattern);
-            var found = await Task.Run(() => FindMatches(baseDirectory, matcher, includeDirectories));
+            var progress = new ThrottledProgress<SearchProgress>(
+                new Progress<SearchProgress>(UpdateSearchProgress),
+                TimeSpan.FromMilliseconds(50));
+            var found = await Task.Run(
+                () => FindMatches(
+                    baseDirectory,
+                    matcher,
+                    includeDirectories,
+                    progress,
+                    cancellationTokenSource.Token),
+                cancellationTokenSource.Token);
+            progress.Flush();
             results.AddRange(found);
             ResultListBox.ItemsSource = results;
             if (results.Count > 0)
@@ -127,24 +165,38 @@ public partial class FileSearchDialog : Window
 
             UpdateResultCount();
         }
+        catch (OperationCanceledException)
+        {
+            SearchProgressTextBlock.Text = Strings.Dialog_Progress_Canceled;
+            UpdateResultCount();
+        }
         finally
         {
+            searchCancellationTokenSource = null;
             SearchButton.IsEnabled = true;
+            CancelSearchButton.IsEnabled = false;
+            SearchProgressBar.IsVisible = false;
         }
     }
 
     private static List<SearchResult> FindMatches(
         string baseDirectory,
         Regex matcher,
-        bool includeDirectories)
+        bool includeDirectories,
+        IProgress<SearchProgress> progress,
+        CancellationToken cancellationToken)
     {
         var found = new List<SearchResult>();
         var pending = new Stack<string>();
+        var scannedDirectories = 0;
         pending.Push(baseDirectory);
 
         while (pending.Count > 0)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var directory = pending.Pop();
+            scannedDirectories++;
+            progress.Report(new SearchProgress(directory, found.Count, scannedDirectories));
             IEnumerable<string> childDirectories;
 
             try
@@ -158,6 +210,7 @@ public partial class FileSearchDialog : Window
 
             foreach (var childDirectory in childDirectories)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (includeDirectories && matcher.IsMatch(Path.GetFileName(childDirectory)))
                 {
                     found.Add(new SearchResult(childDirectory, baseDirectory));
@@ -178,6 +231,7 @@ public partial class FileSearchDialog : Window
 
             foreach (var file in files)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (matcher.IsMatch(Path.GetFileName(file)))
                 {
                     found.Add(new SearchResult(file, baseDirectory));
@@ -185,6 +239,7 @@ public partial class FileSearchDialog : Window
             }
         }
 
+        progress.Report(new SearchProgress(baseDirectory, found.Count, scannedDirectories));
         return found
             .OrderBy(result => result.DisplayPath, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
@@ -206,6 +261,15 @@ public partial class FileSearchDialog : Window
     private void UpdateResultCount()
     {
         ResultCountTextBlock.Text = string.Format(Strings.Dialog_FileSearch_Count, results.Count);
+    }
+
+    private void UpdateSearchProgress(SearchProgress progress)
+    {
+        ResultCountTextBlock.Text = string.Format(Strings.Dialog_FileSearch_Count, progress.FoundCount);
+        SearchProgressTextBlock.Text = string.Format(
+            Strings.Dialog_FileSearch_Progress,
+            progress.ScannedDirectories,
+            progress.CurrentDirectory);
     }
 
     private void CloseWithSelection()
@@ -237,4 +301,9 @@ public partial class FileSearchDialog : Window
 
         public override string ToString() => DisplayPath;
     }
+
+    private sealed record SearchProgress(
+        string CurrentDirectory,
+        int FoundCount,
+        int ScannedDirectories);
 }

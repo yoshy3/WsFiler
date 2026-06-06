@@ -48,6 +48,10 @@
             <Button x:Name="SearchButton"
                     Height="32"
                     Click="OnSearchClick"/>
+            <Button x:Name="CancelSearchButton"
+                    Height="32"
+                    IsEnabled="False"
+                    Click="OnCancelSearchClick"/>
             <Button x:Name="JumpButton"
                     Height="32"
                     Click="OnJumpClick"/>
@@ -60,7 +64,7 @@
         <Grid Grid.Row="1"
               Grid.Column="0"
               Grid.ColumnSpan="2"
-              RowDefinitions="Auto,*"
+              RowDefinitions="Auto,Auto,*"
               RowSpacing="4">
             <Grid Grid.Row="0"
                   ColumnDefinitions="Auto,*">
@@ -70,8 +74,20 @@
                            Grid.Column="1"
                            Margin="20,0,0,0"/>
             </Grid>
+            <Grid Grid.Row="1"
+                  RowDefinitions="Auto,Auto"
+                  RowSpacing="4">
+                <TextBlock x:Name="SearchProgressTextBlock"
+                           Grid.Row="0"
+                           TextWrapping="Wrap"/>
+                <ProgressBar x:Name="SearchProgressBar"
+                             Grid.Row="1"
+                             Height="16"
+                             IsVisible="False"
+                             IsIndeterminate="True"/>
+            </Grid>
             <ListBox x:Name="ResultListBox"
-                     Grid.Row="1"
+                     Grid.Row="2"
                      FontFamily="Consolas"
                      DoubleTapped="OnResultDoubleTapped"/>
         </Grid>

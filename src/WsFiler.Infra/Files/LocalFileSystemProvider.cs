@@ -76,16 +76,36 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         IReadOnlyList<string> sourcePaths,
         string destinationDirectory,
         Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
+        IProgress<FileOperationProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
         ThrowIfArchiveDestination(destinationDirectory);
         Directory.CreateDirectory(destinationDirectory);
         var conflictScope = new ConflictDecisionScope(resolveConflictAsync);
+        var completedItems = 0;
+        var totalItems = TryCountCopyItems(sourcePaths, cancellationToken);
+
+        void ReportCurrent(string path)
+        {
+            progress?.Report(new FileOperationProgress(path, completedItems, totalItems));
+        }
+
+        void ReportCompleted(string path)
+        {
+            ReportCompletedCount(path, completedCount: 1);
+        }
+
+        void ReportCompletedCount(string path, int completedCount)
+        {
+            completedItems += completedCount;
+            progress?.Report(new FileOperationProgress(path, completedItems, totalItems));
+        }
 
         foreach (var sourcePath in sourcePaths)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var destinationPath = Path.Combine(destinationDirectory, Path.GetFileName(sourcePath));
+            ReportCurrent(sourcePath);
 
             if (ArchivePath.TryParse(sourcePath, out var archivePath) && !archivePath.IsRoot)
             {
@@ -100,17 +120,27 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
                             conflictScope,
                             cancellationToken),
                     cancellationToken);
+                ReportCompleted(sourcePath);
             }
             else if (Directory.Exists(sourcePath))
             {
-                await CopyDirectoryAsync(sourcePath, destinationPath, conflictScope, cancellationToken);
+                await CopyDirectoryAsync(
+                    sourcePath,
+                    destinationPath,
+                    conflictScope,
+                    ReportCurrent,
+                    ReportCompleted,
+                    cancellationToken);
             }
             else if (File.Exists(sourcePath))
             {
+                ReportCurrent(sourcePath);
                 if (await ShouldWriteFileAsync(sourcePath, destinationPath, conflictScope, cancellationToken))
                 {
-                    File.Copy(sourcePath, destinationPath, overwrite: true);
+                    await CopyFileAsync(sourcePath, destinationPath, cancellationToken);
                 }
+
+                ReportCompleted(sourcePath);
             }
         }
     }
@@ -119,11 +149,30 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         IReadOnlyList<string> sourcePaths,
         string destinationDirectory,
         Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
+        IProgress<FileOperationProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
         ThrowIfArchiveMutation(sourcePaths, destinationDirectory);
         Directory.CreateDirectory(destinationDirectory);
         var conflictScope = new ConflictDecisionScope(resolveConflictAsync);
+        var completedItems = 0;
+        var totalItems = TryCountCopyItems(sourcePaths, cancellationToken);
+
+        void ReportCurrent(string path)
+        {
+            progress?.Report(new FileOperationProgress(path, completedItems, totalItems));
+        }
+
+        void ReportCompleted(string path)
+        {
+            ReportCompletedCount(path, completedCount: 1);
+        }
+
+        void ReportCompletedCount(string path, int completedCount)
+        {
+            completedItems += completedCount;
+            progress?.Report(new FileOperationProgress(path, completedItems, totalItems));
+        }
 
         foreach (var sourcePath in sourcePaths)
         {
@@ -148,7 +197,26 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
                     Directory.Delete(destinationPath, recursive: true);
                 }
 
-                Directory.Move(sourcePath, destinationPath);
+                if (IsCrossVolumeMove(sourcePath, destinationPath))
+                {
+                    await CopyDirectoryAsync(
+                        sourcePath,
+                        destinationPath,
+                        conflictScope,
+                        ReportCurrent,
+                        ReportCompleted,
+                        cancellationToken);
+                    await DeleteDirectoryAsync(
+                        sourcePath,
+                        new DeleteConfirmationScope(confirmDeleteAsync: null),
+                        cancellationToken);
+                }
+                else
+                {
+                    var completedCount = TryCountCopyItems([sourcePath], cancellationToken) ?? 1;
+                    Directory.Move(sourcePath, destinationPath);
+                    ReportCompletedCount(sourcePath, completedCount);
+                }
             }
             else if (File.Exists(sourcePath))
             {
@@ -168,16 +236,41 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
                     File.Delete(destinationPath);
                 }
 
-                File.Move(sourcePath, destinationPath);
+                if (IsCrossVolumeMove(sourcePath, destinationPath))
+                {
+                    ReportCurrent(sourcePath);
+                    await CopyFileAsync(sourcePath, destinationPath, cancellationToken);
+                    ReportCompleted(sourcePath);
+                    await DeleteFileAsync(
+                        sourcePath,
+                        new DeleteConfirmationScope(confirmDeleteAsync: null),
+                        cancellationToken);
+                }
+                else
+                {
+                    File.Move(sourcePath, destinationPath);
+                    ReportCompleted(sourcePath);
+                }
             }
         }
     }
 
-    public Task DeleteAsync(
+    private static bool IsCrossVolumeMove(string sourcePath, string destinationPath)
+    {
+        var sourceRoot = Path.GetPathRoot(Path.GetFullPath(sourcePath));
+        var destinationRoot = Path.GetPathRoot(Path.GetFullPath(destinationPath));
+        return !string.Equals(sourceRoot, destinationRoot, OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal);
+    }
+
+    public async Task DeleteAsync(
         IReadOnlyList<string> targetPaths,
+        Func<FileDeleteConfirmationInfo, Task<FileDeleteConfirmationDecision>>? confirmDeleteAsync = null,
         CancellationToken cancellationToken = default)
     {
         ThrowIfArchiveMutation(targetPaths);
+        var confirmationScope = new DeleteConfirmationScope(confirmDeleteAsync);
 
         foreach (var targetPath in targetPaths)
         {
@@ -185,15 +278,100 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
 
             if (Directory.Exists(targetPath))
             {
-                Directory.Delete(targetPath, recursive: true);
+                await DeleteDirectoryAsync(targetPath, confirmationScope, cancellationToken);
             }
             else if (File.Exists(targetPath))
             {
-                File.Delete(targetPath);
+                await DeleteFileAsync(targetPath, confirmationScope, cancellationToken);
             }
         }
+    }
 
-        return Task.CompletedTask;
+    private static async Task<bool> DeleteDirectoryAsync(
+        string path,
+        DeleteConfirmationScope confirmationScope,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!await ShouldDeleteReadOnlyItemAsync(path, isDirectory: true, confirmationScope, cancellationToken))
+        {
+            return false;
+        }
+
+        var allChildrenDeleted = true;
+        foreach (var file in Directory.EnumerateFiles(path))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            allChildrenDeleted &= await DeleteFileAsync(file, confirmationScope, cancellationToken);
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(path))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            allChildrenDeleted &= await DeleteDirectoryAsync(directory, confirmationScope, cancellationToken);
+        }
+
+        if (!allChildrenDeleted)
+        {
+            return false;
+        }
+
+        ClearReadOnlyAttribute(path);
+        Directory.Delete(path);
+        return true;
+    }
+
+    private static async Task<bool> DeleteFileAsync(
+        string path,
+        DeleteConfirmationScope confirmationScope,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!await ShouldDeleteReadOnlyItemAsync(path, isDirectory: false, confirmationScope, cancellationToken))
+        {
+            return false;
+        }
+
+        ClearReadOnlyAttribute(path);
+        File.Delete(path);
+        return true;
+    }
+
+    private static async Task<bool> ShouldDeleteReadOnlyItemAsync(
+        string path,
+        bool isDirectory,
+        DeleteConfirmationScope confirmationScope,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!File.GetAttributes(path).HasFlag(FileAttributes.ReadOnly))
+        {
+            return true;
+        }
+
+        var action = await confirmationScope.ResolveAsync(new FileDeleteConfirmationInfo(
+            path,
+            Path.GetFileName(path),
+            isDirectory,
+            IsReadOnly: true));
+        return action switch
+        {
+            FileDeleteConfirmationAction.Delete => true,
+            FileDeleteConfirmationAction.Skip => false,
+            FileDeleteConfirmationAction.Cancel => throw new OperationCanceledException(),
+            _ => false,
+        };
+    }
+
+    private static void ClearReadOnlyAttribute(string path)
+    {
+        var attributes = File.GetAttributes(path);
+        if (attributes.HasFlag(FileAttributes.ReadOnly))
+        {
+            File.SetAttributes(path, attributes & ~FileAttributes.ReadOnly);
+        }
     }
 
     public Task RenameAsync(
@@ -239,6 +417,8 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         string sourceDirectory,
         string destinationDirectory,
         ConflictDecisionScope conflictScope,
+        Action<string> reportCurrent,
+        Action<string> reportCompleted,
         CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(destinationDirectory);
@@ -247,18 +427,86 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         {
             cancellationToken.ThrowIfCancellationRequested();
             var destinationPath = Path.Combine(destinationDirectory, Path.GetFileName(filePath));
+            reportCurrent(filePath);
 
             if (await ShouldWriteFileAsync(filePath, destinationPath, conflictScope, cancellationToken))
             {
-                File.Copy(filePath, destinationPath, overwrite: true);
+                await CopyFileAsync(filePath, destinationPath, cancellationToken);
             }
+
+            reportCompleted(filePath);
         }
 
         foreach (var directoryPath in Directory.EnumerateDirectories(sourceDirectory))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var destinationPath = Path.Combine(destinationDirectory, Path.GetFileName(directoryPath));
-            await CopyDirectoryAsync(directoryPath, destinationPath, conflictScope, cancellationToken);
+            await CopyDirectoryAsync(
+                directoryPath,
+                destinationPath,
+                conflictScope,
+                reportCurrent,
+                reportCompleted,
+                cancellationToken);
+        }
+    }
+
+    private static async Task CopyFileAsync(
+        string sourcePath,
+        string destinationPath,
+        CancellationToken cancellationToken)
+    {
+        await using var source = new FileStream(
+            sourcePath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 81920,
+            useAsync: true);
+        await using var destination = new FileStream(
+            destinationPath,
+            FileMode.Create,
+            FileAccess.Write,
+            FileShare.None,
+            bufferSize: 81920,
+            useAsync: true);
+        await source.CopyToAsync(destination, cancellationToken);
+    }
+
+    private static int? TryCountCopyItems(
+        IReadOnlyList<string> sourcePaths,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var total = 0;
+            foreach (var sourcePath in sourcePaths)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (ArchivePath.TryParse(sourcePath, out var archivePath) && !archivePath.IsRoot)
+                {
+                    return null;
+                }
+
+                if (File.Exists(sourcePath))
+                {
+                    total++;
+                }
+                else if (Directory.Exists(sourcePath))
+                {
+                    total += Directory.EnumerateFiles(sourcePath, "*", SearchOption.AllDirectories).Count();
+                }
+            }
+
+            return total;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+        catch (IOException)
+        {
+            return null;
         }
     }
 
@@ -315,6 +563,33 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
 
             var decision = await resolveConflictAsync(conflict);
             if (decision.ApplyToAll && decision.Action != FileConflictAction.Cancel)
+            {
+                actionForAll = decision.Action;
+            }
+
+            return decision.Action;
+        }
+    }
+
+    private sealed class DeleteConfirmationScope(
+        Func<FileDeleteConfirmationInfo, Task<FileDeleteConfirmationDecision>>? confirmDeleteAsync)
+    {
+        private FileDeleteConfirmationAction? actionForAll;
+
+        public async Task<FileDeleteConfirmationAction> ResolveAsync(FileDeleteConfirmationInfo info)
+        {
+            if (actionForAll is { } action)
+            {
+                return action;
+            }
+
+            if (confirmDeleteAsync is null)
+            {
+                return FileDeleteConfirmationAction.Delete;
+            }
+
+            var decision = await confirmDeleteAsync(info);
+            if (decision.ApplyToAll && decision.Action != FileDeleteConfirmationAction.Cancel)
             {
                 actionForAll = decision.Action;
             }

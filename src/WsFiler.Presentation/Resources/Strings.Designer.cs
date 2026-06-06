@@ -75,6 +75,8 @@ public class Strings
 
     public static string Status_AlreadyAtRoot => ResourceManager.GetString("Status.AlreadyAtRoot", resourceCulture)!;
 
+    public static string Status_OperationCanceled => ResourceManager.GetString("Status.OperationCanceled", resourceCulture)!;
+
     public static string Dialog_Copy_Title => ResourceManager.GetString("Dialog.Copy.Title", resourceCulture)!;
 
     public static string Dialog_Copy_MessageSingle => ResourceManager.GetString("Dialog.Copy.MessageSingle", resourceCulture)!;
@@ -94,6 +96,10 @@ public class Strings
     public static string Dialog_Rename_Title => ResourceManager.GetString("Dialog.Rename.Title", resourceCulture)!;
 
     public static string Dialog_Rename_NewName => ResourceManager.GetString("Dialog.Rename.NewName", resourceCulture)!;
+
+    public static string Dialog_Duplicate_Title => ResourceManager.GetString("Dialog.Duplicate.Title", resourceCulture)!;
+
+    public static string Dialog_Duplicate_NewName => ResourceManager.GetString("Dialog.Duplicate.NewName", resourceCulture)!;
 
     public static string Dialog_Common_Ok => ResourceManager.GetString("Dialog.Common.Ok", resourceCulture)!;
 
@@ -223,6 +229,24 @@ public class Strings
 
     public static string Dialog_FileSearch_BaseDirectoryNotFound => ResourceManager.GetString("Dialog.FileSearch.BaseDirectoryNotFound", resourceCulture)!;
 
+    public static string Dialog_FileSearch_Searching => ResourceManager.GetString("Dialog.FileSearch.Searching", resourceCulture)!;
+
+    public static string Dialog_FileSearch_Progress => ResourceManager.GetString("Dialog.FileSearch.Progress", resourceCulture)!;
+
+    public static string Dialog_Progress_Copying => ResourceManager.GetString("Dialog.Progress.Copying", resourceCulture)!;
+
+    public static string Dialog_Progress_Duplicating => ResourceManager.GetString("Dialog.Progress.Duplicating", resourceCulture)!;
+
+    public static string Dialog_Progress_Moving => ResourceManager.GetString("Dialog.Progress.Moving", resourceCulture)!;
+
+    public static string Dialog_Progress_Count => ResourceManager.GetString("Dialog.Progress.Count", resourceCulture)!;
+
+    public static string Dialog_Progress_CountUnknown => ResourceManager.GetString("Dialog.Progress.CountUnknown", resourceCulture)!;
+
+    public static string Dialog_Progress_Canceling => ResourceManager.GetString("Dialog.Progress.Canceling", resourceCulture)!;
+
+    public static string Dialog_Progress_Canceled => ResourceManager.GetString("Dialog.Progress.Canceled", resourceCulture)!;
+
     public static string Dialog_Bookmark_CurrentPath => ResourceManager.GetString("Dialog.Bookmark.CurrentPath", resourceCulture)!;
 
     public static string Dialog_Bookmark_Add => ResourceManager.GetString("Dialog.Bookmark.Add", resourceCulture)!;
@@ -348,6 +372,12 @@ public class Strings
     public static string Dialog_Delete_MessageSingle => ResourceManager.GetString("Dialog.Delete.MessageSingle", resourceCulture)!;
 
     public static string Dialog_Delete_MessageMultiple => ResourceManager.GetString("Dialog.Delete.MessageMultiple", resourceCulture)!;
+
+    public static string Dialog_ReadOnlyDelete_Title => ResourceManager.GetString("Dialog.ReadOnlyDelete.Title", resourceCulture)!;
+
+    public static string Dialog_ReadOnlyDelete_Message => ResourceManager.GetString("Dialog.ReadOnlyDelete.Message", resourceCulture)!;
+
+    public static string Dialog_ReadOnlyDelete_Delete => ResourceManager.GetString("Dialog.ReadOnlyDelete.Delete", resourceCulture)!;
 
     public static string Dialog_Conflict_Title => ResourceManager.GetString("Dialog.Conflict.Title", resourceCulture)!;
 

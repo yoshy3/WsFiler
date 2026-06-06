@@ -14,10 +14,15 @@ public partial class RenameDialog : Window
     }
 
     public RenameDialog(string currentName)
+        : this(currentName, Strings.Dialog_Rename_Title, Strings.Dialog_Rename_NewName)
+    {
+    }
+
+    public RenameDialog(string currentName, string title, string label)
         : this()
     {
-        Title = Strings.Dialog_Rename_Title;
-        NewNameLabel.Text = Strings.Dialog_Rename_NewName;
+        Title = title;
+        NewNameLabel.Text = label;
         OkButton.Content = Strings.Dialog_Common_Ok;
         CancelButton.Content = Strings.Dialog_Common_Cancel;
         NameTextBox.Text = currentName;

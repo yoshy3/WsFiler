@@ -16,16 +16,19 @@ public interface IFileSystemProvider
         IReadOnlyList<string> sourcePaths,
         string destinationDirectory,
         Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
+        IProgress<FileOperationProgress>? progress = null,
         CancellationToken cancellationToken = default);
 
     Task MoveAsync(
         IReadOnlyList<string> sourcePaths,
         string destinationDirectory,
         Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
+        IProgress<FileOperationProgress>? progress = null,
         CancellationToken cancellationToken = default);
 
     Task DeleteAsync(
         IReadOnlyList<string> targetPaths,
+        Func<FileDeleteConfirmationInfo, Task<FileDeleteConfirmationDecision>>? confirmDeleteAsync = null,
         CancellationToken cancellationToken = default);
 
     Task RenameAsync(

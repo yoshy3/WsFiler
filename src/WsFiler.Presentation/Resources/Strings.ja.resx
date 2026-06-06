@@ -57,6 +57,9 @@
   <data name="Status.AlreadyAtRoot" xml:space="preserve">
     <value>すでにルートです</value>
   </data>
+  <data name="Status.OperationCanceled" xml:space="preserve">
+    <value>操作をキャンセルしました</value>
+  </data>
   <data name="Dialog.Copy.Title" xml:space="preserve">
     <value>コピー</value>
   </data>
@@ -86,6 +89,12 @@
   </data>
   <data name="Dialog.Rename.NewName" xml:space="preserve">
     <value>新しい名前(N)</value>
+  </data>
+  <data name="Dialog.Duplicate.Title" xml:space="preserve">
+    <value>複製</value>
+  </data>
+  <data name="Dialog.Duplicate.NewName" xml:space="preserve">
+    <value>複製名(N)</value>
   </data>
   <data name="Dialog.Common.Ok" xml:space="preserve">
     <value>OK</value>
@@ -279,6 +288,33 @@
   <data name="Dialog.FileSearch.BaseDirectoryNotFound" xml:space="preserve">
     <value>基準ディレクトリが見つかりません</value>
   </data>
+  <data name="Dialog.FileSearch.Searching" xml:space="preserve">
+    <value>検索中...</value>
+  </data>
+  <data name="Dialog.FileSearch.Progress" xml:space="preserve">
+    <value>{0:N0} フォルダーを検索: {1}</value>
+  </data>
+  <data name="Dialog.Progress.Copying" xml:space="preserve">
+    <value>コピー中...</value>
+  </data>
+  <data name="Dialog.Progress.Duplicating" xml:space="preserve">
+    <value>複製中...</value>
+  </data>
+  <data name="Dialog.Progress.Moving" xml:space="preserve">
+    <value>移動中...</value>
+  </data>
+  <data name="Dialog.Progress.Count" xml:space="preserve">
+    <value>{0:N0} / {1:N0}</value>
+  </data>
+  <data name="Dialog.Progress.CountUnknown" xml:space="preserve">
+    <value>{0:N0} 件完了</value>
+  </data>
+  <data name="Dialog.Progress.Canceling" xml:space="preserve">
+    <value>キャンセル中...</value>
+  </data>
+  <data name="Dialog.Progress.Canceled" xml:space="preserve">
+    <value>キャンセルしました</value>
+  </data>
   <data name="Dialog.Bookmark.CurrentPath" xml:space="preserve">
     <value>現在のディレクトリ</value>
   </data>
@@ -467,6 +503,15 @@
   </data>
   <data name="Dialog.Delete.MessageMultiple" xml:space="preserve">
     <value>{0} ほか {1:N0} 件を完全に削除します。</value>
+  </data>
+  <data name="Dialog.ReadOnlyDelete.Title" xml:space="preserve">
+    <value>読み取り専用項目</value>
+  </data>
+  <data name="Dialog.ReadOnlyDelete.Message" xml:space="preserve">
+    <value>{0} は読み取り専用です。削除しますか?</value>
+  </data>
+  <data name="Dialog.ReadOnlyDelete.Delete" xml:space="preserve">
+    <value>削除(Y)</value>
   </data>
   <data name="Dialog.Conflict.Title" xml:space="preserve">
     <value>同名ファイル</value>

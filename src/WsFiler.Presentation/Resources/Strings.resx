@@ -57,6 +57,9 @@
   <data name="Status.AlreadyAtRoot" xml:space="preserve">
     <value>Already at root</value>
   </data>
+  <data name="Status.OperationCanceled" xml:space="preserve">
+    <value>Operation canceled</value>
+  </data>
   <data name="Dialog.Copy.Title" xml:space="preserve">
     <value>Copy</value>
   </data>
@@ -86,6 +89,12 @@
   </data>
   <data name="Dialog.Rename.NewName" xml:space="preserve">
     <value>New name(N)</value>
+  </data>
+  <data name="Dialog.Duplicate.Title" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Dialog.Duplicate.NewName" xml:space="preserve">
+    <value>Duplicate name(N)</value>
   </data>
   <data name="Dialog.Common.Ok" xml:space="preserve">
     <value>OK</value>
@@ -279,6 +288,33 @@
   <data name="Dialog.FileSearch.BaseDirectoryNotFound" xml:space="preserve">
     <value>Base directory was not found</value>
   </data>
+  <data name="Dialog.FileSearch.Searching" xml:space="preserve">
+    <value>Searching...</value>
+  </data>
+  <data name="Dialog.FileSearch.Progress" xml:space="preserve">
+    <value>{0:N0} folders scanned: {1}</value>
+  </data>
+  <data name="Dialog.Progress.Copying" xml:space="preserve">
+    <value>Copying...</value>
+  </data>
+  <data name="Dialog.Progress.Duplicating" xml:space="preserve">
+    <value>Duplicating...</value>
+  </data>
+  <data name="Dialog.Progress.Moving" xml:space="preserve">
+    <value>Moving...</value>
+  </data>
+  <data name="Dialog.Progress.Count" xml:space="preserve">
+    <value>{0:N0} / {1:N0}</value>
+  </data>
+  <data name="Dialog.Progress.CountUnknown" xml:space="preserve">
+    <value>{0:N0} completed</value>
+  </data>
+  <data name="Dialog.Progress.Canceling" xml:space="preserve">
+    <value>Canceling...</value>
+  </data>
+  <data name="Dialog.Progress.Canceled" xml:space="preserve">
+    <value>Canceled</value>
+  </data>
   <data name="Dialog.Bookmark.CurrentPath" xml:space="preserve">
     <value>Current directory</value>
   </data>
@@ -467,6 +503,15 @@
   </data>
   <data name="Dialog.Delete.MessageMultiple" xml:space="preserve">
     <value>Permanently delete {0} and {1:N0} other item(s).</value>
+  </data>
+  <data name="Dialog.ReadOnlyDelete.Title" xml:space="preserve">
+    <value>Read-only Item</value>
+  </data>
+  <data name="Dialog.ReadOnlyDelete.Message" xml:space="preserve">
+    <value>{0} is read-only. Delete it?</value>
+  </data>
+  <data name="Dialog.ReadOnlyDelete.Delete" xml:space="preserve">
+    <value>Delete(Y)</value>
   </data>
   <data name="Dialog.Conflict.Title" xml:space="preserve">
     <value>File Exists</value>

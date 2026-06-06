@@ -281,17 +281,29 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     public async Task CopyAsync(
         FileOperationRequest request,
-        Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync)
+        Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
+        IProgress<FileOperationProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             var sourcePaths = request.Targets.Select(item => item.FullPath).ToList();
-            await fileSystemProvider.CopyAsync(sourcePaths, request.DestinationDirectory, resolveConflictAsync);
+            await fileSystemProvider.CopyAsync(
+                sourcePaths,
+                request.DestinationDirectory,
+                resolveConflictAsync,
+                progress,
+                cancellationToken);
             ActivePane.ClearMarks();
             await RefreshPaneAsync(InactivePane);
             StatusMessage = string.Format(Strings.Status_Copied, request.Targets.Count);
             LogInfo(StatusMessage);
             OnPropertyChanged(nameof(StatusSummary));
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = Strings.Status_OperationCanceled;
+            LogInfo(StatusMessage);
         }
         catch (Exception ex)
         {
@@ -302,7 +314,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     public async Task CopyExternalFilesAsync(
         IReadOnlyList<string> sourcePaths,
         FilePaneViewModel destinationPane,
-        Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync)
+        Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
+        IProgress<FileOperationProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         if (sourcePaths.Count == 0)
         {
@@ -311,11 +325,21 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            await fileSystemProvider.CopyAsync(sourcePaths, destinationPane.CurrentPath, resolveConflictAsync);
+            await fileSystemProvider.CopyAsync(
+                sourcePaths,
+                destinationPane.CurrentPath,
+                resolveConflictAsync,
+                progress,
+                cancellationToken);
             await RefreshPaneAsync(destinationPane);
             StatusMessage = string.Format(Strings.Status_Copied, sourcePaths.Count);
             LogInfo(StatusMessage);
             OnPropertyChanged(nameof(StatusSummary));
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = Strings.Status_OperationCanceled;
+            LogInfo(StatusMessage);
         }
         catch (Exception ex)
         {
@@ -325,12 +349,19 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     public async Task MoveAsync(
         FileOperationRequest request,
-        Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync)
+        Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
+        IProgress<FileOperationProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             var sourcePaths = request.Targets.Select(item => item.FullPath).ToList();
-            await fileSystemProvider.MoveAsync(sourcePaths, request.DestinationDirectory, resolveConflictAsync);
+            await fileSystemProvider.MoveAsync(
+                sourcePaths,
+                request.DestinationDirectory,
+                resolveConflictAsync,
+                progress,
+                cancellationToken);
             ActivePane.ClearMarks();
             await RefreshPaneAsync(InactivePane);
             await RefreshPaneAsync(ActivePane);
@@ -338,23 +369,35 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             LogInfo(StatusMessage);
             OnPropertyChanged(nameof(StatusSummary));
         }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = Strings.Status_OperationCanceled;
+            LogInfo(StatusMessage);
+        }
         catch (Exception ex)
         {
             LogError(ex.Message);
         }
     }
 
-    public async Task DeleteAsync(DeleteRequest request)
+    public async Task DeleteAsync(
+        DeleteRequest request,
+        Func<FileDeleteConfirmationInfo, Task<FileDeleteConfirmationDecision>>? confirmDeleteAsync = null)
     {
         try
         {
             var targetPaths = request.Targets.Select(item => item.FullPath).ToList();
-            await fileSystemProvider.DeleteAsync(targetPaths);
+            await fileSystemProvider.DeleteAsync(targetPaths, confirmDeleteAsync);
             ActivePane.ClearMarks();
             await RefreshPaneAsync(ActivePane);
             StatusMessage = string.Format(Strings.Status_Deleted, request.Targets.Count);
             LogInfo(StatusMessage);
             OnPropertyChanged(nameof(StatusSummary));
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = Strings.Status_OperationCanceled;
+            LogInfo(StatusMessage);
         }
         catch (Exception ex)
         {
@@ -711,6 +754,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             IReadOnlyList<string> sourcePaths,
             string destinationDirectory,
             Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
+            IProgress<FileOperationProgress>? progress = null,
             CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
@@ -720,6 +764,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             IReadOnlyList<string> sourcePaths,
             string destinationDirectory,
             Func<FileConflictInfo, Task<FileConflictDecision>> resolveConflictAsync,
+            IProgress<FileOperationProgress>? progress = null,
             CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
@@ -727,6 +772,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
         public Task DeleteAsync(
             IReadOnlyList<string> targetPaths,
+            Func<FileDeleteConfirmationInfo, Task<FileDeleteConfirmationDecision>>? confirmDeleteAsync = null,
             CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;

@@ -17,7 +17,9 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using WsFiler.App;
 using WsFiler.App.Shell;
 using WsFiler.Core.Commands;
 using WsFiler.Core.Files;
@@ -343,7 +345,7 @@ public partial class MainWindow : Window
 
         var destinationPane = grid == LeftFileGrid ? viewModel.LeftPane : viewModel.RightPane;
         e.Handled = true;
-        await viewModel.CopyExternalFilesAsync(sourcePaths, destinationPane, ResolveConflictAsync);
+        await CopyExternalFilesWithProgressAsync(viewModel, sourcePaths, destinationPane);
     }
 
     private void OnFileGridPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -803,7 +805,65 @@ public partial class MainWindow : Window
 
         if (confirmed)
         {
-            await viewModel.CopyAsync(request, ResolveConflictAsync);
+            await CopyWithProgressAsync(viewModel, request);
+        }
+    }
+
+    private async Task CopyWithProgressAsync(MainWindowViewModel viewModel, WsFiler.Presentation.Operations.FileOperationRequest request)
+    {
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var progressDialog = new OperationProgressDialog(
+            Strings.Dialog_Copy_Title,
+            Strings.Dialog_Progress_Copying,
+            cancellationTokenSource.Cancel);
+        var progress = new ThrottledProgress<FileOperationProgress>(
+            new Progress<FileOperationProgress>(progressDialog.Update),
+            TimeSpan.FromMilliseconds(50));
+
+        progressDialog.Show(this);
+        try
+        {
+            await viewModel.CopyAsync(
+                request,
+                ResolveConflictAsync,
+                progress,
+                cancellationTokenSource.Token);
+            progress.Flush();
+        }
+        finally
+        {
+            progressDialog.Close();
+        }
+    }
+
+    private async Task CopyExternalFilesWithProgressAsync(
+        MainWindowViewModel viewModel,
+        IReadOnlyList<string> sourcePaths,
+        FilePaneViewModel destinationPane)
+    {
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var progressDialog = new OperationProgressDialog(
+            Strings.Dialog_Copy_Title,
+            Strings.Dialog_Progress_Copying,
+            cancellationTokenSource.Cancel);
+        var progress = new ThrottledProgress<FileOperationProgress>(
+            new Progress<FileOperationProgress>(progressDialog.Update),
+            TimeSpan.FromMilliseconds(50));
+
+        progressDialog.Show(this);
+        try
+        {
+            await viewModel.CopyExternalFilesAsync(
+                sourcePaths,
+                destinationPane,
+                ResolveConflictAsync,
+                progress,
+                cancellationTokenSource.Token);
+            progress.Flush();
+        }
+        finally
+        {
+            progressDialog.Close();
         }
     }
 
@@ -823,7 +883,34 @@ public partial class MainWindow : Window
 
         if (confirmed)
         {
-            await viewModel.MoveAsync(request, ResolveConflictAsync);
+            await MoveWithProgressAsync(viewModel, request);
+        }
+    }
+
+    private async Task MoveWithProgressAsync(MainWindowViewModel viewModel, WsFiler.Presentation.Operations.FileOperationRequest request)
+    {
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var progressDialog = new OperationProgressDialog(
+            Strings.Dialog_Move_Title,
+            Strings.Dialog_Progress_Moving,
+            cancellationTokenSource.Cancel);
+        var progress = new ThrottledProgress<FileOperationProgress>(
+            new Progress<FileOperationProgress>(progressDialog.Update),
+            TimeSpan.FromMilliseconds(50));
+
+        progressDialog.Show(this);
+        try
+        {
+            await viewModel.MoveAsync(
+                request,
+                ResolveConflictAsync,
+                progress,
+                cancellationTokenSource.Token);
+            progress.Flush();
+        }
+        finally
+        {
+            progressDialog.Close();
         }
     }
 
@@ -832,6 +919,15 @@ public partial class MainWindow : Window
         var dialog = new ConflictConfirmDialog(conflict);
         var decision = await dialog.ShowDialog<FileConflictDecision?>(this);
         return decision ?? new FileConflictDecision(FileConflictAction.Cancel, ApplyToAll: false);
+    }
+
+    private async Task<FileDeleteConfirmationDecision> ConfirmReadOnlyDeleteAsync(FileDeleteConfirmationInfo info)
+    {
+        var dialog = new ReadOnlyDeleteConfirmDialog(info);
+        var decision = await dialog.ShowDialog<FileDeleteConfirmationDecision?>(this);
+        return decision ?? new FileDeleteConfirmationDecision(
+            FileDeleteConfirmationAction.Cancel,
+            ApplyToAll: false);
     }
 
     private async Task ConfirmAndDeleteAsync(MainWindowViewModel viewModel)
@@ -849,7 +945,7 @@ public partial class MainWindow : Window
 
         if (confirmed)
         {
-            await viewModel.DeleteAsync(request);
+            await viewModel.DeleteAsync(request, ConfirmReadOnlyDeleteAsync);
         }
     }
 
@@ -1607,7 +1703,10 @@ public partial class MainWindow : Window
             return;
         }
 
-        var dialog = new RenameDialog(current.Name);
+        var dialog = new RenameDialog(
+            current.Name,
+            Strings.Dialog_Duplicate_Title,
+            Strings.Dialog_Duplicate_NewName);
         var newName = await dialog.ShowDialog<string?>(this);
         if (string.IsNullOrWhiteSpace(newName) || newName == current.Name)
         {
@@ -1617,37 +1716,151 @@ public partial class MainWindow : Window
         var parent = Path.GetDirectoryName(current.FullPath) ?? current.FullPath;
         var destPath = Path.Combine(parent, newName);
 
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var progressDialog = new OperationProgressDialog(
+            Strings.ContextMenu_Duplicate,
+            Strings.Dialog_Progress_Duplicating,
+            cancellationTokenSource.Cancel);
+        var progress = new ThrottledProgress<FileOperationProgress>(
+            new Progress<FileOperationProgress>(progressDialog.Update),
+            TimeSpan.FromMilliseconds(50));
+
+        progressDialog.Show(this);
         try
         {
-            if (current.IsDirectory)
-            {
-                CopyDirectoryRecursive(current.FullPath, destPath);
-            }
-            else
-            {
-                File.Copy(current.FullPath, destPath);
-            }
+            await Task.Run(
+                () => DuplicatePathAsync(
+                    current.FullPath,
+                    destPath,
+                    progress,
+                    cancellationTokenSource.Token),
+                cancellationTokenSource.Token);
+            progress.Flush();
 
             await viewModel.RefreshActivePaneAsync();
             viewModel.LogInfo(string.Format(Strings.Status_Duplicated, newName));
+        }
+        catch (OperationCanceledException)
+        {
+            viewModel.StatusMessage = Strings.Status_OperationCanceled;
+            viewModel.LogInfo(viewModel.StatusMessage);
         }
         catch (Exception ex)
         {
             viewModel.LogError(ex.Message);
         }
+        finally
+        {
+            progressDialog.Close();
+        }
     }
 
-    private static void CopyDirectoryRecursive(string source, string destination)
+    private static async Task DuplicatePathAsync(
+        string source,
+        string destination,
+        IProgress<FileOperationProgress> progress,
+        CancellationToken cancellationToken)
     {
+        var completedItems = 0;
+        var totalItems = TryCountDuplicateItems(source, cancellationToken);
+
+        void ReportCurrent(string path)
+        {
+            progress.Report(new FileOperationProgress(path, completedItems, totalItems));
+        }
+
+        void ReportCompleted(string path)
+        {
+            completedItems++;
+            progress.Report(new FileOperationProgress(path, completedItems, totalItems));
+        }
+
+        if (Directory.Exists(source))
+        {
+            await DuplicateDirectoryAsync(source, destination, ReportCurrent, ReportCompleted, cancellationToken);
+        }
+        else
+        {
+            ReportCurrent(source);
+            await DuplicateFileAsync(source, destination, cancellationToken);
+            ReportCompleted(source);
+        }
+    }
+
+    private static async Task DuplicateDirectoryAsync(
+        string source,
+        string destination,
+        Action<string> reportCurrent,
+        Action<string> reportCompleted,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
         Directory.CreateDirectory(destination);
+
         foreach (var file in Directory.EnumerateFiles(source))
         {
-            File.Copy(file, Path.Combine(destination, Path.GetFileName(file)));
+            cancellationToken.ThrowIfCancellationRequested();
+            var destinationPath = Path.Combine(destination, Path.GetFileName(file));
+            reportCurrent(file);
+            await DuplicateFileAsync(file, destinationPath, cancellationToken);
+            reportCompleted(file);
         }
 
         foreach (var dir in Directory.EnumerateDirectories(source))
         {
-            CopyDirectoryRecursive(dir, Path.Combine(destination, Path.GetFileName(dir)));
+            cancellationToken.ThrowIfCancellationRequested();
+            await DuplicateDirectoryAsync(
+                dir,
+                Path.Combine(destination, Path.GetFileName(dir)),
+                reportCurrent,
+                reportCompleted,
+                cancellationToken);
+        }
+    }
+
+    private static async Task DuplicateFileAsync(
+        string source,
+        string destination,
+        CancellationToken cancellationToken)
+    {
+        await using var sourceStream = new FileStream(
+            source,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 81920,
+            useAsync: true);
+        await using var destinationStream = new FileStream(
+            destination,
+            FileMode.CreateNew,
+            FileAccess.Write,
+            FileShare.None,
+            bufferSize: 81920,
+            useAsync: true);
+        await sourceStream.CopyToAsync(destinationStream, cancellationToken);
+    }
+
+    private static int? TryCountDuplicateItems(string source, CancellationToken cancellationToken)
+    {
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (File.Exists(source))
+            {
+                return 1;
+            }
+
+            return Directory.Exists(source)
+                ? Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories).Count()
+                : null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+        catch (IOException)
+        {
+            return null;
         }
     }
 

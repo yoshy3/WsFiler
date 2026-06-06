@@ -125,6 +125,8 @@ public class Strings
 
     public static string Pane_Summary => ResourceManager.GetString("Pane.Summary", resourceCulture)!;
 
+    public static string Pane_SearchResultsPath => ResourceManager.GetString("Pane.SearchResultsPath", resourceCulture)!;
+
     public static string Status_SortChanged => ResourceManager.GetString("Status.SortChanged", resourceCulture)!;
 
     public static string Status_DirectoryCreated => ResourceManager.GetString("Status.DirectoryCreated", resourceCulture)!;
@@ -189,6 +191,8 @@ public class Strings
 
     public static string Status_SearchNotFound => ResourceManager.GetString("Status.SearchNotFound", resourceCulture)!;
 
+    public static string Status_SearchResultsLoaded => ResourceManager.GetString("Status.SearchResultsLoaded", resourceCulture)!;
+
     public static string Status_PathCopied => ResourceManager.GetString("Status.PathCopied", resourceCulture)!;
 
     public static string Status_BookmarkAdded => ResourceManager.GetString("Status.BookmarkAdded", resourceCulture)!;
@@ -222,6 +226,8 @@ public class Strings
     public static string Dialog_FileSearch_Start => ResourceManager.GetString("Dialog.FileSearch.Start", resourceCulture)!;
 
     public static string Dialog_FileSearch_Jump => ResourceManager.GetString("Dialog.FileSearch.Jump", resourceCulture)!;
+
+    public static string Dialog_FileSearch_VirtualDirectory => ResourceManager.GetString("Dialog.FileSearch.VirtualDirectory", resourceCulture)!;
 
     public static string Dialog_FileSearch_Results => ResourceManager.GetString("Dialog.FileSearch.Results", resourceCulture)!;
 

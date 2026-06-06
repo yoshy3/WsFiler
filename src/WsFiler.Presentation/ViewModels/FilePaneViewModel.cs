@@ -16,6 +16,8 @@ public sealed partial class FilePaneViewModel : ViewModelBase
     public bool SortAscending { get; private set; } = true;
     public string? FilterPattern { get; private set; }
     public bool ShowHiddenFiles { get; private set; }
+    public bool IsVirtualDirectory { get; private set; }
+    public string? VirtualReturnPath { get; private set; }
 
     private readonly Dictionary<string, string> cursorMemory = new(StringComparer.OrdinalIgnoreCase);
 
@@ -63,6 +65,8 @@ public sealed partial class FilePaneViewModel : ViewModelBase
     {
         SaveCursorMemory();
 
+        IsVirtualDirectory = false;
+        VirtualReturnPath = null;
         CurrentPath = path;
         Items.Clear();
         cursorIndex = 0;
@@ -88,6 +92,38 @@ public sealed partial class FilePaneViewModel : ViewModelBase
         }
 
         RestoreCursorFromMemory(path);
+        UpdateSelectedItem();
+        OnPaneInfoChanged();
+    }
+
+    public void LoadVirtual(string displayPath, string returnPath, IEnumerable<FileSystemItem> items)
+    {
+        SaveCursorMemory();
+
+        ClearFilter();
+        IsVirtualDirectory = true;
+        VirtualReturnPath = returnPath;
+        CurrentPath = displayPath;
+        Items.Clear();
+        cursorIndex = 0;
+
+        var parent = new FileSystemItem(
+            "..",
+            returnPath,
+            FileSystemItemType.Directory,
+            null,
+            default,
+            "",
+            false,
+            false);
+        Items.Add(new FileItemViewModel(parent));
+
+        var sorted = ApplySortAndFilter(items);
+        foreach (var item in sorted)
+        {
+            Items.Add(new FileItemViewModel(item));
+        }
+
         UpdateSelectedItem();
         OnPaneInfoChanged();
     }

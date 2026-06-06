@@ -34,6 +34,7 @@ public partial class FileSearchDialog : Window
         SearchButton.Content = Strings.Dialog_FileSearch_Start;
         CancelSearchButton.Content = Strings.Dialog_Common_Cancel;
         JumpButton.Content = Strings.Dialog_FileSearch_Jump;
+        VirtualDirectoryButton.Content = Strings.Dialog_FileSearch_VirtualDirectory;
         CloseButton.Content = Strings.Dialog_Common_Cancel;
         ResultLabel.Text = Strings.Dialog_FileSearch_Results;
         BaseDirectoryTextBox.Text = baseDirectory;
@@ -55,6 +56,14 @@ public partial class FileSearchDialog : Window
     private void OnJumpClick(object? sender, RoutedEventArgs e)
     {
         CloseWithSelection();
+    }
+
+    private void OnVirtualDirectoryClick(object? sender, RoutedEventArgs e)
+    {
+        Close(new FileSearchDialogResult(
+            JumpPath: null,
+            VirtualBaseDirectory: BaseDirectoryTextBox.Text?.Trim(),
+            VirtualResultPaths: results.Select(result => result.FullPath).ToList()));
     }
 
     private void OnCloseClick(object? sender, RoutedEventArgs e)
@@ -163,6 +172,7 @@ public partial class FileSearchDialog : Window
                 ResultListBox.Focus();
             }
 
+            VirtualDirectoryButton.IsEnabled = results.Count > 0;
             UpdateResultCount();
         }
         catch (OperationCanceledException)
@@ -261,6 +271,7 @@ public partial class FileSearchDialog : Window
     private void UpdateResultCount()
     {
         ResultCountTextBlock.Text = string.Format(Strings.Dialog_FileSearch_Count, results.Count);
+        VirtualDirectoryButton.IsEnabled = results.Count > 0;
     }
 
     private void UpdateSearchProgress(SearchProgress progress)
@@ -276,7 +287,10 @@ public partial class FileSearchDialog : Window
     {
         if (ResultListBox.SelectedItem is SearchResult result)
         {
-            Close(result.FullPath);
+            Close(new FileSearchDialogResult(
+                JumpPath: result.FullPath,
+                VirtualBaseDirectory: null,
+                VirtualResultPaths: []));
         }
     }
 
@@ -307,3 +321,8 @@ public partial class FileSearchDialog : Window
         int FoundCount,
         int ScannedDirectories);
 }
+
+public sealed record FileSearchDialogResult(
+    string? JumpPath,
+    string? VirtualBaseDirectory,
+    IReadOnlyList<string> VirtualResultPaths);

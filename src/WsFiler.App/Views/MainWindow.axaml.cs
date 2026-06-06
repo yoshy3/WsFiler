@@ -1418,10 +1418,17 @@ public partial class MainWindow : Window
     private async Task ShowSearchDialogAsync(MainWindowViewModel viewModel)
     {
         var dialog = new FileSearchDialog(viewModel.ActivePane.CurrentPath);
-        var path = await dialog.ShowDialog<string?>(this);
-        if (!string.IsNullOrWhiteSpace(path))
+        var result = await dialog.ShowDialog<FileSearchDialogResult?>(this);
+        if (!string.IsNullOrWhiteSpace(result?.JumpPath))
         {
-            await viewModel.NavigateActivePaneToItemAsync(path);
+            await viewModel.NavigateActivePaneToItemAsync(result.JumpPath);
+        }
+        else if (!string.IsNullOrWhiteSpace(result?.VirtualBaseDirectory) &&
+                 result.VirtualResultPaths.Count > 0)
+        {
+            viewModel.LoadSearchResultsAsVirtualDirectory(
+                result.VirtualBaseDirectory,
+                result.VirtualResultPaths);
         }
     }
 

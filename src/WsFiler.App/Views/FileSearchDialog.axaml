@@ -55,6 +55,10 @@
             <Button x:Name="JumpButton"
                     Height="32"
                     Click="OnJumpClick"/>
+            <Button x:Name="VirtualDirectoryButton"
+                    Height="32"
+                    IsEnabled="False"
+                    Click="OnVirtualDirectoryClick"/>
             <Button x:Name="CloseButton"
                     Height="32"
                     IsCancel="True"

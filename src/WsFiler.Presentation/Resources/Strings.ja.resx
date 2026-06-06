@@ -132,6 +132,9 @@
   <data name="Pane.Summary" xml:space="preserve">
     <value>{0:N0} 項目, {1:N0} 選択</value>
   </data>
+  <data name="Pane.SearchResultsPath" xml:space="preserve">
+    <value>検索結果: {0}</value>
+  </data>
   <data name="Status.SortChanged" xml:space="preserve">
     <value>ソート: {0}</value>
   </data>
@@ -228,6 +231,9 @@
   <data name="Status.SearchNotFound" xml:space="preserve">
     <value>見つかりません: {0}</value>
   </data>
+  <data name="Status.SearchResultsLoaded" xml:space="preserve">
+    <value>{0:N0} 件の検索結果を表示しました</value>
+  </data>
   <data name="Status.PathCopied" xml:space="preserve">
     <value>パスをコピーしました: {0}</value>
   </data>
@@ -278,6 +284,9 @@
   </data>
   <data name="Dialog.FileSearch.Jump" xml:space="preserve">
     <value>ジャンプ(J)</value>
+  </data>
+  <data name="Dialog.FileSearch.VirtualDirectory" xml:space="preserve">
+    <value>結果ペイン(V)</value>
   </data>
   <data name="Dialog.FileSearch.Results" xml:space="preserve">
     <value>検索結果</value>

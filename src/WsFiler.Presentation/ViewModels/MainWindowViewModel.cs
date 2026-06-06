@@ -564,6 +564,19 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     private async Task NavigateParentAsync()
     {
+        if (ActivePane.IsVirtualDirectory)
+        {
+            var returnPath = ActivePane.VirtualReturnPath;
+            if (string.IsNullOrWhiteSpace(returnPath))
+            {
+                StatusMessage = Strings.Status_AlreadyAtRoot;
+                return;
+            }
+
+            await LoadPaneAsync(ActivePane, returnPath);
+            return;
+        }
+
         var parent = fileSystemProvider.GetParentPath(ActivePane.CurrentPath);
         if (string.IsNullOrEmpty(parent))
         {
@@ -600,6 +613,21 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     public Task NavigateActivePaneAsync(string path) => LoadPaneAsync(ActivePane, path);
 
+    public void LoadSearchResultsAsVirtualDirectory(
+        string baseDirectory,
+        IReadOnlyList<string> resultPaths)
+    {
+        var items = resultPaths
+            .Select(path => TryCreateFileSystemItem(path, baseDirectory))
+            .Where(item => item is not null)
+            .Select(item => item!)
+            .ToList();
+        var displayPath = string.Format(Strings.Pane_SearchResultsPath, baseDirectory);
+        ActivePane.LoadVirtual(displayPath, baseDirectory, items);
+        StatusMessage = string.Format(Strings.Status_SearchResultsLoaded, items.Count);
+        OnPropertyChanged(nameof(StatusSummary));
+    }
+
     public async Task NavigateActivePaneToItemAsync(string fullPath)
     {
         var parent = Path.GetDirectoryName(fullPath);
@@ -621,8 +649,101 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     private async Task RefreshPaneAsync(FilePaneViewModel pane)
     {
-        var items = await fileSystemProvider.ListDirectoryAsync(pane.CurrentPath);
-        pane.Load(pane.CurrentPath, items);
+        if (pane.IsVirtualDirectory)
+        {
+            var returnPath = pane.VirtualReturnPath;
+            if (string.IsNullOrWhiteSpace(returnPath))
+            {
+                return;
+            }
+
+            var displayPath = pane.CurrentPath;
+            var paths = pane.Items
+                .Where(item => !item.IsParent)
+                .Select(item => item.FullPath)
+                .ToList();
+            var virtualItems = paths
+                .Select(TryCreateFileSystemItem)
+                .Where(item => item is not null)
+                .Select(item => item!)
+                .ToList();
+            pane.LoadVirtual(displayPath, returnPath, virtualItems);
+            return;
+        }
+
+        var directoryItems = await fileSystemProvider.ListDirectoryAsync(pane.CurrentPath);
+        pane.Load(pane.CurrentPath, directoryItems);
+    }
+
+    private static FileSystemItem? TryCreateFileSystemItem(string path)
+    {
+        return TryCreateFileSystemItem(path, baseDirectory: null);
+    }
+
+    private static FileSystemItem? TryCreateFileSystemItem(string path, string? baseDirectory)
+    {
+        try
+        {
+            if (Directory.Exists(path))
+            {
+                var directory = new DirectoryInfo(path);
+                return CreateFileSystemItem(directory, GetDisplayName(path, baseDirectory));
+            }
+
+            if (File.Exists(path))
+            {
+                var file = new FileInfo(path);
+                return CreateFileSystemItem(file, GetDisplayName(path, baseDirectory));
+            }
+        }
+        catch
+        {
+        }
+
+        return null;
+    }
+
+    private static FileSystemItem CreateFileSystemItem(FileSystemInfo info, string? displayName = null)
+    {
+        var attributes = info.Attributes;
+        var isDirectory = attributes.HasFlag(FileAttributes.Directory);
+        var isSymbolicLink = attributes.HasFlag(FileAttributes.ReparsePoint);
+        var type = isSymbolicLink
+            ? FileSystemItemType.SymbolicLink
+            : isDirectory
+                ? FileSystemItemType.Directory
+                : FileSystemItemType.File;
+        var size = info is FileInfo fileInfo ? fileInfo.Length : (long?)null;
+        var name = string.IsNullOrWhiteSpace(displayName) ? info.Name : displayName;
+        return new FileSystemItem(
+            name,
+            info.FullName,
+            type,
+            size,
+            info.LastWriteTime,
+            isDirectory ? "" : GetExtensionWithoutDot(name),
+            attributes.HasFlag(FileAttributes.Hidden),
+            attributes.HasFlag(FileAttributes.ReadOnly),
+            attributes.HasFlag(FileAttributes.System));
+    }
+
+    private static string? GetDisplayName(string path, string? baseDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(baseDirectory))
+        {
+            return null;
+        }
+
+        var relative = Path.GetRelativePath(baseDirectory, path);
+        return string.IsNullOrWhiteSpace(relative) || relative == "."
+            ? null
+            : relative;
+    }
+
+    private static string GetExtensionWithoutDot(string name)
+    {
+        var lastDot = name.LastIndexOf('.');
+        return lastDot <= 0 ? string.Empty : name[(lastDot + 1)..];
     }
 
     private async Task LoadInitialPanesAsync(string leftPath, string rightPath)

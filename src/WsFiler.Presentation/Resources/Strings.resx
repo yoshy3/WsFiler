@@ -132,6 +132,9 @@
   <data name="Pane.Summary" xml:space="preserve">
     <value>{0:N0} items, {1:N0} selected</value>
   </data>
+  <data name="Pane.SearchResultsPath" xml:space="preserve">
+    <value>Search results: {0}</value>
+  </data>
   <data name="Status.SortChanged" xml:space="preserve">
     <value>Sort: {0}</value>
   </data>
@@ -228,6 +231,9 @@
   <data name="Status.SearchNotFound" xml:space="preserve">
     <value>Not found: {0}</value>
   </data>
+  <data name="Status.SearchResultsLoaded" xml:space="preserve">
+    <value>Loaded {0:N0} search result(s)</value>
+  </data>
   <data name="Status.PathCopied" xml:space="preserve">
     <value>Copied path: {0}</value>
   </data>
@@ -278,6 +284,9 @@
   </data>
   <data name="Dialog.FileSearch.Jump" xml:space="preserve">
     <value>Jump(J)</value>
+  </data>
+  <data name="Dialog.FileSearch.VirtualDirectory" xml:space="preserve">
+    <value>Results Pane(V)</value>
   </data>
   <data name="Dialog.FileSearch.Results" xml:space="preserve">
     <value>Search results</value>

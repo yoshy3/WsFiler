@@ -395,22 +395,89 @@ public sealed class LocalFileSystemProvider : IFileSystemProvider
         var parent = Path.GetDirectoryName(sourcePath)
             ?? throw new IOException("Parent directory was not found.");
         var destinationPath = Path.Combine(parent, newName);
+        var isSamePathWithDifferentCasing = IsSamePath(sourcePath, destinationPath)
+            && !string.Equals(
+                Path.GetFullPath(sourcePath),
+                Path.GetFullPath(destinationPath),
+                StringComparison.Ordinal);
 
         if (Directory.Exists(destinationPath) || File.Exists(destinationPath))
         {
-            throw new IOException("Destination already exists.");
+            if (!isSamePathWithDifferentCasing)
+            {
+                throw new IOException("Destination already exists.");
+            }
         }
 
         if (Directory.Exists(sourcePath))
         {
-            Directory.Move(sourcePath, destinationPath);
+            MoveWithOptionalTemporaryName(
+                sourcePath,
+                destinationPath,
+                isSamePathWithDifferentCasing,
+                Directory.Move);
         }
         else if (File.Exists(sourcePath))
         {
-            File.Move(sourcePath, destinationPath);
+            MoveWithOptionalTemporaryName(
+                sourcePath,
+                destinationPath,
+                isSamePathWithDifferentCasing,
+                File.Move);
         }
 
         return Task.CompletedTask;
+    }
+
+    private static bool IsSamePath(string sourcePath, string destinationPath)
+    {
+        return string.Equals(
+            Path.GetFullPath(sourcePath),
+            Path.GetFullPath(destinationPath),
+            OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal);
+    }
+
+    private static void MoveWithOptionalTemporaryName(
+        string sourcePath,
+        string destinationPath,
+        bool useTemporaryName,
+        Action<string, string> move)
+    {
+        if (!useTemporaryName)
+        {
+            move(sourcePath, destinationPath);
+            return;
+        }
+
+        var temporaryPath = CreateTemporarySiblingPath(sourcePath);
+        move(sourcePath, temporaryPath);
+
+        try
+        {
+            move(temporaryPath, destinationPath);
+        }
+        catch
+        {
+            move(temporaryPath, sourcePath);
+            throw;
+        }
+    }
+
+    private static string CreateTemporarySiblingPath(string sourcePath)
+    {
+        var parent = Path.GetDirectoryName(sourcePath)
+            ?? throw new IOException("Parent directory was not found.");
+
+        string temporaryPath;
+        do
+        {
+            temporaryPath = Path.Combine(parent, $".wsfiler-rename-{Guid.NewGuid():N}.tmp");
+        }
+        while (Directory.Exists(temporaryPath) || File.Exists(temporaryPath));
+
+        return temporaryPath;
     }
 
     private static async Task CopyDirectoryAsync(

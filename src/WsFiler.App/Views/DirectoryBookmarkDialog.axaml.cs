@@ -97,7 +97,7 @@ public partial class DirectoryBookmarkDialog : Window
             e.Handled = true;
             HandleEnter();
         }
-        else if (e.Key == Key.Delete)
+        else if (e.Key == Key.Delete || e.Key == Key.D)
         {
             e.Handled = true;
             DeleteSelectedBookmark();
@@ -116,6 +116,11 @@ public partial class DirectoryBookmarkDialog : Window
         {
             e.Handled = true;
             AddCurrentPath();
+        }
+        else if (e.Key == Key.J)
+        {
+            e.Handled = true;
+            CloseWithSelectedBookmark();
         }
     }
 

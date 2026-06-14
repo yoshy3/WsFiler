@@ -81,6 +81,11 @@ public partial class DirectoryHistoryDialog : Window
             e.Handled = true;
             MoveSelection(e.Key == Key.Down ? 1 : -1);
         }
+        else if (e.Key == Key.J)
+        {
+            e.Handled = true;
+            CloseWithSelection();
+        }
     }
 
     private void MoveSelection(int offset)

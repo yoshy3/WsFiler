@@ -71,6 +71,12 @@ public partial class DriveSelectDialog : Window
 
         if (PathInput.IsFocused)
         {
+            if (e.Key is Key.Up or Key.Down)
+            {
+                e.Handled = true;
+                MoveSelection(e.Key == Key.Down ? 1 : -1);
+            }
+
             return;
         }
 
@@ -163,6 +169,9 @@ public partial class DriveSelectDialog : Window
         var currentIndex = DriveListBox.SelectedIndex >= 0 ? DriveListBox.SelectedIndex : 0;
         var nextIndex = Math.Clamp(currentIndex + offset, 0, drives.Count - 1);
         DriveListBox.SelectedIndex = nextIndex;
+        PathInput.Text = drives[nextIndex].RootDirectory.FullName;
+        PathInput.CaretIndex = PathInput.Text.Length;
+
         if (DriveListBox.SelectedItem is { } selectedItem)
         {
             DriveListBox.ScrollIntoView(selectedItem);

@@ -46,7 +46,28 @@ public partial class App : Application
             ApplyTheme(settings.Theme);
             var viewModel = new MainWindowViewModel(new LocalFileSystemProvider());
             viewModel.SetDirectoryHistory(DirectoryHistoryManager.Load());
-            _ = viewModel.InitializeAsync(settings.LastSession?.LeftPath, settings.LastSession?.RightPath);
+
+            PaneSortField? leftSortField = null;
+            if (Enum.TryParse<PaneSortField>(settings.LastSession?.LeftSortField, true, out var lsf))
+            {
+                leftSortField = lsf;
+            }
+            bool leftSortAscending = settings.LastSession?.LeftSortAscending ?? true;
+
+            PaneSortField? rightSortField = null;
+            if (Enum.TryParse<PaneSortField>(settings.LastSession?.RightSortField, true, out var rsf))
+            {
+                rightSortField = rsf;
+            }
+            bool rightSortAscending = settings.LastSession?.RightSortAscending ?? true;
+
+            _ = viewModel.InitializeAsync(
+                settings.LastSession?.LeftPath,
+                settings.LastSession?.RightPath,
+                leftSortField,
+                leftSortAscending,
+                rightSortField,
+                rightSortAscending);
 
             var mainWindow = new MainWindow(settings.KeyMap)
             {
@@ -88,6 +109,10 @@ public partial class App : Application
                     {
                         LeftPath = paths.LeftPath,
                         RightPath = paths.RightPath,
+                        LeftSortField = vm.LeftPane.SortField.ToString(),
+                        LeftSortAscending = vm.LeftPane.SortAscending,
+                        RightSortField = vm.RightPane.SortField.ToString(),
+                        RightSortAscending = vm.RightPane.SortAscending,
                     };
                     currentSettings.Window = lastWindowSettings ?? CaptureWindowBounds(desktop.MainWindow);
                     SettingsManager.Save(currentSettings);

@@ -36,10 +36,26 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         defaultHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
     }
 
-    public Task InitializeAsync(string? leftPath = null, string? rightPath = null)
+    public Task InitializeAsync(
+        string? leftPath = null,
+        string? rightPath = null,
+        PaneSortField? leftSortField = null,
+        bool leftSortAscending = true,
+        PaneSortField? rightSortField = null,
+        bool rightSortAscending = true)
     {
         var left = string.IsNullOrWhiteSpace(leftPath) ? defaultHome : leftPath;
         var right = string.IsNullOrWhiteSpace(rightPath) ? defaultHome : rightPath;
+
+        if (leftSortField is { } lsf)
+        {
+            LeftPane.SetSort(lsf, leftSortAscending);
+        }
+        if (rightSortField is { } rsf)
+        {
+            RightPane.SetSort(rsf, rightSortAscending);
+        }
+
         return LoadInitialPanesAsync(left, right);
     }
 

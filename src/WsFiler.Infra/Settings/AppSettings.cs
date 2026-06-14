@@ -46,6 +46,18 @@ public sealed class LastSessionSettings
 
     [JsonPropertyName("rightPath")]
     public string? RightPath { get; set; }
+
+    [JsonPropertyName("leftSortField")]
+    public string? LeftSortField { get; set; }
+
+    [JsonPropertyName("leftSortAscending")]
+    public bool LeftSortAscending { get; set; } = true;
+
+    [JsonPropertyName("rightSortField")]
+    public string? RightSortField { get; set; }
+
+    [JsonPropertyName("rightSortAscending")]
+    public bool RightSortAscending { get; set; } = true;
 }
 
 public sealed class WindowSettings

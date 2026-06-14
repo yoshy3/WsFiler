@@ -12,6 +12,6 @@ namespace WsFiler.Infra.Settings;
 [JsonSerializable(typeof(DirectoryHistorySettings))]
 [JsonSerializable(typeof(UserCommandSettings))]
 [JsonSerializable(typeof(UserCommandEntry))]
-internal partial class SettingsJsonContext : JsonSerializerContext
+public partial class SettingsJsonContext : JsonSerializerContext
 {
 }

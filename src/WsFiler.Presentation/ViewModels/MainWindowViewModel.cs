@@ -134,7 +134,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             case ApplicationCommandId.ViewSort:
                 break;
             case ApplicationCommandId.ViewRefresh:
-                await RefreshActivePaneAsync();
+                await RefreshPaneAsync(ActivePane);
+                await RefreshPaneAsync(InactivePane);
                 StatusMessage = ActivePane.CurrentPath;
                 OnPropertyChanged(nameof(StatusSummary));
                 break;
